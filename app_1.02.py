@@ -72,29 +72,39 @@ if rol == "Professor" and acces_professor:
             # Comoprovam si s'han adjuntat tots els arxius per INICIAR la pujada al servidor
             if  file_compres_real and file_fecha_entrega_trabajos and file_dades_compra_comandes_alumne and file_dades_compra_albarans_alumne and file_dades_compra_factures_alumne:
                 if nom_correccio == "":
-                    st.error("Cal que indiques un nom a aquesta correcció")     
+                    st.error("Cal que indiquis un nom per aquesta correcció")     
                 else:
                     st.write("⏳ Aplicant algoritme de correcció")
 
+                    # --- 1. IMPORTAR LÒGICA CORRECCIÓ COMPRES ---
+                    # Esto carga el archivo logic_compras.py que creamos antes
+                    import logic_compres 
+                    
+                    # --- 2. LLAMADA A LA FUNCIÓN MAESTRA ---
+                    # Le pasamos los 5 archivos que has subido a la web
+                    """
+                    df_notas, df_h_alb, df_h_fac, df_h_ped, error_msg = logic_compres.procesar_correccion_compras(
+                                file_compres_real, 
+                                file_dades_compra_comandes_alumne, 
+                                file_dades_compra_albarans_alumne, 
+                                file_dades_compra_factures_alumne, 
+                                file_fecha_entrega_trabajos
+                    )                    
 
-                    # --- AQUÍ IRÁ TU CÓDIGO DEL MOTOR (Fase 4) ---
-                    # SIMULACIÓN: Leemos el Excel que generaste manualmente para probar  
-
-                    try:
-                        df_resultado = pd.read_excel("correccioCompres.xlsx")
-
-                        # --- GUARDADO EN EL HISTÓRICO (PERSISTENCIA) ---
-                        nombre_archivo = f"{CARPETA_HISTORICO}/COMPRES_{nom_correccio}.xlsx"
-                                
-                        # Guardamos el Excel en la carpeta del disco duro
-                        df_resultado.to_excel(nombre_archivo, index=False)
-                                
-                        st.success(f"✅ Corrección '{nom_correccio}' guardada correctamente en el histórico.")
-                        st.dataframe(df_resultado.head())
-
-                        
-                    except FileNotFoundError:
-                        st.error("Modo simulación: No encuentro 'correccioCompres.xlsx' base.")
+                    # --- 3. GESTIÓN DE RESULTADOS ---
+                    if error_msg:
+                        st.error(f"❌ MERDA, ALGUNA COSA NO FUNCIONA. HO MIRAM {error_msg}")
+                    else:
+                        st.success("✅ CORRECCIÓ REALITZADA AMB Éxit")
+                    """
+                    logic_compres.procesar_correccion_compras(
+                                file_compres_real, 
+                                file_dades_compra_comandes_alumne, 
+                                file_dades_compra_albarans_alumne, 
+                                file_dades_compra_factures_alumne, 
+                                file_fecha_entrega_trabajos
+                    )                   
+                    st.success("✅ CORRECCIÓ REALITZADA AMB ÉXIT")
         
             else:
                 st.error("Cal que adjuntis tots els arxius per poder processar la correcció")
