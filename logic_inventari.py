@@ -117,6 +117,7 @@ for idx, row in df_inventari_final.iterrows():
     'UNITATS PENDENTS SORTIR': row['A_UNITATS_PENDENTS_SORTIR_I'],
     'ESTAT PENDENTS SORTIR': '',
     'STOCKS NEGATIUS':  '✅',
+    'VALOR STOCK FINAL': valor_stock_final_per_empresa.get(empresa, 0),
     'VALOR STOCK NO SUPERIOR A 1.000 €': '✅',
     'RESULTAT': '',
     'OBSERVACIONS': ''
@@ -158,13 +159,13 @@ for idx, row in df_inventari_final.iterrows():
     info['ESTAT PENDENTS SORTIR'] = '✅'
 
   # 'CHECK VALOR STOCK NO SUPERIOR A 1.000 €'
-    # Comprovam si el valor del stock és superior a 1.000 €
-    valorStockFinal = valor_stock_final_per_empresa.get(empresa, 0)
-    if valorStockFinal > 1000:
-        info['VALOR STOCK NO SUPERIOR A 1.000 €'] = '❌'
-        observacions.append("Valor dels articles en magatzem excessiu")
-    else:
-        info['VALOR STOCK NO SUPERIOR A 1.000 €'] = '✅'
+  # Comprovam si el valor del stock és superior a 1.000 €
+  
+  if info['VALOR STOCK FINAL'] > 1000:
+    info['VALOR STOCK NO SUPERIOR A 1.000 €'] = '❌'
+    observacions.append("Valor dels articles en magatzem excessiu")
+  else:
+    info['VALOR STOCK NO SUPERIOR A 1.000 €'] = '✅'
 
   # 'RESULTAT'
   if all([info['STOCKS NEGATIUS'] == '✅', 
