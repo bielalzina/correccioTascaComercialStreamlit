@@ -83,12 +83,6 @@ df_hes_inventari_stocks_negatius = df_hes_inventari.loc[df_hes_inventari['A_STOC
 
 # print(df_hes_inventari_stocks_negatius)
 
-# Agrupamos el resumen por empresa para calcular el valor total del almacén
-# (Aunque revisaremos línea a línea, necesitamos el total para la regla de los 1000€)
-valor_stock_final_per_empresa = df_resum_stock.groupby('A_EMPRESA_I')['A_IMPORT_I'].sum()
-
-# print(valor_stock_final_per_empresa)
-
 # UNIO df_resum_stock i df_hes_inventari_stocks_finals 
 # D'AQUESTA MANERA PODEM DETERMINAR SI LLISTAT HES INVENTARI
 # INCLOU TOTS ELS REGISTRES
@@ -97,7 +91,14 @@ df_inventari_final = pd.merge(df_resum_stock, df_hes_inventari_stocks_finals, on
 
 # print(df_inventari_final)
 
-# CREAM INFORME FINAL
+# INICIAM CORRECCIO INVENTARI A NIVELL D'EMPRESA - PRODUCTE
+# ASPECTES A COMPROVAR PER CADA EMPRESA-PRODUCTE:
+# 1. NUM. UNITATS FINALS COINCIDEIX EN ELS DOS LLISTATS: 
+#    9_DATOS_INVENTARIO_ALUMNO.csv i 10_HISTORIAL_E_S_INVENTARIO_ALUMNO.csv
+# 2. UNITATS PENDENTS ENTRAR
+# 3. UNITATS PENDENTS SORTIR
+# 4. STOCKS NEGATIUS
+
 informe = []
 
 for idx, row in df_inventari_final.iterrows():
@@ -111,75 +112,64 @@ for idx, row in df_inventari_final.iterrows():
     'PRODUCTE': producte,
     'STOCK FINAL - UNITATS - INFORME STOCK': row['A_UNITATS_REALS_I'],
     'STOCK FINAL - UNITATS - HISTORIAL OPERACIONS': row['A_STOCK_HES'],
-    'STOCKS FINALS COINCIDEIXEN': '',
+    'UNITATS FINALS COINCIDEIXEN': '',
     'UNITATS PENDENTS ENTRAR': row['A_UNITATS_PENDENTS_ENTRAR_I'],
     'ESTAT PENDENTS ENTRAR': '',
     'UNITATS PENDENTS SORTIR': row['A_UNITATS_PENDENTS_SORTIR_I'],
     'ESTAT PENDENTS SORTIR': '',
     'STOCKS NEGATIUS':  '✅',
-    'VALOR STOCK FINAL': valor_stock_final_per_empresa.get(empresa, 0),
-    'VALOR STOCK NO SUPERIOR A 1.000 €': '✅',
     'RESULTAT': '',
     'OBSERVACIONS': ''
   }
 
-  observacions = []
+  observacions = ""  
 
-  # 'CHECK STOCK NEGATIU'
-    # Comprovam si empresa ha tingut stocks negatius
-
-  if not df_hes_inventari_stocks_negatius.empty:
-    error = df_hes_inventari_stocks_negatius[
-      (df_hes_inventari_stocks_negatius['EMPRESA'] == empresa) &
-      (df_hes_inventari_stocks_negatius['PRODUCTO'] == producto)
-    ]
-    if not error.empty:
-      info['STOCKS NEGATIUS'] = '❌'
-      observacions.append(error.iloc[0]['OBSERVACIONS'])
-
-  # 'STOCKS FINALS COINCIDEIXEN'
+  # 'UNITATS FINALS COINCIDEIXEN'
   if row['A_UNITATS_REALS_I'] == row['A_STOCK_HES']:
-    info['STOCKS FINALS COINCIDEIXEN'] = '✅'
+    info['UNITATS FINALS COINCIDEIXEN'] = '✅'
   else:
-    info['STOCKS FINALS COINCIDEIXEN'] = '❌'
-    observacions.append("Stocks finals no coincideixen. Llistat HES incomplet ¿?")
+    info['UNITATS FINALS COINCIDEIXEN'] = '❌'
+    observacions += "El numero de unitats finals no coincideixen en els llistats aportats\n"
 
   # 'ESTAT PENDENTS ENTRAR'
   if row['A_UNITATS_PENDENTS_ENTRAR_I'] > 0:
     info['ESTAT PENDENTS ENTRAR'] = '❌'
-    observacions.append("Unitats pendents entrar > 0 (Albarans de compra no validats ¿?)")
+    observacions += "Unitats pendents entrar > 0 -> Hi ha albarans de compra no validats?\n"
   else:
     info['ESTAT PENDENTS ENTRAR'] = '✅'
 
   # 'ESTAT PENDENTS SORTIR'
   if row['A_UNITATS_PENDENTS_SORTIR_I'] > 0:
     info['ESTAT PENDENTS SORTIR'] = '❌'
-    observacions.append("Unitats pendents sortir > 0 (Albarans de venda no validats ¿?)")
+    observacions += "Unitats pendents sortir > 0 -> Hi ha albarans de venda no validats?\n"
   else:
     info['ESTAT PENDENTS SORTIR'] = '✅'
 
-  # 'CHECK VALOR STOCK NO SUPERIOR A 1.000 €'
-  # Comprovam si el valor del stock és superior a 1.000 €
-  
-  if info['VALOR STOCK FINAL'] > 1000:
-    info['VALOR STOCK NO SUPERIOR A 1.000 €'] = '❌'
-    observacions.append("Valor dels articles en magatzem excessiu")
-  else:
-    info['VALOR STOCK NO SUPERIOR A 1.000 €'] = '✅'
+# 'CHECK STOCK NEGATIU'
+    # Comprovam si empresa ha tingut stocks negatius
+
+  if not df_hes_inventari_stocks_negatius.empty:
+    error = df_hes_inventari_stocks_negatius[
+      (df_hes_inventari_stocks_negatius['A_EMPRESA_HES'] == empresa) &
+      (df_hes_inventari_stocks_negatius['A_PRODUCTE_HES'] == producte)
+    ]
+    if not error.empty:
+      info['STOCKS NEGATIUS'] = '❌'
+      observacions += "Per aquest producte hi ha operacions registrades que han generat stocks negatius"
+
 
   # 'RESULTAT'
   if all([info['STOCKS NEGATIUS'] == '✅', 
-          info['STOCKS FINALS COINCIDEIXEN'] == '✅', 
+          info['UNITATS FINALS COINCIDEIXEN'] == '✅', 
           info['ESTAT PENDENTS ENTRAR'] == '✅', 
-          info['ESTAT PENDENTS SORTIR'] == '✅', 
-          info['VALOR STOCK NO SUPERIOR A 1.000 €'] == '✅']):
+          info['ESTAT PENDENTS SORTIR'] == '✅']):
     info['RESULTAT'] = '✅ - ENHORABONA'
   else:
     info['RESULTAT'] = '❌ - REVISAR'
 
   # 'OBSERVACIONS'
   if observacions:
-    info['OBSERVACIONS'] = '\n'.join(observacions)
+    info['OBSERVACIONS'] = observacions
   else:
     info['OBSERVACIONS'] = '✅'
 
@@ -189,7 +179,7 @@ for idx, row in df_inventari_final.iterrows():
 df_informe = pd.DataFrame(informe)
 
 # GUARDEM INFORME
-fileName = "Correccio_Inventari_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".xlsx"
+fileName = "Correccio_Inventari_Empresa_Producte.xlsx"
 
 rutaActual = os.getcwd()
 
@@ -201,4 +191,78 @@ try:
 except Exception as e:
     print(f"❌ Error al guardar: {e}")
 
+# CONTINUAM CORRECCIO INVENTARI A NIVELL D'EMPRESA
+# ASPECTES A COMPROVAR PER CADA EMPRESA:
+# 1. VALOR FINAL NO SUPERIOR A 1.000 €
+# 
+# AQUESTA CORRECCIO NO ES FA A NIVELL DE PRODUCTE,
+# SINO QUE ES FA A NIVELL D'EMPRESA, PER LA QUAL COSA
+# HEM DE CREAR UN NOU DF AMB AGRUPAMENT PER EMPRESA AMB 
+# SUMA DE LA COLUMNA IMPORT
 
+# PRIMER PAS: CREAM DF REDUIT AMB LES COLUNNES QUE ENS INTERESSEN
+
+df_reduit = df_inventari_final[['A_EMPRESA_I', 'A_IMPORT_I']]
+
+# print(df_reduit)
+
+# SEGON PAS: CREAM DF AGRUPAT PER EMPRESA AMB SUMA IMPORT
+
+df_agrupat = df_reduit.groupby('A_EMPRESA_I').sum().reset_index()
+
+# print(df_agrupat)
+
+informe02 = []
+
+for idx, row in df_agrupat.iterrows():
+  empresa = row['A_EMPRESA_I']
+  valor_stock_final = row['A_IMPORT_I']
+
+  info02 = {
+    'EMPRESA': empresa,
+    'VALOR STOCK FINAL': valor_stock_final,
+    'VALOR STOCK FINAL NO SUPERIOR A 1.000 €': '',
+    'RESULTAT': '',
+    'OBSERVACIONS': ''
+  }
+
+  observacions02 = ""
+
+  # 'CHECK VALOR STOCK NO SUPERIOR A 1.000 €'
+  # Comprovam si el valor del stock és superior a 1.000 €
+  
+  if info02['VALOR STOCK FINAL'] > 1000:
+    info02['VALOR STOCK FINAL NO SUPERIOR A 1.000 €'] = '❌'
+    observacions02 += "El valor dels articles en magatzem supera el límit de 1.000 €"
+  else:
+    info02['VALOR STOCK FINAL NO SUPERIOR A 1.000 €'] = '✅'
+
+  # 'RESULTAT'
+  if info02['VALOR STOCK FINAL NO SUPERIOR A 1.000 €'] == '✅':
+    info02['RESULTAT'] = '✅ - ENHORABONA'
+  else:
+    info02['RESULTAT'] = '❌ - REVISAR'
+
+  # 'OBSERVACIONS'
+  if observacions02:
+    info02['OBSERVACIONS'] = observacions02
+  else:
+    info02['OBSERVACIONS'] = '✅'
+
+  informe02.append(info02)
+
+# CREAM DF INFORME
+df_informe02 = pd.DataFrame(informe02)
+
+# GUARDEM INFORME
+fileName02 = "Correccio_Inventari_valor_stock_final.xlsx"
+
+rutaActual = os.getcwd()
+
+rutaFitxer = rutaActual + "/HISTORIC_CORRECCIONS/" + fileName02
+
+try:
+    df_informe02.to_excel(rutaFitxer, index=False)
+    print(f"✅ Corrección Inventario generada: {fileName02}")
+except Exception as e:
+    print(f"❌ Error al guardar: {e}")
