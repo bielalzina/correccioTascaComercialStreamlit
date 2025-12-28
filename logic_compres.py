@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 import os
 import logic_comu
@@ -71,7 +72,26 @@ R_ACUMULADO_C	                A_ESTADO_CP	                        A_ACUMULADO_CA
 
 """
 
+# ==============================================================================
+# INSERIM DATA ENTREGA TREBALL EN df_fac
+# ==============================================================================
+
+# CONVERTIM df_fechas['EMPRESA_ALUMNO'] i df_fechas['FECHA_ENTREGA'] en un diccionari
+mapaDatesEntrega = dict(zip(df_fechas["EMPRESA_ALUMNO"], df_fechas["FECHA_ENTREGA"]))
+
+# print(mapaDatesEntrega)
+
+# INSERIM LA DATA EN df_fac
+df_fac["A_FECHA_ENTREGA_FV"] = df_fac["A_EMPRESA_CF"].map(mapaDatesEntrega)
+
+
+# for fila in df_fac.itertuples():
+#     print(f"EMPRESA: {fila.A_EMPRESA_CF} - DATA: {fila.A_FECHA_ENTREGA_FV}")
+
+
+# ==============================================================================
 # 2. NETEJA TIPUS DE DADES
+# ==============================================================================
 
 # DATES
 
@@ -81,7 +101,7 @@ df_ped["A_FECHA_EMISION_CP"] = pd.to_datetime(df_ped["A_FECHA_EMISION_CP"])
 df_alb["A_FECHA_ALTA_ODOO_CA"] = pd.to_datetime(df_alb["A_FECHA_ALTA_ODOO_CA"])
 df_alb["A_FECHA_EMISION_CA"] = pd.to_datetime(df_alb["A_FECHA_EMISION_CA"])
 df_fac["A_FECHA_EMISION_CF"] = pd.to_datetime(df_fac["A_FECHA_EMISION_CF"])
-df_fechas["FECHA_ENTREGA"] = pd.to_datetime(df_fechas["FECHA_ENTREGA"])
+df_fac["A_FECHA_ENTREGA_FV"] = pd.to_datetime(df_fac["A_FECHA_ENTREGA_FV"])
 
 # NUMERICS
 df_real["R_IMPORTE_C"] = pd.to_numeric(df_real["R_IMPORTE_C"], errors="coerce").fillna(
@@ -97,7 +117,10 @@ df_fac["A_IMPORTE_CF"] = pd.to_numeric(df_fac["A_IMPORTE_CF"], errors="coerce").
     0.00
 )
 
+
+# ==============================================================================
 # 3. DUPLICATS
+# ==============================================================================
 
 # Real
 DUPLICATS_DF_REAL_R_NUMERO_CP = df_real[df_real.duplicated("R_NUMERO_CP", keep=False)]
@@ -105,13 +128,19 @@ DUPLICATS_DF_REAL_R_NUMERO_CP = df_real[df_real.duplicated("R_NUMERO_CP", keep=F
 
 # Pedidos
 DUPLICATS_DF_PED_A_NUMERO_CP = df_ped[df_ped.duplicated("A_NUMERO_CP", keep=False)]
-DUPLICATS_DF_PED_A_CLAU_UNICA_CP = df_ped[df_ped.duplicated("A_CLAU_UNICA_CP", keep=False)]
+DUPLICATS_DF_PED_A_CLAU_UNICA_CP = df_ped[
+    df_ped.duplicated("A_CLAU_UNICA_CP", keep=False)
+]
 
 # Albaranes
-DUPLICATS_DF_ALB_A_CLAU_UNICA_CA = df_alb[df_alb.duplicated("A_CLAU_UNICA_CA", keep=False)]
+DUPLICATS_DF_ALB_A_CLAU_UNICA_CA = df_alb[
+    df_alb.duplicated("A_CLAU_UNICA_CA", keep=False)
+]
 
 # Facturas
-DUPLICATS_DF_FAC_A_CLAU_UNICA_CF = df_fac[df_fac.duplicated("A_CLAU_UNICA_CF", keep=False)]
+DUPLICATS_DF_FAC_A_CLAU_UNICA_CF = df_fac[
+    df_fac.duplicated("A_CLAU_UNICA_CF", keep=False)
+]
 
 # RESUM DUPLICATS
 
@@ -136,7 +165,7 @@ for key, value in duplicats.items():
                 print("NUM. PEDIDOS COMPRA DUPLICATS EN DF_REAL: " + str(value))
                 print(DUPLICATS_DF_REAL_R_NUMERO_CP[["R_EMPRESA_C", "R_NUMERO_CP"]])
                 print("---------------------------------------------------------------")
-            #if parts[2] == "R_CLAU_UNICA":
+            # if parts[2] == "R_CLAU_UNICA":
             #    print("NUM. CLAUS UNIQUES DUPLICADES EN DF_REAL: " + str(value))
             #    print(DUPLICATS_DF_REAL_R_CLAU_UNICA[["R_EMPRESA_C", "CLAU_UNICA"]])
             #    print("---------------------------------------------------------------")
@@ -163,7 +192,9 @@ for key, value in duplicats.items():
         print(key + " = " + str(value))
         print("---------------------------------------------------------------")
 
-# 4. UNIR TOTS ELS DATAFRAMES
+# ==============================================================================
+# 4. UNIO DE TOTS ELS DATAFRAMES
+# ==============================================================================
 
 # df_ped + df_alb = DF_CPA
 
@@ -175,6 +206,7 @@ df_cpa = pd.merge(
     how="outer",
     suffixes=("_cp", "_ca"),
     indicator=True,
+    # validate="one_to_one",
 )
 
 print("LEN DF_REAL: " + str(len(df_real)))
@@ -197,6 +229,7 @@ df_cpaf = pd.merge(
     how="outer",
     suffixes=("_cp", "_cf"),
     indicator=True,
+    # validate="one_to_one",
 )
 
 print("LEN DF_CPAF: " + str(len(df_cpaf)))
@@ -215,7 +248,34 @@ df_final = pd.merge(
     how="outer",
     suffixes=("_real", "_cpaf"),
     indicator=True,
+    # validate="one_to_one",
 )
+
+df_final = df_final.sort_values(by=["R_EMPRESA_C", "R_NUMERO_CP"])
+
+# SI ALUMNE REPETEIX UN NUM DE COMANDA, PER EXEMPLE TE DUES
+# FILES AMB EL MATEIX NUM DE COMANDA (PERO DIFERENT DETALL)
+# EN DF_FINAL DUPLICA LA COMANDA REAL, DUPLICANT EL CLIENT REAL,
+# IMPORT REAL, DATA REAL.
+# PER TANT ES FA NECESSARI NETEJAR AQUESTS VALORS DUPLICATS I
+# DEIXAR NOMES UN REGISTRE EN L'APARTAT DE DADES REALS.
+
+mask = df_final.duplicated(subset=["R_NUMERO_CP"], keep="first")
+columnes_a_netejar = [
+    "R_IDTOTS_C",
+    "R_ID_C",
+    "R_EXPEDIENT_C",
+    "R_EMPRESA_C",
+    "R_ESTADO_FC",
+    "R_PROVEEDOR_C",
+    "R_FECHA_EMISION_C",
+    "R_NUMERO_CA",
+    "R_NUMERO_CF",
+    "R_IMPORTE_C",
+    "R_ACUMULADO_C",
+]
+
+df_final.loc[mask, columnes_a_netejar] = np.nan
 
 print("LEN DF_FINAL: " + str(len(df_final)))
 
