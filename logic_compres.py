@@ -101,23 +101,23 @@ df_fac["A_IMPORTE_CF"] = pd.to_numeric(df_fac["A_IMPORTE_CF"], errors="coerce").
 
 # Real
 DUPLICATS_DF_REAL_R_NUMERO_CP = df_real[df_real.duplicated("R_NUMERO_CP", keep=False)]
-DUPLICATS_DF_REAL_R_CLAU_UNICA = df_real[df_real.duplicated("CLAU_UNICA", keep=False)]
+# DUPLICATS_DF_REAL_R_CLAU_UNICA = df_real[df_real.duplicated("CLAU_UNICA", keep=False)]
 
 # Pedidos
 DUPLICATS_DF_PED_A_NUMERO_CP = df_ped[df_ped.duplicated("A_NUMERO_CP", keep=False)]
-DUPLICATS_DF_PED_A_CLAU_UNICA_CP = df_ped[df_ped.duplicated("CLAU_UNICA", keep=False)]
+DUPLICATS_DF_PED_A_CLAU_UNICA_CP = df_ped[df_ped.duplicated("A_CLAU_UNICA_CP", keep=False)]
 
 # Albaranes
-DUPLICATS_DF_ALB_A_CLAU_UNICA_CA = df_alb[df_alb.duplicated("CLAU_UNICA", keep=False)]
+DUPLICATS_DF_ALB_A_CLAU_UNICA_CA = df_alb[df_alb.duplicated("A_CLAU_UNICA_CA", keep=False)]
 
 # Facturas
-DUPLICATS_DF_FAC_A_CLAU_UNICA_CF = df_fac[df_fac.duplicated("CLAU_UNICA", keep=False)]
+DUPLICATS_DF_FAC_A_CLAU_UNICA_CF = df_fac[df_fac.duplicated("A_CLAU_UNICA_CF", keep=False)]
 
 # RESUM DUPLICATS
 
 duplicats = {
     "DUPLICATS DF_REAL R_NUMERO_CP": len(DUPLICATS_DF_REAL_R_NUMERO_CP),
-    "DUPLICATS DF_REAL R_CLAU_UNICA": len(DUPLICATS_DF_REAL_R_CLAU_UNICA),
+    # "DUPLICATS DF_REAL R_CLAU_UNICA": len(DUPLICATS_DF_REAL_R_CLAU_UNICA),
     "DUPLICATS DF_PED A_NUMERO_CP": len(DUPLICATS_DF_PED_A_NUMERO_CP),
     "DUPLICATS DF_PED A_CLAU_UNICA_CP": len(DUPLICATS_DF_PED_A_CLAU_UNICA_CP),
     "DUPLICATS DF_ALB A_CLAU_UNICA_CA": len(DUPLICATS_DF_ALB_A_CLAU_UNICA_CA),
@@ -136,10 +136,10 @@ for key, value in duplicats.items():
                 print("NUM. PEDIDOS COMPRA DUPLICATS EN DF_REAL: " + str(value))
                 print(DUPLICATS_DF_REAL_R_NUMERO_CP[["R_EMPRESA_C", "R_NUMERO_CP"]])
                 print("---------------------------------------------------------------")
-            if parts[2] == "R_CLAU_UNICA":
-                print("NUM. CLAUS UNIQUES DUPLICADES EN DF_REAL: " + str(value))
-                print(DUPLICATS_DF_REAL_R_CLAU_UNICA[["R_EMPRESA_C", "CLAU_UNICA"]])
-                print("---------------------------------------------------------------")
+            #if parts[2] == "R_CLAU_UNICA":
+            #    print("NUM. CLAUS UNIQUES DUPLICADES EN DF_REAL: " + str(value))
+            #    print(DUPLICATS_DF_REAL_R_CLAU_UNICA[["R_EMPRESA_C", "CLAU_UNICA"]])
+            #    print("---------------------------------------------------------------")
         if parts[1] == "DF_PED":
             if parts[2] == "A_NUMERO_CP":
                 print("NUM. PEDIDOS COMPRA DUPLICATS EN DF_PED: " + str(value))
@@ -170,7 +170,8 @@ for key, value in duplicats.items():
 df_cpa = pd.merge(
     df_ped,
     df_alb,
-    on="CLAU_UNICA",
+    left_on="A_CLAU_UNICA_CP",
+    right_on="A_CLAU_UNICA_CA",
     how="outer",
     suffixes=("_cp", "_ca"),
     indicator=True,
@@ -191,7 +192,8 @@ df_cpa.rename(columns={"_merge": "_merge_df_cpa"}, inplace=True)
 df_cpaf = pd.merge(
     df_cpa,
     df_fac,
-    on="CLAU_UNICA",
+    left_on="A_CLAU_UNICA_CP",
+    right_on="A_CLAU_UNICA_CF",
     how="outer",
     suffixes=("_cp", "_cf"),
     indicator=True,
@@ -218,6 +220,7 @@ df_final = pd.merge(
 print("LEN DF_FINAL: " + str(len(df_final)))
 
 logic_comu.exportToExcel(df_final, "DF_FINAL.xlsx")
+
 
 """
 def procesar_correccion_compras(file_real, 
