@@ -215,7 +215,7 @@ print("LEN DF_ALB: " + str(len(df_alb)))
 print("LEN DF_FAC: " + str(len(df_fac)))
 print("LEN DF_CPA: " + str(len(df_cpa)))
 
-logic_comu.exportToExcel(df_cpa, "DF_CPA.xlsx")
+# ogic_comu.exportToExcel(df_cpa, "DF_CPA.xlsx")
 
 df_cpa.rename(columns={"_merge": "_merge_df_cpa"}, inplace=True)
 
@@ -232,9 +232,9 @@ df_cpaf = pd.merge(
     # validate="one_to_one",
 )
 
-print("LEN DF_CPAF: " + str(len(df_cpaf)))
+# print("LEN DF_CPAF: " + str(len(df_cpaf)))
 
-logic_comu.exportToExcel(df_cpaf, "DF_CPAF.xlsx")
+# logic_comu.exportToExcel(df_cpaf, "DF_CPAF.xlsx")
 
 df_cpaf.rename(columns={"_merge": "_merge_df_cpaf"}, inplace=True)
 
@@ -277,9 +277,218 @@ columnes_a_netejar = [
 
 df_final.loc[mask, columnes_a_netejar] = np.nan
 
-print("LEN DF_FINAL: " + str(len(df_final)))
+# print("LEN DF_FINAL: " + str(len(df_final)))
 
-logic_comu.exportToExcel(df_final, "DF_FINAL.xlsx")
+# logic_comu.exportToExcel(df_final, "DF_FINAL.xlsx")
+
+# ==============================================================================
+# 5. LÒGICA DE CORRECCIO
+# ==============================================================================
+
+informe_pedidos = []
+informe_albarans = []
+informe_factures = []
+
+# nomsColumnes = df_final.columns.tolist()
+# print(nomsColumnes)
+
+"""
+['R_IDTOTS_C', 'R_ID_C', 'R_EXPEDIENT_C', 'R_EMPRESA_C', 'R_ESTADO_FC', 'R_PROVEEDOR_C', 'R_FECHA_EMISION_C', 'R_NUMERO_CP', 'R_NUMERO_CA', 'R_NUMERO_CF', 'R_IMPORTE_C', 'R_ACUMULADO_C', 
+
+'A_IDTOTS_CP', 'A_CLAU_UNICA_CP', 'A_ID_CP', 'A_EXPEDIENT_CP', 'A_EMPRESA_CP', 'A_REF_ODOO_CP', 'A_FECHA_ALTA_ODOO_CP', 'A_NUMERO_CP', 'A_FECHA_EMISION_CP', 'A_PROVEEDOR_CP', 'A_IMPORTE_CP', 'A_ACUMULADO_CP', 'A_ESTADO_CP', 'A_ESTADO_FACTURACION_CP', 
+
+'A_IDTOTS_CA', 'A_CLAU_UNICA_CA', 'A_ID_CA', 'A_EXPEDIENT_CA', 'A_EMPRESA_CA', 'A_REF_ODOO_CA', 'A_FECHA_ALTA_ODOO_CA', 'A_NUMERO_CA', 'A_FECHA_EMISION_CA', 'A_PROVEEDOR_CA', 'A_ORIGEN_CA', 'A_IMPORTE_CA', 'A_ACUMULADO_CA', 'A_ESTADO_CA', '_merge_df_cpa', 
+
+'A_IDTOTS_CF', 'A_CLAU_UNICA_CF', 'A_ID_CF', 'A_EXPEDIENT_CF', 'A_EMPRESA_CF', 'A_REF_ODOO_CF', 'A_PROVEEDOR_CF', 'A_NUMERO_CF', 'A_FECHA_EMISION_CF', 'A_ORIGEN_CF', 'A_IMPORTE_CF', 'A_ACUMULADO_CF', 'A_ESTADO_PAGO_CF', 'A_FECHA_ENTREGA_FV', '_merge_df_cpaf', '_merge']
+
+"""
+
+# ==============================================================================
+# 5.1. LÒGICA DE CORRECCIO COMANDES
+# ==============================================================================
+
+for index, row in df_final.iterrows():
+    info_pedidos = {
+        "EMPRESAULA - EMPRESA ALUMNE": row["R_EMPRESA_C"],
+        "ALUMNE - EMPRESA ALUMNE": row["A_EMPRESA_CP"],
+        "COINCIDEIXEN EMPRESES": "✅",
+        "EMPRESAULA - PROVEÏDOR": row["R_PROVEEDOR_C"],
+        "ALUMNE - PROVEÏDOR": row["A_PROVEEDOR_CP"],
+        "COINCIDEIXEN PROVEÏDORS": "✅",
+        "EMPRESAULA - DATA EMISIÓ": row["R_FECHA_EMISION_C"],
+        "ALUMNE - DATA EMISIÓ": row["A_FECHA_EMISION_CP"],
+        "COINCIDEIXEN DATES EMISIÓ": "✅",
+        "EMPRESAULA - NUM COMANDA": row["R_NUMERO_CP"],
+        "ALUMNE - NUM COMANDA": row["A_NUMERO_CP"],
+        "COINCIDEIXEN NUM COMANDA": "✅",
+        "EMPRESAULA - IMPORT": row["R_IMPORTE_C"],
+        "ALUMNE - IMPORT": row["A_IMPORTE_CP"],
+        "COINCIDEIXEN IMPORTS": "✅",
+        "ESTAT COMANDA": row["A_ESTADO_CP"],
+        "COMPROVACIO ESTAT COMANDA": "❌",
+        "ESTAT FACTURACIO COMANDA": row["A_ESTADO_FACTURACION_CP"],
+        "COMPROVACIO ESTAT FACTURACIO COMANDA": "❌",
+    }
+
+    if (
+        str(row["R_EMPRESA_C"]).strip().upper()
+        != str(row["A_EMPRESA_CP"]).strip().upper()
+    ):
+        info_pedidos["COINCIDEIXEN EMPRESES"] = "❌"
+
+    if (
+        str(row["R_PROVEEDOR_C"]).strip().upper()
+        != str(row["A_PROVEEDOR_CP"]).strip().upper()
+    ):
+        info_pedidos["COINCIDEIXEN PROVEÏDORS"] = "❌"
+
+    if row["R_FECHA_EMISION_C"] != row["A_FECHA_EMISION_CP"]:
+        info_pedidos["COINCIDEIXEN DATES EMISIÓ"] = "❌"
+
+    if row["R_NUMERO_CP"] != row["A_NUMERO_CP"]:
+        info_pedidos["COINCIDEIXEN NUM COMANDA"] = "❌"
+
+    if row["R_IMPORTE_C"] != row["A_IMPORTE_CP"]:
+        info_pedidos["COINCIDEIXEN IMPORTS"] = "❌"
+
+    if row["A_ESTADO_CP"] == "Pedido de compra":
+        info_pedidos["COMPROVACIO ESTAT COMANDA"] = "✅"
+
+    if row["A_ESTADO_FACTURACION_CP"] == "Totalmente facturado":
+        info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "✅"
+
+    informe_pedidos.append(info_pedidos)
+
+
+# CREAM DF CORRECCIO COMANDES COMPRA
+dfCorrecioComandesCompra = pd.DataFrame(informe_pedidos)
+
+fileName = "InformeCorreccióComandesCompra.xlsx"
+
+logic_comu.exportToExcel(dfCorrecioComandesCompra, fileName)
+
+# ==============================================================================
+# 5.2. LÒGICA DE CORRECCIO ALBARANS
+# ==============================================================================
+
+for index, row in df_final.iterrows():
+    info_albarans = {
+        "EMPRESAULA - EMPRESA ALUMNE": row["R_EMPRESA_C"],
+        "ALUMNE - EMPRESA ALUMNE": row["A_EMPRESA_CA"],
+        "COINCIDEIXEN EMPRESES": "✅",
+        "EMPRESAULA - PROVEÏDOR": row["R_PROVEEDOR_C"],
+        "ALUMNE - PROVEÏDOR": row["A_PROVEEDOR_CA"],
+        "COINCIDEIXEN PROVEÏDORS": "✅",
+        "EMPRESAULA - DATA EMISIÓ": row["R_FECHA_EMISION_C"],
+        "ALUMNE - DATA EMISIÓ": row["A_FECHA_EMISION_CA"],
+        "COINCIDEIXEN DATES EMISIÓ": "✅",
+        "EMPRESAULA - NUM ALBARÀ": row["R_NUMERO_CA"],
+        "ALUMNE - NUM ALBARÀ": row["A_NUMERO_CA"],
+        "COINCIDEIXEN NUM ALBARÀ": "✅",
+        "EMPRESAULA - IMPORT": row["R_IMPORTE_C"],
+        "ALUMNE - IMPORT": row["A_IMPORTE_CA"],
+        "COINCIDEIXEN IMPORTS": "✅",
+        "ESTAT ALBARÀ": row["A_ESTADO_CA"],
+        "COMPROVACIO ESTAT ALBARÀ": "❌",
+    }
+
+    if (
+        str(row["R_EMPRESA_C"]).strip().upper()
+        != str(row["A_EMPRESA_CA"]).strip().upper()
+    ):
+        info_albarans["COINCIDEIXEN EMPRESES"] = "❌"
+
+    if (
+        str(row["R_PROVEEDOR_C"]).strip().upper()
+        != str(row["A_PROVEEDOR_CA"]).strip().upper()
+    ):
+        info_albarans["COINCIDEIXEN PROVEÏDORS"] = "❌"
+
+    if row["R_FECHA_EMISION_C"] != row["A_FECHA_EMISION_CA"]:
+        info_albarans["COINCIDEIXEN DATES EMISIÓ"] = "❌"
+
+    if row["R_NUMERO_CA"] != row["A_NUMERO_CA"]:
+        info_albarans["COINCIDEIXEN NUM ALBARÀ"] = "❌"
+
+    if row["R_IMPORTE_C"] != row["A_IMPORTE_CP"]:
+        info_pedidos["COINCIDEIXEN IMPORTS"] = "❌"
+
+    if row["A_ESTADO_CP"] == "Pedido de compra":
+        info_pedidos["COMPROVACIO ESTAT COMANDA"] = "✅"
+
+    # COMPROVAM SI FACTURA ESTÀ DISPONIBLE
+    dataEntregaTasca = row["A_FECHA_ENTREGA_FV"]
+    dataDisponibleFactura = row["R_FECHA_EMISION_C"] + timedelta(days=1)
+
+    if dataEntregaTasca < dataDisponibleFactura:
+        estatFactEsperat = "FACTURAS EN ESPERA"
+        if row["A_ESTADO_FACTURACION_CP"] == estatFactEsperat:
+            info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "✅"
+        else:
+            info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "❌"
+
+    else:
+        estatFactEsperat = "TOTALMENTE FACTURADO"
+        if row["A_ESTADO_FACTURACION_CP"] == estatFactEsperat:
+            info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "✅"
+        else:
+            info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "❌"
+
+    informe_pedidos.append(info_pedidos)
+
+
+# CREAM DF CORRECCIO ALBARANS COMPRA
+dfCorrecioAlbaransCompra = pd.DataFrame(informe_albarans)
+
+# ==============================================================================
+# 5.3. LÒGICA DE CORRECCIO FACTURES
+# ==============================================================================
+
+
+for index, row in df_final.iterrows():
+    info_factures = {
+        "EMPRESAULA - EMPRESA ALUMNE": row["R_EMPRESA_C"],
+        "ALUMNE - EMPRESA ALUMNE": row["A_EMPRESA_CF"],
+        "COINCIDEIXEN EMPRESES": "✅",
+        "EMPRESAULA - PROVEÏDOR": row["R_PROVEEDOR_C"],
+        "ALUMNE - PROVEÏDOR": row["A_PROVEEDOR_CF"],
+        "COINCIDEIXEN PROVEÏDORS": "✅",
+        "EMPRESAULA - DATA EMISIÓ": row["R_FECHA_EMISION_C"],
+        "ALUMNE - DATA EMISIÓ": row["A_FECHA_EMISION_CF"],
+        "COINCIDEIXEN DATES EMISIÓ": "✅",
+        "EMPRESAULA - NUM FACTURA": row["R_NUMERO_CF"],
+        "ALUMNE - NUM FACTURA": row["A_NUMERO_CF"],
+        "COINCIDEIXEN NUM FACTURA": "✅",
+        "EMPRESAULA - IMPORT": row["R_IMPORTE_C"],
+        "ALUMNE - IMPORT": row["A_IMPORTE_CA"],
+        "COINCIDEIXEN IMPORTS": "✅",
+    }
+
+    if (
+        str(row["R_EMPRESA_C"]).strip().upper()
+        != str(row["A_EMPRESA_CF"]).strip().upper()
+    ):
+        info_factures["COINCIDEIXEN EMPRESES"] = "❌"
+
+    if (
+        str(row["R_PROVEEDOR_C"]).strip().upper()
+        != str(row["A_PROVEEDOR_CF"]).strip().upper()
+    ):
+        info_factures["COINCIDEIXEN PROVEÏDORS"] = "❌"
+
+    if row["R_FECHA_EMISION_C"] != row["A_FECHA_EMISION_CP"]:
+        info_factures["COINCIDEIXEN DATES EMISIÓ"] = "❌"
+
+    if row["R_NUMERO_CF"] != row["A_NUMERO_CF"]:
+        info_factures["COINCIDEIXEN NUM FACTURA"] = "❌"
+
+    if row["R_IMPORTE_C"] != row["A_IMPORTE_CF"]:
+        info_factures["COINCIDEIXEN IMPORTS"] = "❌"
+
+    informe_factures.append(info_factures)
+
+# CREAM DF CORRECCIO FACTURES COMPRA
+dfCorrecioFacturesCompra = pd.DataFrame(informe_factures)
 
 
 """
