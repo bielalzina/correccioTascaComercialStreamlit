@@ -9,18 +9,6 @@ import logic_comu
 # ==============================================================================
 
 
-def obtenir_expedient(nom_empresa):
-    try:
-        if pd.isna(nom_empresa):
-            return "UNKNOWN"
-        parts = str(nom_empresa).split(" ")
-        if len(parts) >= 2:
-            return parts[1]
-        else:
-            return "UNKNOWN"
-    except:
-        return "ERROR"
-
 
 # 1. CARREGA ARXIUS
 #   0_DATOS_COMPRAS_REALES.csv
@@ -65,7 +53,7 @@ R_PROVEEDOR_C	                A_FECHA_ALTA_ODOO_CP	            A_FECHA_ALTA_ODOO
 R_FECHA_EMISION_C	            A_NUMERO_CP	                        A_NUMERO_CA	                            A_NUMERO_CF
 R_NUMERO_CP	                    A_FECHA_EMISION_CP	                A_FECHA_EMISION_CA	                    A_FECHA_EMISION_CF
 R_NUMERO_CA	                    A_PROVEEDOR_CP	                    A_PROVEEDOR_CA	                        A_ORIGEN_CF
-R_NUMERO_CF	                    A_IMPORTE_CP	                    A_ORIGEN_CA	                            A_IMPORTE_CF
+R_NUMERO_CF	                    A_IMPORTE_CP	                    A_ORIGEN_CA	                           A_IMPORTE_CF
 R_IMPORTE_C	                    A_ACUMULADO_CP	                    A_IMPORTE_CA	                        A_ACUMULADO_CF
 R_ACUMULADO_C	                A_ESTADO_CP	                        A_ACUMULADO_CA	                        A_ESTADO_PAGO_CF
                                 A_ESTADO_FACTURACION_CP	            A_ESTADO_CA	
@@ -76,139 +64,182 @@ R_ACUMULADO_C	                A_ESTADO_CP	                        A_ACUMULADO_CA
 # INSERIM DATA ENTREGA TREBALL EN df_fac
 # ==============================================================================
 
-# CONVERTIM df_fechas['EMPRESA_ALUMNO'] i df_fechas['FECHA_ENTREGA'] en un diccionari
-mapaDatesEntrega = dict(zip(df_fechas["EMPRESA_ALUMNO"], df_fechas["FECHA_ENTREGA"]))
-
-# print(mapaDatesEntrega)
-
-# INSERIM LA DATA EN df_fac
-df_fac["A_FECHA_ENTREGA_FV"] = df_fac["A_EMPRESA_CF"].map(mapaDatesEntrega)
-
-
-# for fila in df_fac.itertuples():
-#     print(f"EMPRESA: {fila.A_EMPRESA_CF} - DATA: {fila.A_FECHA_ENTREGA_FV}")
-
+df_fac = logic_comu.insereixDataEntregaEnDFFac(df_fac, df_fechas)
 
 # ==============================================================================
 # 2. NETEJA TIPUS DE DADES
 # ==============================================================================
 
-# DATES
+# df_real
+df_real = logic_comu.netejaTipusDadesDFReal(df_real)
 
-df_real["R_FECHA_EMISION_C"] = pd.to_datetime(df_real["R_FECHA_EMISION_C"])
-df_ped["A_FECHA_ALTA_ODOO_CP"] = pd.to_datetime(df_ped["A_FECHA_ALTA_ODOO_CP"])
-df_ped["A_FECHA_EMISION_CP"] = pd.to_datetime(df_ped["A_FECHA_EMISION_CP"])
-df_alb["A_FECHA_ALTA_ODOO_CA"] = pd.to_datetime(df_alb["A_FECHA_ALTA_ODOO_CA"])
-df_alb["A_FECHA_EMISION_CA"] = pd.to_datetime(df_alb["A_FECHA_EMISION_CA"])
-df_fac["A_FECHA_EMISION_CF"] = pd.to_datetime(df_fac["A_FECHA_EMISION_CF"])
-df_fac["A_FECHA_ENTREGA_FV"] = pd.to_datetime(df_fac["A_FECHA_ENTREGA_FV"])
+# df_ped
+df_ped = logic_comu.netejaTipusDadesDFPed(df_ped)
 
-# NUMERICS
-df_real["R_IMPORTE_C"] = pd.to_numeric(df_real["R_IMPORTE_C"], errors="coerce").fillna(
-    0.00
-)
-df_ped["A_IMPORTE_CP"] = pd.to_numeric(df_ped["A_IMPORTE_CP"], errors="coerce").fillna(
-    0.00
-)
-df_alb["A_IMPORTE_CA"] = pd.to_numeric(df_alb["A_IMPORTE_CA"], errors="coerce").fillna(
-    0.00
-)
-df_fac["A_IMPORTE_CF"] = pd.to_numeric(df_fac["A_IMPORTE_CF"], errors="coerce").fillna(
-    0.00
-)
+# df_alb
+df_alb = logic_comu.netejaTipusDadesDFAlb(df_alb)
 
+# df_fac
+df_fac = logic_comu.netejaTipusDadesDFFac(df_fac)
 
 # ==============================================================================
 # 3. DUPLICATS
 # ==============================================================================
 
-# Real
-DUPLICATS_DF_REAL_R_NUMERO_CP = df_real[df_real.duplicated("R_NUMERO_CP", keep=False)]
-# DUPLICATS_DF_REAL_R_CLAU_UNICA = df_real[df_real.duplicated("CLAU_UNICA", keep=False)]
+
+
+# Real, en principi en DF_REAL no hi ha duplicats
+df_duplicats_df_real_r_numero_cp = logic_comu.obtenirDuplicats(df_real, "R_NUMERO_CP")
 
 # Pedidos
-DUPLICATS_DF_PED_A_NUMERO_CP = df_ped[df_ped.duplicated("A_NUMERO_CP", keep=False)]
-DUPLICATS_DF_PED_A_CLAU_UNICA_CP = df_ped[
-    df_ped.duplicated("A_CLAU_UNICA_CP", keep=False)
-]
+df_duplicats_df_ped_a_numero_cp = logic_comu.obtenirDuplicats(df_ped, "A_NUMERO_CP")
+df_duplicats_df_ped_a_clau_unica_cp = logic_comu.obtenirDuplicats(df_ped, "A_CLAU_UNICA_CP")
 
 # Albaranes
-DUPLICATS_DF_ALB_A_CLAU_UNICA_CA = df_alb[
-    df_alb.duplicated("A_CLAU_UNICA_CA", keep=False)
-]
+df_duplicats_df_alb_a_clau_unica_ca = logic_comu.obtenirDuplicats(df_alb, "A_CLAU_UNICA_CA")
 
 # Facturas
-DUPLICATS_DF_FAC_A_CLAU_UNICA_CF = df_fac[
-    df_fac.duplicated("A_CLAU_UNICA_CF", keep=False)
-]
+df_duplicats_df_fac_a_clau_unica_cf = logic_comu.obtenirDuplicats(df_fac, "A_CLAU_UNICA_CF")
 
 # RESUM DUPLICATS
 
 duplicats = {
-    "DUPLICATS DF_REAL R_NUMERO_CP": len(DUPLICATS_DF_REAL_R_NUMERO_CP),
-    # "DUPLICATS DF_REAL R_CLAU_UNICA": len(DUPLICATS_DF_REAL_R_CLAU_UNICA),
-    "DUPLICATS DF_PED A_NUMERO_CP": len(DUPLICATS_DF_PED_A_NUMERO_CP),
-    "DUPLICATS DF_PED A_CLAU_UNICA_CP": len(DUPLICATS_DF_PED_A_CLAU_UNICA_CP),
-    "DUPLICATS DF_ALB A_CLAU_UNICA_CA": len(DUPLICATS_DF_ALB_A_CLAU_UNICA_CA),
-    "DUPLICATS DF_FAC A_CLAU_UNICA_CF": len(DUPLICATS_DF_FAC_A_CLAU_UNICA_CF),
+    "DUPLICATS DF_REAL R_NUMERO_CP": len(df_duplicats_df_real_r_numero_cp),
+    "DUPLICATS DF_PED A_NUMERO_CP": len(df_duplicats_df_ped_a_numero_cp),
+    "DUPLICATS DF_PED A_CLAU_UNICA_CP": len(df_duplicats_df_ped_a_clau_unica_cp),
+    "DUPLICATS DF_ALB A_CLAU_UNICA_CA": len(df_duplicats_df_alb_a_clau_unica_ca),
+    "DUPLICATS DF_FAC A_CLAU_UNICA_CF": len(df_duplicats_df_fac_a_clau_unica_cf),
 }
 
 print("======================================================================")
 print("RESUM DUPLICATS")
 print("======================================================================")
+print()
+
+informeRepetits = []
 
 for key, value in duplicats.items():
+    repetits = {
+
+    }
     if value > 0:
         parts = str(key).split(" ")
         if parts[1] == "DF_REAL":
             if parts[2] == "R_NUMERO_CP":
+                print()    
                 print("NUM. PEDIDOS COMPRA DUPLICATS EN DF_REAL: " + str(value))
-                print(DUPLICATS_DF_REAL_R_NUMERO_CP[["R_EMPRESA_C", "R_NUMERO_CP"]])
+                print()
+                print(df_duplicats_df_real_r_numero_cp[["R_EMPRESA_C", "R_NUMERO_CP"]])
+                print()
                 print("---------------------------------------------------------------")
-            # if parts[2] == "R_CLAU_UNICA":
-            #    print("NUM. CLAUS UNIQUES DUPLICADES EN DF_REAL: " + str(value))
-            #    print(DUPLICATS_DF_REAL_R_CLAU_UNICA[["R_EMPRESA_C", "CLAU_UNICA"]])
-            #    print("---------------------------------------------------------------")
         if parts[1] == "DF_PED":
             if parts[2] == "A_NUMERO_CP":
+                print()
                 print("NUM. PEDIDOS COMPRA DUPLICATS EN DF_PED: " + str(value))
-                print(DUPLICATS_DF_PED_A_NUMERO_CP[["A_EMPRESA_CP", "A_NUMERO_CP"]])
+                print()
+                print(df_duplicats_df_ped_a_numero_cp[["A_EMPRESA_CP", "A_NUMERO_CP"]])
+                print()
                 print("---------------------------------------------------------------")
             if parts[2] == "A_CLAU_UNICA_CP":
+                print()
                 print("NUM. CLAUS UNIQUES DUPLICADES EN DF_PED: " + str(value))
-                print(DUPLICATS_DF_PED_A_CLAU_UNICA_CP[["A_EMPRESA_CP", "CLAU_UNICA"]])
+                print()
+                print(df_duplicats_df_ped_a_clau_unica_cp[["A_EMPRESA_CP", "CLAU_UNICA"]])
+                print()
                 print("---------------------------------------------------------------")
         if parts[1] == "DF_ALB":
             if parts[2] == "A_CLAU_UNICA_CA":
+                print()
                 print("NUM. CLAUS UNIQUES DUPLICADES EN DF_ALB: " + str(value))
-                print(DUPLICATS_DF_ALB_A_CLAU_UNICA_CA[["A_EMPRESA_CA", "CLAU_UNICA"]])
+                print()
+                print(df_duplicats_df_alb_a_clau_unica_ca[["A_EMPRESA_CA", "CLAU_UNICA"]])
+                print()
                 print("---------------------------------------------------------------")
         if parts[1] == "DF_FAC":
             if parts[2] == "A_CLAU_UNICA_CF":
+                print()
                 print("NUM. CLAUS UNIQUES DUPLICADES EN DF_FAC: " + str(value))
-                print(DUPLICATS_DF_FAC_A_CLAU_UNICA_CF[["A_EMPRESA_CF", "CLAU_UNICA"]])
+                print()
+                print(df_duplicats_df_fac_a_clau_unica_cf[["A_EMPRESA_CF", "CLAU_UNICA"]])
+                print()
                 print("---------------------------------------------------------------")
     if value == 0:
+        print()
         print(key + " = " + str(value))
+        print()
         print("---------------------------------------------------------------")
 
 # ==============================================================================
 # 4. UNIO DE TOTS ELS DATAFRAMES
 # ==============================================================================
 
-# df_ped + df_alb = DF_CPA
+# df_real + df_ped + = df_real_ped
 
-df_cpa = pd.merge(
-    df_ped,
-    df_alb,
-    left_on="A_CLAU_UNICA_CP",
-    right_on="A_CLAU_UNICA_CA",
-    how="outer",
-    suffixes=("_cp", "_ca"),
-    indicator=True,
-    # validate="one_to_one",
-)
+df_real_ped = logic_comu.unionDataFrames(df_real, 
+                                        df_ped, 
+                                        "R_NUMERO_CP", 
+                                        "A_NUMERO_CP", 
+                                        "left", 
+                                        "_real", 
+                                        "_ped",
+                                        True)
 
+
+# logic_comu.exportToExcel(df_real_ped, "DF_REAL_PED_abans.xlsx")
+
+# SI ALUMNE INTRODUEIX DUES COMANDES DIFERENTS, PERÒ EN LA 2A
+# INDICA EL MATEIX NUM DE COMANDA QUE L'ANTERIOR, PER TANT TENIM
+# DUES COMANDES DIFERENTS AMB NUM DE COMANDA IGUAL 
+# QUAN FEM LA UNIÓ df_real i df_ped, el df_resultant
+# R_NUMERO_CP <-> A_NUMERO_CP
+#    53749
+# FILES AMB EL MATEIX NUM DE COMANDA (PERO DIFERENT DETALL)
+# EN DF_FINAL DUPLICA LA COMANDA REAL, DUPLICANT EL CLIENT REAL,
+# IMPORT REAL, DATA REAL.
+# PER TANT ES FA NECESSARI NETEJAR AQUESTS VALORS DUPLICATS I
+# DEIXAR NOMES UN REGISTRE EN L'APARTAT DE DADES REALS.
+
+# VEURE IMATGE EXPLICATIVA EN IMATGES/MERGE_DUPLICAT.png
+
+mask = df_real_ped.duplicated(subset=["R_NUMERO_CP"], keep="first")
+columnes_a_netejar = [
+    "R_IDTOTS_C",
+    "R_ID_C",
+    "R_EXPEDIENT_C",
+    "R_EMPRESA_C",
+    "R_ESTADO_FC",
+    "R_PROVEEDOR_C",
+    "R_FECHA_EMISION_C",
+    "R_NUMERO_CP",
+    "R_NUMERO_CA",
+    "R_NUMERO_CF",
+    "R_IMPORTE_C",
+    "R_ACUMULADO_C",
+]
+
+df_real_ped.loc[mask, columnes_a_netejar] = np.nan
+
+# logic_comu.exportToExcel(df_real_ped, "DF_REAL_PED_despres.xlsx")
+
+# OBTENIM COMANDES ALUMNES ORFES.
+# Es a dir, un alumne ha introduit una comanda, la qual no 
+# apareix en les dades reals df_real
+
+comandesOrfes = logic_comu.unionDataFrames(df_ped, 
+                                        df_real, 
+                                        "A_NUMERO_CP", 
+                                        "R_NUMERO_CP", 
+                                        "left", 
+                                        "_ped", 
+                                        "_real",
+                                        True)
+
+
+nomesComandesOrfes = comandesOrfes[comandesOrfes["_merge"] == "left_only"]
+# logic_comu.exportToExcel(nomesComandesOrfes, "NOMES_COMANDES_ORFES.xlsx")
+
+
+"""
 print("LEN DF_REAL: " + str(len(df_real)))
 print("LEN DF_PED: " + str(len(df_ped)))
 print("LEN DF_ALB: " + str(len(df_alb)))
@@ -253,33 +284,11 @@ df_final = pd.merge(
 
 df_final = df_final.sort_values(by=["R_EMPRESA_C", "R_NUMERO_CP"])
 
-# SI ALUMNE REPETEIX UN NUM DE COMANDA, PER EXEMPLE TE DUES
-# FILES AMB EL MATEIX NUM DE COMANDA (PERO DIFERENT DETALL)
-# EN DF_FINAL DUPLICA LA COMANDA REAL, DUPLICANT EL CLIENT REAL,
-# IMPORT REAL, DATA REAL.
-# PER TANT ES FA NECESSARI NETEJAR AQUESTS VALORS DUPLICATS I
-# DEIXAR NOMES UN REGISTRE EN L'APARTAT DE DADES REALS.
 
-mask = df_final.duplicated(subset=["R_NUMERO_CP"], keep="first")
-columnes_a_netejar = [
-    "R_IDTOTS_C",
-    "R_ID_C",
-    "R_EXPEDIENT_C",
-    "R_EMPRESA_C",
-    "R_ESTADO_FC",
-    "R_PROVEEDOR_C",
-    "R_FECHA_EMISION_C",
-    "R_NUMERO_CA",
-    "R_NUMERO_CF",
-    "R_IMPORTE_C",
-    "R_ACUMULADO_C",
-]
-
-df_final.loc[mask, columnes_a_netejar] = np.nan
 
 # print("LEN DF_FINAL: " + str(len(df_final)))
 
-# logic_comu.exportToExcel(df_final, "DF_FINAL.xlsx")
+logic_comu.exportToExcel(df_final, "DF_FINAL.xlsx")
 
 # ==============================================================================
 # 5. LÒGICA DE CORRECCIO
@@ -292,16 +301,6 @@ informe_factures = []
 # nomsColumnes = df_final.columns.tolist()
 # print(nomsColumnes)
 
-"""
-['R_IDTOTS_C', 'R_ID_C', 'R_EXPEDIENT_C', 'R_EMPRESA_C', 'R_ESTADO_FC', 'R_PROVEEDOR_C', 'R_FECHA_EMISION_C', 'R_NUMERO_CP', 'R_NUMERO_CA', 'R_NUMERO_CF', 'R_IMPORTE_C', 'R_ACUMULADO_C', 
-
-'A_IDTOTS_CP', 'A_CLAU_UNICA_CP', 'A_ID_CP', 'A_EXPEDIENT_CP', 'A_EMPRESA_CP', 'A_REF_ODOO_CP', 'A_FECHA_ALTA_ODOO_CP', 'A_NUMERO_CP', 'A_FECHA_EMISION_CP', 'A_PROVEEDOR_CP', 'A_IMPORTE_CP', 'A_ACUMULADO_CP', 'A_ESTADO_CP', 'A_ESTADO_FACTURACION_CP', 
-
-'A_IDTOTS_CA', 'A_CLAU_UNICA_CA', 'A_ID_CA', 'A_EXPEDIENT_CA', 'A_EMPRESA_CA', 'A_REF_ODOO_CA', 'A_FECHA_ALTA_ODOO_CA', 'A_NUMERO_CA', 'A_FECHA_EMISION_CA', 'A_PROVEEDOR_CA', 'A_ORIGEN_CA', 'A_IMPORTE_CA', 'A_ACUMULADO_CA', 'A_ESTADO_CA', '_merge_df_cpa', 
-
-'A_IDTOTS_CF', 'A_CLAU_UNICA_CF', 'A_ID_CF', 'A_EXPEDIENT_CF', 'A_EMPRESA_CF', 'A_REF_ODOO_CF', 'A_PROVEEDOR_CF', 'A_NUMERO_CF', 'A_FECHA_EMISION_CF', 'A_ORIGEN_CF', 'A_IMPORTE_CF', 'A_ACUMULADO_CF', 'A_ESTADO_PAGO_CF', 'A_FECHA_ENTREGA_FV', '_merge_df_cpaf', '_merge']
-
-"""
 
 # ==============================================================================
 # 5.1. LÒGICA DE CORRECCIO COMANDES
@@ -489,39 +488,5 @@ for index, row in df_final.iterrows():
 
 # CREAM DF CORRECCIO FACTURES COMPRA
 dfCorrecioFacturesCompra = pd.DataFrame(informe_factures)
-
-
 """
-def procesar_correccion_compras(file_real, 
-                               file_ped, 
-                               file_alb, 
-                               file_fac, 
-                               file_fec):
 
-    
-    # Función principal que recibe los 5 archivos subidos a la web
-    # y devuelve 4 DataFrames: 
-    # (Informe, Huerfanos_Alb, Huerfanos_Fac, Pedidos_Inventados)
-                       
-
-    # 1. CARREGA ARXIUS PUJATS PER STRAMLIT
-
-    try:
-        # Feim servir engine = 'python' i sep = None per autodetectar el separador (, o ;)
-        df_real = pd.read_csv(file_real, engine='python', sep=None)
-        df_ped = pd.read_csv(file_ped, engine='python', sep=None)
-        df_alb = pd.read_csv(file_alb, engine='python', sep=None)
-        df_fac = pd.read_csv(file_fac, engine='python', sep=None)
-        df_fec = pd.read_csv(file_fec, engine='python', sep=None)
-
-    except Exception as e:
-        return None, None, None, None, f"Error al carregar arxius: {str(e)}"
-
-     # 2. LIMPIEZA DE TIPOS
-    # Real
-    df_real['R_FECHA_EMISION_C'] = pd.to_datetime(df_real['R_FECHA_EMISION_C'], dayfirst=True)
-    df_real['R_IMPORTE_C'] = pd.to_numeric(df_real['R_IMPORTE_C'], errors='coerce').fillna(0.00)
-    
-    
-    print(df_real)
-"""
