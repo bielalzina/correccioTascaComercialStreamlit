@@ -35,21 +35,21 @@ def exportToExcel(df, fileName):
         print(f"❌ Error al exportar a Excel: {e}")
 
 def unionDataFrames(dfleft , 
-                        dfright, 
+                    dfright, 
                     clauleft, 
                     clauright, 
-                    how, 
+                    com, 
                     suffleft, 
                     suffright, 
-                    indicator):
+                    resultat):
     
     df_union = pd.merge(dfleft, 
                         dfright, 
                         left_on=clauleft, 
                         right_on=clauright, 
-                        how=how, 
+                        how=com, 
                         suffixes=(suffleft, suffright), 
-                        indicator=indicator)
+                        indicator=resultat)
     
     return df_union
 

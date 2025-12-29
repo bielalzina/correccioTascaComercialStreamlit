@@ -86,92 +86,22 @@ df_fac = logic_comu.netejaTipusDadesDFFac(df_fac)
 # ==============================================================================
 
 
-# Real, en principi en DF_REAL no hi ha duplicats
-df_duplicats_df_real_r_numero_cp = logic_comu.obtenirDuplicats(df_real, "R_NUMERO_CP")
+# A NIVELL DE COMPRES, LES UNIQUES OPERACIONS QUE PODEN SER DUPLICADES
+# SON QUAN UN ALUMNE INTRODUEIX DOS COPS LA MATEIXA COMANDA, O BE 
+# INTRODUEIX DUES COMANDES DIFERENTS, PERÒ AMB EL MATEIX NUMEERO AMBDUES
+# PER TOT AIXÒ, NOMES TINDREM EN COMPTE POSSIBLES DUPLICATS EN df_ped
 
-# Pedidos
+# OBTENIM DF ANB COMANDES QUE TENEN ASSIGNAT EL MATEIX NUMERO
 df_duplicats_df_ped_a_numero_cp = logic_comu.obtenirDuplicats(df_ped, "A_NUMERO_CP")
-df_duplicats_df_ped_a_clau_unica_cp = logic_comu.obtenirDuplicats(
-    df_ped, "A_CLAU_UNICA_CP"
-)
 
-# Albaranes
-df_duplicats_df_alb_a_clau_unica_ca = logic_comu.obtenirDuplicats(
-    df_alb, "A_CLAU_UNICA_CA"
-)
+print(df_duplicats_df_ped_a_numero_cp)
 
-# Facturas
-df_duplicats_df_fac_a_clau_unica_cf = logic_comu.obtenirDuplicats(
-    df_fac, "A_CLAU_UNICA_CF"
-)
-
-print("======================================================================")
-print("RESUM DUPLICATS")
-print("======================================================================")
-print()
-
-duplicato = {
-    "DUPLICATS DF_REAL R_NUMERO_CP": df_duplicats_df_real_r_numero_cp,
-    "DUPLICATS DF_PED A_NUMERO_CP": df_duplicats_df_ped_a_numero_cp,
-    "DUPLICATS DF_PED A_CLAU_UNICA_CP": df_duplicats_df_ped_a_clau_unica_cp,
-    "DUPLICATS DF_ALB A_CLAU_UNICA_CA": df_duplicats_df_alb_a_clau_unica_ca,
-    "DUPLICATS DF_FAC A_CLAU_UNICA_CF": df_duplicats_df_fac_a_clau_unica_cf,
-}
-
-informeRepetits = []
-
-for key, df in duplicato.items():
-    info = {
-        "DATAFRAME": "",
-        "EMPRESA": "",
-        "COLUMNA AFECTADA": "",
-        "NUM. IDENTIFICATIU": "",
-    }
-
-    if len(df) > 0:
-        for fila in df.itertuples():
-            if key == "DUPLICATS DF_REAL R_NUMERO_CP":
-                info["DATAFRAME"] = "DF_REAL"
-                info["EMPRESA"] = fila.R_EMPRESA_C
-                info["COLUMNA AFECTADA"] = "R_NUMERO_CP"
-                info["NUM. IDENTIFICATIU"] = fila.R_NUMERO_CP
-                informeRepetits.append(info)
-            if key == "DUPLICATS DF_PED A_NUMERO_CP":
-                info["DATAFRAME"] = "DF_PED"
-                info["EMPRESA"] = fila.A_EMPRESA_CP
-                info["COLUMNA AFECTADA"] = "A_NUMERO_CP"
-                info["NUM. IDENTIFICATIU"] = fila.A_NUMERO_CP
-                informeRepetits.append(info)
-            if key == "DUPLICATS DF_PED A_CLAU_UNICA_CP":
-                info["DATAFRAME"] = "DF_PED"
-                info["EMPRESA"] = fila.A_EMPRESA_CP
-                info["COLUMNA AFECTADA"] = "A_CLAU_UNICA_CP"
-                info["NUM. IDENTIFICATIU"] = fila.A_CLAU_UNICA_CP
-                informeRepetits.append(info)
-            if key == "DUPLICATS DF_ALB A_CLAU_UNICA_CA":
-                info["DATAFRAME"] = "DF_ALB"
-                info["EMPRESA"] = fila.A_EMPRESA_CA
-                info["COLUMNA AFECTADA"] = "A_CLAU_UNICA_CA"
-                info["NUM. IDENTIFICATIU"] = fila.A_CLAU_UNICA_CA
-                informeRepetits.append(info)
-            if key == "DUPLICATS DF_FAC A_CLAU_UNICA_CF":
-                info["DATAFRAME"] = "DF_FAC"
-                info["EMPRESA"] = fila.A_EMPRESA_CF
-                info["COLUMNA AFECTADA"] = "A_CLAU_UNICA_CF"
-                info["NUM. IDENTIFICATIU"] = fila.A_CLAU_UNICA_CF
-                informeRepetits.append(info)
-
-# print(informeRepetits)
-
-df_operacionsRepetides = pd.DataFrame(informeRepetits)
-
-# print(df_operacionsRepetides)
 
 # ==============================================================================
 # 4. UNIO DE TOTS ELS DATAFRAMES
 # ==============================================================================
 
-# df_real + df_ped + = df_real_ped
+# 1a UNIO: df_real + df_ped + = df_real_ped
 
 df_real_ped = logic_comu.unionDataFrames(
     df_real, df_ped, "R_NUMERO_CP", "A_NUMERO_CP", "left", "_real", "_ped", True
@@ -218,16 +148,77 @@ df_real_ped.loc[mask, columnes_a_netejar] = np.nan
 # Es a dir, un alumne ha introduit una comanda, la qual no
 # apareix en les dades reals df_real
 
-comandesOrfes = logic_comu.unionDataFrames(
+df_comandesOrfes = logic_comu.unionDataFrames(
     df_ped, df_real, "A_NUMERO_CP", "R_NUMERO_CP", "left", "_ped", "_real", True
 )
 
 
-nomesComandesOrfes = comandesOrfes[comandesOrfes["_merge"] == "left_only"]
+df_nomesComandesOrfes = df_comandesOrfes[df_comandesOrfes["_merge"] == "left_only"]
 # logic_comu.exportToExcel(nomesComandesOrfes, "NOMES_COMANDES_ORFES.xlsx")
 
+# print(df_nomesComandesOrfes)
+
+# 2a UNIO: df_real + df_alb = df_real_alb
+
+# No tenim cap relació directa entre df_real i df_alb
+# però amb l'ajuda de df_ped podem establir una relació indirecta
+# df_real <-> df_ped <-> NUM. COMANDA 
+# df_ped <-> df_alb <-> EXPEDIENTE + REF. INTERNA ODOO COMANDA COMPRA
+# A CADA NUM DE COMANDA LI CORRESPON UN (EXP. + REF. INTERNA ODOO COMANDA COMPRA)
+# D'AQUESTA FORMA PODEM ASSIGNAR (EXP + REF. ODOO) A CADA NUM. COMANDA EN DF_REAL
+
+df_real = logic_comu.unionDataFrames(
+    df_real, 
+    df_ped[["A_NUMERO_CP", "A_CLAU_UNICA_CP"]], 
+    "R_NUMERO_CP", 
+    "A_NUMERO_CP", 
+    "left", 
+    "_real", 
+    "_ped", 
+    True
+)
+
+# logic_comu.exportToExcel(df_real, "DF_REAL_AMB_CLAU_UNICA_CP.xlsx")
+
+# ARA JA PODEM UNIR DF_REAL + DF_ALB
+
+# ABANS CAL REANOMBRAR LA COLUMNA _MERGE PER EVITAR CONFLICTE
+df_real.rename(columns={"_merge": "_merge_01"}, inplace=True)
+
+
+df_real_alb = logic_comu.unionDataFrames(
+    df_real, 
+    df_alb, 
+    "A_CLAU_UNICA_CP", 
+    "A_CLAU_UNICA_CA", 
+    "left", 
+    "_real", 
+    "_alb", 
+    True
+)
+
+# logic_comu.exportToExcel(df_real_alb, "DF_REAL_ALB.xlsx")
+
+# OBTENIM ALBARANS ALUMNES ORFES.
+# Es a dir, un alumne ha introduit un albarà, el qual no
+# apareix en les dades reals df_real
+
+df_alb_orfes = logic_comu.unionDataFrames(
+    df_alb, df_real, "A_CLAU_UNICA_CA", "A_CLAU_UNICA_CP", "left", "_alb", "_real", True
+)
+
+
+df_nomesAlbaransOrfes = df_alb_orfes[df_alb_orfes["_merge"] == "left_only"]
+logic_comu.exportToExcel(df_nomesAlbaransOrfes, "NOMES_ALBARANS_ORFES.xlsx")
+
+
+# 3r merge df_real + df_fac = df_real_fac
+
+# factures orfes
 
 """
+
+
 print("LEN DF_REAL: " + str(len(df_real)))
 print("LEN DF_PED: " + str(len(df_ped)))
 print("LEN DF_ALB: " + str(len(df_alb)))
