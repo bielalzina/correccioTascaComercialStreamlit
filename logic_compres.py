@@ -9,7 +9,6 @@ import logic_comu
 # ==============================================================================
 
 
-
 # 1. CARREGA ARXIUS
 #   0_DATOS_COMPRAS_REALES.csv
 #   1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv
@@ -87,87 +86,86 @@ df_fac = logic_comu.netejaTipusDadesDFFac(df_fac)
 # ==============================================================================
 
 
-
 # Real, en principi en DF_REAL no hi ha duplicats
 df_duplicats_df_real_r_numero_cp = logic_comu.obtenirDuplicats(df_real, "R_NUMERO_CP")
 
 # Pedidos
 df_duplicats_df_ped_a_numero_cp = logic_comu.obtenirDuplicats(df_ped, "A_NUMERO_CP")
-df_duplicats_df_ped_a_clau_unica_cp = logic_comu.obtenirDuplicats(df_ped, "A_CLAU_UNICA_CP")
+df_duplicats_df_ped_a_clau_unica_cp = logic_comu.obtenirDuplicats(
+    df_ped, "A_CLAU_UNICA_CP"
+)
 
 # Albaranes
-df_duplicats_df_alb_a_clau_unica_ca = logic_comu.obtenirDuplicats(df_alb, "A_CLAU_UNICA_CA")
+df_duplicats_df_alb_a_clau_unica_ca = logic_comu.obtenirDuplicats(
+    df_alb, "A_CLAU_UNICA_CA"
+)
 
 # Facturas
-df_duplicats_df_fac_a_clau_unica_cf = logic_comu.obtenirDuplicats(df_fac, "A_CLAU_UNICA_CF")
-
-# RESUM DUPLICATS
-
-duplicats = {
-    "DUPLICATS DF_REAL R_NUMERO_CP": len(df_duplicats_df_real_r_numero_cp),
-    "DUPLICATS DF_PED A_NUMERO_CP": len(df_duplicats_df_ped_a_numero_cp),
-    "DUPLICATS DF_PED A_CLAU_UNICA_CP": len(df_duplicats_df_ped_a_clau_unica_cp),
-    "DUPLICATS DF_ALB A_CLAU_UNICA_CA": len(df_duplicats_df_alb_a_clau_unica_ca),
-    "DUPLICATS DF_FAC A_CLAU_UNICA_CF": len(df_duplicats_df_fac_a_clau_unica_cf),
-}
+df_duplicats_df_fac_a_clau_unica_cf = logic_comu.obtenirDuplicats(
+    df_fac, "A_CLAU_UNICA_CF"
+)
 
 print("======================================================================")
 print("RESUM DUPLICATS")
 print("======================================================================")
 print()
 
+duplicato = {
+    "DUPLICATS DF_REAL R_NUMERO_CP": df_duplicats_df_real_r_numero_cp,
+    "DUPLICATS DF_PED A_NUMERO_CP": df_duplicats_df_ped_a_numero_cp,
+    "DUPLICATS DF_PED A_CLAU_UNICA_CP": df_duplicats_df_ped_a_clau_unica_cp,
+    "DUPLICATS DF_ALB A_CLAU_UNICA_CA": df_duplicats_df_alb_a_clau_unica_ca,
+    "DUPLICATS DF_FAC A_CLAU_UNICA_CF": df_duplicats_df_fac_a_clau_unica_cf,
+}
+
 informeRepetits = []
 
-for key, value in duplicats.items():
-    repetits = {
-
+for key, df in duplicato.items():
+    info = {
+        "DATAFRAME": "",
+        "EMPRESA": "",
+        "COLUMNA AFECTADA": "",
+        "NUM. IDENTIFICATIU": "",
     }
-    if value > 0:
-        parts = str(key).split(" ")
-        if parts[1] == "DF_REAL":
-            if parts[2] == "R_NUMERO_CP":
-                print()    
-                print("NUM. PEDIDOS COMPRA DUPLICATS EN DF_REAL: " + str(value))
-                print()
-                print(df_duplicats_df_real_r_numero_cp[["R_EMPRESA_C", "R_NUMERO_CP"]])
-                print()
-                print("---------------------------------------------------------------")
-        if parts[1] == "DF_PED":
-            if parts[2] == "A_NUMERO_CP":
-                print()
-                print("NUM. PEDIDOS COMPRA DUPLICATS EN DF_PED: " + str(value))
-                print()
-                print(df_duplicats_df_ped_a_numero_cp[["A_EMPRESA_CP", "A_NUMERO_CP"]])
-                print()
-                print("---------------------------------------------------------------")
-            if parts[2] == "A_CLAU_UNICA_CP":
-                print()
-                print("NUM. CLAUS UNIQUES DUPLICADES EN DF_PED: " + str(value))
-                print()
-                print(df_duplicats_df_ped_a_clau_unica_cp[["A_EMPRESA_CP", "CLAU_UNICA"]])
-                print()
-                print("---------------------------------------------------------------")
-        if parts[1] == "DF_ALB":
-            if parts[2] == "A_CLAU_UNICA_CA":
-                print()
-                print("NUM. CLAUS UNIQUES DUPLICADES EN DF_ALB: " + str(value))
-                print()
-                print(df_duplicats_df_alb_a_clau_unica_ca[["A_EMPRESA_CA", "CLAU_UNICA"]])
-                print()
-                print("---------------------------------------------------------------")
-        if parts[1] == "DF_FAC":
-            if parts[2] == "A_CLAU_UNICA_CF":
-                print()
-                print("NUM. CLAUS UNIQUES DUPLICADES EN DF_FAC: " + str(value))
-                print()
-                print(df_duplicats_df_fac_a_clau_unica_cf[["A_EMPRESA_CF", "CLAU_UNICA"]])
-                print()
-                print("---------------------------------------------------------------")
-    if value == 0:
-        print()
-        print(key + " = " + str(value))
-        print()
-        print("---------------------------------------------------------------")
+
+    if len(df) > 0:
+        for fila in df.itertuples():
+            if key == "DUPLICATS DF_REAL R_NUMERO_CP":
+                info["DATAFRAME"] = "DF_REAL"
+                info["EMPRESA"] = fila.R_EMPRESA_C
+                info["COLUMNA AFECTADA"] = "R_NUMERO_CP"
+                info["NUM. IDENTIFICATIU"] = fila.R_NUMERO_CP
+                informeRepetits.append(info)
+            if key == "DUPLICATS DF_PED A_NUMERO_CP":
+                info["DATAFRAME"] = "DF_PED"
+                info["EMPRESA"] = fila.A_EMPRESA_CP
+                info["COLUMNA AFECTADA"] = "A_NUMERO_CP"
+                info["NUM. IDENTIFICATIU"] = fila.A_NUMERO_CP
+                informeRepetits.append(info)
+            if key == "DUPLICATS DF_PED A_CLAU_UNICA_CP":
+                info["DATAFRAME"] = "DF_PED"
+                info["EMPRESA"] = fila.A_EMPRESA_CP
+                info["COLUMNA AFECTADA"] = "A_CLAU_UNICA_CP"
+                info["NUM. IDENTIFICATIU"] = fila.A_CLAU_UNICA_CP
+                informeRepetits.append(info)
+            if key == "DUPLICATS DF_ALB A_CLAU_UNICA_CA":
+                info["DATAFRAME"] = "DF_ALB"
+                info["EMPRESA"] = fila.A_EMPRESA_CA
+                info["COLUMNA AFECTADA"] = "A_CLAU_UNICA_CA"
+                info["NUM. IDENTIFICATIU"] = fila.A_CLAU_UNICA_CA
+                informeRepetits.append(info)
+            if key == "DUPLICATS DF_FAC A_CLAU_UNICA_CF":
+                info["DATAFRAME"] = "DF_FAC"
+                info["EMPRESA"] = fila.A_EMPRESA_CF
+                info["COLUMNA AFECTADA"] = "A_CLAU_UNICA_CF"
+                info["NUM. IDENTIFICATIU"] = fila.A_CLAU_UNICA_CF
+                informeRepetits.append(info)
+
+# print(informeRepetits)
+
+df_operacionsRepetides = pd.DataFrame(informeRepetits)
+
+# print(df_operacionsRepetides)
 
 # ==============================================================================
 # 4. UNIO DE TOTS ELS DATAFRAMES
@@ -175,21 +173,16 @@ for key, value in duplicats.items():
 
 # df_real + df_ped + = df_real_ped
 
-df_real_ped = logic_comu.unionDataFrames(df_real, 
-                                        df_ped, 
-                                        "R_NUMERO_CP", 
-                                        "A_NUMERO_CP", 
-                                        "left", 
-                                        "_real", 
-                                        "_ped",
-                                        True)
+df_real_ped = logic_comu.unionDataFrames(
+    df_real, df_ped, "R_NUMERO_CP", "A_NUMERO_CP", "left", "_real", "_ped", True
+)
 
 
 # logic_comu.exportToExcel(df_real_ped, "DF_REAL_PED_abans.xlsx")
 
 # SI ALUMNE INTRODUEIX DUES COMANDES DIFERENTS, PERÒ EN LA 2A
 # INDICA EL MATEIX NUM DE COMANDA QUE L'ANTERIOR, PER TANT TENIM
-# DUES COMANDES DIFERENTS AMB NUM DE COMANDA IGUAL 
+# DUES COMANDES DIFERENTS AMB NUM DE COMANDA IGUAL
 # QUAN FEM LA UNIÓ df_real i df_ped, el df_resultant
 # R_NUMERO_CP <-> A_NUMERO_CP
 #    53749
@@ -222,17 +215,12 @@ df_real_ped.loc[mask, columnes_a_netejar] = np.nan
 # logic_comu.exportToExcel(df_real_ped, "DF_REAL_PED_despres.xlsx")
 
 # OBTENIM COMANDES ALUMNES ORFES.
-# Es a dir, un alumne ha introduit una comanda, la qual no 
+# Es a dir, un alumne ha introduit una comanda, la qual no
 # apareix en les dades reals df_real
 
-comandesOrfes = logic_comu.unionDataFrames(df_ped, 
-                                        df_real, 
-                                        "A_NUMERO_CP", 
-                                        "R_NUMERO_CP", 
-                                        "left", 
-                                        "_ped", 
-                                        "_real",
-                                        True)
+comandesOrfes = logic_comu.unionDataFrames(
+    df_ped, df_real, "A_NUMERO_CP", "R_NUMERO_CP", "left", "_ped", "_real", True
+)
 
 
 nomesComandesOrfes = comandesOrfes[comandesOrfes["_merge"] == "left_only"]
@@ -489,4 +477,3 @@ for index, row in df_final.iterrows():
 # CREAM DF CORRECCIO FACTURES COMPRA
 dfCorrecioFacturesCompra = pd.DataFrame(informe_factures)
 """
-
