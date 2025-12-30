@@ -63,7 +63,17 @@ R_ACUMULADO_C	                A_ESTADO_CP	                        A_ACUMULADO_CA
 # INSERIM DATA ENTREGA TREBALL EN df_fac
 # ==============================================================================
 
-df_fac = logic_comu.insereixDataEntregaEnDFFac(df_fac, df_fechas)
+df_fac = logic_comu.insereixDataEntregaEnDFDesti(
+    df_fac, "A_FECHA_ENTREGA_CF", "A_EMPRESA_CF", df_fechas
+)
+
+# ==============================================================================
+# INSERIM DATA ENTREGA TREBALL EN df_ped
+# ==============================================================================
+
+df_ped = logic_comu.insereixDataEntregaEnDFDesti(
+    df_ped, "A_FECHA_ENTREGA_CP", "A_EMPRESA_CP", df_fechas
+)
 
 # ==============================================================================
 # 2. NETEJA TIPUS DE DADES
@@ -87,7 +97,7 @@ df_fac = logic_comu.netejaTipusDadesDFFac(df_fac)
 
 
 # A NIVELL DE COMPRES, LES UNIQUES OPERACIONS QUE PODEN SER DUPLICADES
-# SON QUAN UN ALUMNE INTRODUEIX DOS COPS LA MATEIXA COMANDA, O BE 
+# SON QUAN UN ALUMNE INTRODUEIX DOS COPS LA MATEIXA COMANDA, O BE
 # INTRODUEIX DUES COMANDES DIFERENTS, PERÒ AMB EL MATEIX NUMEERO AMBDUES
 # PER TOT AIXÒ, NOMES TINDREM EN COMPTE POSSIBLES DUPLICATS EN df_ped
 
@@ -101,7 +111,9 @@ print(df_duplicats_df_ped_a_numero_cp)
 # 4. UNIO DE TOTS ELS DATAFRAMES
 # ==============================================================================
 
-# 1a UNIO: df_real + df_ped + = df_real_ped
+# =========================================
+# 4.1. df_real + df_ped + = df_real_ped
+# =========================================
 
 df_real_ped = logic_comu.unionDataFrames(
     df_real, df_ped, "R_NUMERO_CP", "A_NUMERO_CP", "left", "_real", "_ped", True
@@ -142,7 +154,7 @@ columnes_a_netejar = [
 
 df_real_ped.loc[mask, columnes_a_netejar] = np.nan
 
-# logic_comu.exportToExcel(df_real_ped, "DF_REAL_PED_despres.xlsx")
+logic_comu.exportToExcel(df_real_ped, "DF_REAL_PED.xlsx")
 
 # OBTENIM COMANDES ALUMNES ORFES.
 # Es a dir, un alumne ha introduit una comanda, la qual no
@@ -154,28 +166,31 @@ df_comandesOrfes = logic_comu.unionDataFrames(
 
 
 df_nomesComandesOrfes = df_comandesOrfes[df_comandesOrfes["_merge"] == "left_only"]
+
 # logic_comu.exportToExcel(nomesComandesOrfes, "NOMES_COMANDES_ORFES.xlsx")
 
 # print(df_nomesComandesOrfes)
 
-# 2a UNIO: df_real + df_alb = df_real_alb
+# =========================================
+# 4.2. df_real + df_alb = df_real_alb
+# =========================================
 
 # No tenim cap relació directa entre df_real i df_alb
 # però amb l'ajuda de df_ped podem establir una relació indirecta
-# df_real <-> df_ped <-> NUM. COMANDA 
+# df_real <-> df_ped <-> NUM. COMANDA
 # df_ped <-> df_alb <-> EXPEDIENTE + REF. INTERNA ODOO COMANDA COMPRA
 # A CADA NUM DE COMANDA LI CORRESPON UN (EXP. + REF. INTERNA ODOO COMANDA COMPRA)
 # D'AQUESTA FORMA PODEM ASSIGNAR (EXP + REF. ODOO) A CADA NUM. COMANDA EN DF_REAL
 
 df_real = logic_comu.unionDataFrames(
-    df_real, 
-    df_ped[["A_NUMERO_CP", "A_CLAU_UNICA_CP"]], 
-    "R_NUMERO_CP", 
-    "A_NUMERO_CP", 
-    "left", 
-    "_real", 
-    "_ped", 
-    True
+    df_real,
+    df_ped[["A_NUMERO_CP", "A_CLAU_UNICA_CP"]],
+    "R_NUMERO_CP",
+    "A_NUMERO_CP",
+    "left",
+    "_real",
+    "_ped",
+    True,
 )
 
 # logic_comu.exportToExcel(df_real, "DF_REAL_AMB_CLAU_UNICA_CP.xlsx")
@@ -187,14 +202,7 @@ df_real.rename(columns={"_merge": "_merge_01"}, inplace=True)
 
 
 df_real_alb = logic_comu.unionDataFrames(
-    df_real, 
-    df_alb, 
-    "A_CLAU_UNICA_CP", 
-    "A_CLAU_UNICA_CA", 
-    "left", 
-    "_real", 
-    "_alb", 
-    True
+    df_real, df_alb, "A_CLAU_UNICA_CP", "A_CLAU_UNICA_CA", "left", "_real", "_alb", True
 )
 
 # logic_comu.exportToExcel(df_real_alb, "DF_REAL_ALB.xlsx")
@@ -209,65 +217,33 @@ df_alb_orfes = logic_comu.unionDataFrames(
 
 
 df_nomesAlbaransOrfes = df_alb_orfes[df_alb_orfes["_merge"] == "left_only"]
-logic_comu.exportToExcel(df_nomesAlbaransOrfes, "NOMES_ALBARANS_ORFES.xlsx")
+
+# logic_comu.exportToExcel(df_nomesAlbaransOrfes, "NOMES_ALBARANS_ORFES.xlsx")
 
 
-# 3r merge df_real + df_fac = df_real_fac
+# =========================================
+# 4.3. df_real + df_fac = df_real_fac
+# =========================================
 
-# factures orfes
-
-"""
-
-
-print("LEN DF_REAL: " + str(len(df_real)))
-print("LEN DF_PED: " + str(len(df_ped)))
-print("LEN DF_ALB: " + str(len(df_alb)))
-print("LEN DF_FAC: " + str(len(df_fac)))
-print("LEN DF_CPA: " + str(len(df_cpa)))
-
-# ogic_comu.exportToExcel(df_cpa, "DF_CPA.xlsx")
-
-df_cpa.rename(columns={"_merge": "_merge_df_cpa"}, inplace=True)
-
-# df_cpa + df_fac = DF_CPAF
-
-df_cpaf = pd.merge(
-    df_cpa,
-    df_fac,
-    left_on="A_CLAU_UNICA_CP",
-    right_on="A_CLAU_UNICA_CF",
-    how="outer",
-    suffixes=("_cp", "_cf"),
-    indicator=True,
-    # validate="one_to_one",
+df_real_fac = logic_comu.unionDataFrames(
+    df_real, df_fac, "A_CLAU_UNICA_CP", "A_CLAU_UNICA_CF", "left", "_real", "_fac", True
 )
 
-# print("LEN DF_CPAF: " + str(len(df_cpaf)))
+# logic_comu.exportToExcel(df_real_fac, "DF_REAL_FAC.xlsx")
 
-# logic_comu.exportToExcel(df_cpaf, "DF_CPAF.xlsx")
+# OBTENIM FACTURES ALUMNES ORFES.
+# Es a dir, un alumne ha introduit una factura, el qual no
+# apareix en les dades reals df_real
 
-df_cpaf.rename(columns={"_merge": "_merge_df_cpaf"}, inplace=True)
-
-# df_cpaf + df_real = DF_FINAL
-
-df_final = pd.merge(
-    df_real,
-    df_cpaf,
-    left_on="R_NUMERO_CP",
-    right_on="A_NUMERO_CP",
-    how="outer",
-    suffixes=("_real", "_cpaf"),
-    indicator=True,
-    # validate="one_to_one",
+df_fac_orfes = logic_comu.unionDataFrames(
+    df_fac, df_real, "A_CLAU_UNICA_CF", "A_CLAU_UNICA_CP", "left", "_fac", "_real", True
 )
 
-df_final = df_final.sort_values(by=["R_EMPRESA_C", "R_NUMERO_CP"])
 
+df_nomesFacturesOrfes = df_fac_orfes[df_fac_orfes["_merge"] == "left_only"]
 
+# logic_comu.exportToExcel(df_nomesFacturesOrfes, "NOMES_FACTURES_ORFES.xlsx")
 
-# print("LEN DF_FINAL: " + str(len(df_final)))
-
-logic_comu.exportToExcel(df_final, "DF_FINAL.xlsx")
 
 # ==============================================================================
 # 5. LÒGICA DE CORRECCIO
@@ -285,7 +261,7 @@ informe_factures = []
 # 5.1. LÒGICA DE CORRECCIO COMANDES
 # ==============================================================================
 
-for index, row in df_final.iterrows():
+for index, row in df_real_ped.iterrows():
     info_pedidos = {
         "EMPRESAULA - EMPRESA ALUMNE": row["R_EMPRESA_C"],
         "ALUMNE - EMPRESA ALUMNE": row["A_EMPRESA_CP"],
@@ -332,8 +308,16 @@ for index, row in df_final.iterrows():
     if row["A_ESTADO_CP"] == "Pedido de compra":
         info_pedidos["COMPROVACIO ESTAT COMANDA"] = "✅"
 
-    if row["A_ESTADO_FACTURACION_CP"] == "Totalmente facturado":
-        info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "✅"
+    if row["A_FECHA_ENTREGA_CP"] >= row["A_FECHA_EMISION_CP"] + pd.Timedelta(days=1):
+        if str(row["A_ESTADO_FACTURACION_CP"]).upper() == "TOTALMENTE FACTURADO":
+            info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "✅"
+        else:
+            info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "❌"
+    else:
+        if str(row["A_ESTADO_FACTURACION_CP"]).upper() == "FACTURAS EN ESPERA":
+            info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "✅"
+        else:
+            info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "❌"
 
     informe_pedidos.append(info_pedidos)
 
@@ -345,6 +329,8 @@ fileName = "InformeCorreccióComandesCompra.xlsx"
 
 logic_comu.exportToExcel(dfCorrecioComandesCompra, fileName)
 
+
+"""
 # ==============================================================================
 # 5.2. LÒGICA DE CORRECCIO ALBARANS
 # ==============================================================================
