@@ -58,7 +58,7 @@ def unionDataFrames(
 # ==============================================================================
 
 
-# INSERIM LA DATA DE ENTREGA EN EL DF DE FACTURES
+# INSERIM LA DATA DE ENTREGA EN EL DF DESTI
 def insereixDataEntregaEnDFDesti(
     df_desti, columnaDataEntrega, columnaEmpresa, df_fechas
 ):
@@ -69,7 +69,7 @@ def insereixDataEntregaEnDFDesti(
 
     # print(mapaDatesEntrega)
 
-    # INSERIM LA DATA EN df_fac
+    # INSERIM LA DATA EN df_desti
     df_desti[columnaDataEntrega] = df_desti[columnaEmpresa].map(mapaDatesEntrega)
 
     # for fila in df_desti.itertuples():
@@ -81,6 +81,7 @@ def insereixDataEntregaEnDFDesti(
 # NETEJA TIPUS DE DADES EN df_real
 def netejaTipusDadesDFReal(df_real):
     df_real["R_FECHA_EMISION_C"] = pd.to_datetime(df_real["R_FECHA_EMISION_C"])
+    df_real["R_FECHA_ENTREGA"] = pd.to_datetime(df_real["R_FECHA_ENTREGA"])
     df_real["R_IMPORTE_C"] = pd.to_numeric(
         df_real["R_IMPORTE_C"], errors="coerce"
     ).fillna(0.00)
@@ -100,7 +101,7 @@ def netejaTipusDadesDFPed(df_ped):
     df_ped["A_ACUMULADO_CP"] = pd.to_numeric(
         df_ped["A_ACUMULADO_CP"], errors="coerce"
     ).fillna(0.00)
-    df_ped["A_FECHA_ENTREGA_CP"] = pd.to_datetime(df_ped["A_FECHA_ENTREGA_CP"])
+
     return df_ped
 
 
