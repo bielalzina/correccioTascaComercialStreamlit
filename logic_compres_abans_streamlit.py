@@ -5,66 +5,40 @@ import os
 import logic_comu
 
 # ==============================================================================
-# 1. CARREGA ARXIUS
+# LÓGICA DE NEGOCIO: COMPRAS
 # ==============================================================================
 
+
+# 1. CARREGA ARXIUS
 #   0_DATOS_COMPRAS_REALES.csv
 #   1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv
 #   2_DATOS_ALBARANES_COMPRA_ALUMNOS.csv
 #   3_DATOS_FACTURAS_COMPRA_ALUMNOS.csv
 #   4_FECHA_ENTREGA_TRABAJOS.csv
 
+df_real = logic_comu.carregaCSV("0_DATOS_COMPRAS_REALES.csv")
+df_ped = logic_comu.carregaCSV("1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv")
+df_alb = logic_comu.carregaCSV("2_DATOS_ALBARANES_COMPRA_ALUMNOS.csv")
+df_fac = logic_comu.carregaCSV("3_DATOS_FACTURAS_COMPRA_ALUMNOS.csv")
+df_fechas = logic_comu.carregaCSV("4_FECHA_ENTREGA_TRABAJOS.csv")
 
-def carregaArxius(
-    file_compres_real,
-    file_dades_compra_comandes_alumne,
-    file_dades_compra_albarans_alumne,
-    file_dades_compra_factures_alumne,
-    file_dates_entrega_treballs,
+if any(
+    dadesCarregades is None
+    for dadesCarregades in [df_real, df_ped, df_alb, df_fac, df_fechas]
 ):
+    print("NO ES POT SEGUIR EXECUTANT EL PROGRAMA PER FALTA DE DADES")
+    exit()
 
-    # Intentam llegirs el contingut dels fitxers
-    try:
-        # Feim servir engine='python' y sep=None
-        # per autodetectar separador (, o ;)
-
-        df_real = pd.read_csv(file_compres_real, sep=None, engine="python", dtype=str)
-        df_ped = pd.read_csv(
-            file_dades_compra_comandes_alumne, sep=None, engine="python", dtype=str
-        )
-        df_alb = pd.read_csv(
-            file_dades_compra_albarans_alumne, sep=None, engine="python", dtype=str
-        )
-        df_fac = pd.read_csv(
-            file_dades_compra_factures_alumne, sep=None, engine="python", dtype=str
-        )
-        df_fechas = pd.read_csv(
-            file_dates_entrega_treballs, sep=None, engine="python", dtype=str
-        )
-
-    except Exception as e:
-        print(f"Error carregant els arxius: {e}")
-        return None, None, None, None, None
-
-    # Imprimim els df per verificar que s'han carregat correctament
-    print(df_real)
-    print("====================================")
-    print(df_ped)
-    print("====================================")
-    print(df_alb)
-    print("====================================")
-    print(df_fac)
-    print("====================================")
-    print(df_fechas)
-    print("====================================")
-
-    return df_real, df_ped, df_alb, df_fac, df_fechas
-
-
-# ==============================================================================
-# 1. FINAL CÀRREGA ARXIUS
-# ==============================================================================
-
+# print(df_real)
+# print("====================================")
+# print(df_ped)
+# print("====================================")
+# print(df_alb)
+# print("====================================")
+# print(df_fac)
+# print("====================================")
+# print(df_fechas)
+# print("====================================")
 
 """
 0_DATOS_COMPRAS_REALES.csv	    1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv  2_DATOS_ALBARANES_COMPRA_ALUMNOS.csv  3_DATOS_FACTURAS_COMPRA_ALUMNOS.csv
@@ -85,7 +59,6 @@ R_ACUMULADO_C	                A_ESTADO_CP	                        A_ACUMULADO_CA
 
 """
 
-"""
 # ==============================================================================
 # INSERIM DATA ENTREGA TREBALL EN df_real
 # PER DETERMINAR SI LA FACTURA DE COMPRA ESTA DISPONIBLE O NO
@@ -537,4 +510,3 @@ for index, row in df_real_fac.iterrows():
 dfCorrecioFacturesCompra = pd.DataFrame(informe_factures)
 fileName = "23_InformeCorreccioFacturesCompra.xlsx"
 logic_comu.exportToExcel(dfCorrecioFacturesCompra, fileName)
-"""
