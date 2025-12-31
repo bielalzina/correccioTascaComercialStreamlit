@@ -1,12 +1,19 @@
 import streamlit as st
 import pandas as pd
 import os
+from datetime import datetime, timedelta
+import logic_compres
+import logic_comu
 
 # INICIALITZACIO DELS ESTATS DE LES ETAPES DE CORRECCIÓ
+if "introduccio_grup_tasca_data" not in st.session_state:
+    st.session_state.introduccio_grup_tasca_data = False
+if "compres_preparacio_llistats" not in st.session_state:
+    st.session_state.compres_preparacio_llistats = False
 if "compres_carrega_llistats" not in st.session_state:
     st.session_state.compres_carrega_llistats = False
-if "compres_insercio_dates_entrega_neteja" not in st.session_state:
-    st.session_state.compres_insercio_dates_entrega_neteja = False
+if "compres_neteja_tipus" not in st.session_state:
+    st.session_state.compres_neteja_tipus = False
 
 
 # ==============================================================================
@@ -64,9 +71,10 @@ if rol == "Professor" and acces_professor:
 
     with tab_compres:
 
-        st.subheader("NOVA CORRECCIÓ COMPRES")
+        st.header("NOVA CORRECCIÓ COMPRES")
+        st.subheader("Indica el grup, la tasca i la data de venciment")
 
-        colA, colB = st.columns(2)
+        colA, colB, colC = st.columns(3)
 
         # Definim dades identificatives de la tasca que volem corregir
 
@@ -137,56 +145,70 @@ if rol == "Professor" and acces_professor:
                 placeholder="Selecciona la tasca...",
             )
 
+        with colC:
+            dataVto = st.date_input(
+                "Indica la data de venciment de la tasca: ",
+                value=None,
+                format="DD/MM/YYYY",
+            )
+
+        if grup is None:
+            st.error("Per continuar, cal indicar el grup que ha fet la tasca")
+            st.stop()
+
+        if tasca is None:
+            st.error("Per continuar, cal indicar la tasca objecte de correcció")
+            st.stop()
+
+        if dataVto is None:
+            st.error("Per continuar, cal indicar la data de venciment de la tasca")
+            st.stop()
+
+        st.divider()
+
+        st.session_state.introduccio_grup_tasca_data = True
+
         # ====================================================================
         # 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
         # ====================================================================
 
-        col1, col2 = st.columns(2)
+        if st.session_state.introduccio_grup_tasca_data:
 
-        with col1:
-            st.subheader("DADES REALS")
-            file_compres_real = st.file_uploader(
-                "Adjunta el fitxer 0_DATOS_COMPRAS_REALES.csv",
-                type=["csv"],
-                key="real_c",
-            )
-            file_dates_entrega_treballs = st.file_uploader(
-                "Adjunta el fitxer 4_FECHA_ENTREGA_TRABAJOS.csv",
-                type=["csv"],
-                key="fec_c",
-            )
+            st.subheader("Adjunta els llistats amb les dades per corregir la tasca")
 
-        with col2:
-            st.subheader("DADES ALUMNAT")
-            file_dades_compra_comandes_alumne = st.file_uploader(
-                "Subir 1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv", type=["csv"], key="ped_c"
-            )
-            file_dades_compra_albarans_alumne = st.file_uploader(
-                "Subir 2_DATOS_ALBARANES_COMPRA_ALUMNOS.csv", type=["csv"], key="alb_c"
-            )
-            file_dades_compra_factures_alumne = st.file_uploader(
-                "Subir 3_DATOS_FACTURAS_COMPRA_ALUMNOS.csv", type=["csv"], key="fac_c"
-            )
+            col1, col2 = st.columns(2)
 
-        # ====================================================================
-        # 3.1.2 ENVIAMENT ARXIUS PER AL SEU TRACTAMENT
-        # ===================================================================
+            with col1:
+                st.badge("DADES REALS FROM EMPRESAULA")
+                file_compres_real = st.file_uploader(
+                    "Adjunta el fitxer 0_DATOS_COMPRAS_REALES.csv",
+                    type=["csv"],
+                    key="real_c",
+                )
+                st.badge("DADES COMANDES FROM ALUMNAT")
+                file_dades_compra_comandes_alumne = st.file_uploader(
+                    "Subir 1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv",
+                    type=["csv"],
+                    key="ped_c",
+                )
 
-        if st.button("⚙️ PUJAR I PROCESSAMENT INICIAL DE LLISTATS", type="primary"):
-            # Comprovam si s'ha seleccionat el grup i la tasca
-            # Si no es selecciona cap, mostrem un missatge d'error i aturem la execucio
-            if grup is None:
-                st.error("Per continuar, cal indicar el grup que ha fet la tasca")
-                st.stop()
+            with col2:
+                st.badge("DADES ALBARANS FROM ALUMNAT")
+                file_dades_compra_albarans_alumne = st.file_uploader(
+                    "Subir 2_DATOS_ALBARANES_COMPRA_ALUMNOS.csv",
+                    type=["csv"],
+                    key="alb_c",
+                )
+                st.badge("DADES FACTURES FROM ALUMNAT")
+                file_dades_compra_factures_alumne = st.file_uploader(
+                    "Subir 3_DATOS_FACTURAS_COMPRA_ALUMNOS.csv",
+                    type=["csv"],
+                    key="fac_c",
+                )
 
-            if tasca is None:
-                st.error("Per continuar, cal indicar la tasca objecte de correcció")
-                st.stop()
-
-            # Comoprovam si s'han adjuntat tots els arxius per INICIAR la pujada al servidor
+            # Comprovam si s'han adjuntat tots els arxius per INICIAR la pujada al servidor
             if not (
                 file_compres_real
-                and file_dates_entrega_treballs
                 and file_dades_compra_comandes_alumne
                 and file_dades_compra_albarans_alumne
                 and file_dades_compra_factures_alumne
@@ -194,29 +216,33 @@ if rol == "Professor" and acces_professor:
                 st.error(
                     "No podrem continuar fins que no hagis adjuntat tots els llistats sol·licitats"
                 )
-                # ATURAM L'EXECUCIO DEL PROGRAMA. EL CODI POSTERIOR NO
-                # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
                 st.stop()
 
-            st.write("⏳ Pujant arxius al servidor... ⏳")
+        st.session_state.compres_preparacio_llistats = True
 
-            # --- 1. IMPORTAR LÒGICA CORRECCIÓ COMPRES ---
-            # Esto carga el archivo logic_compras.py que creamos antes
-            import logic_compres
-            import logic_comu
+        st.divider()
+
+        # ====================================================================
+        # 3.1.2 ENVIAMENT ARXIUS PER AL SEU TRACTAMENT
+        # ===================================================================
+
+        if st.session_state.compres_preparacio_llistats:
+
+            # if st.button("⚙️ PUJAR I PROCESSAMENT INICIAL DE LLISTATS", type="primary"):
+
+            st.write("⏳ Pujant arxius al servidor... ⏳")
 
             # --- 2. PUJAM ELS ARXIUS AMB FUNCIO carregaArxius() ---
             # Li passam els 5 arxius que hem pujat a la WEB
 
-            df_real, df_ped, df_alb, df_fac, df_fechas = logic_compres.carregaArxius(
+            df_real, df_ped, df_alb, df_fac = logic_compres.carregaArxius(
                 file_compres_real,
                 file_dades_compra_comandes_alumne,
                 file_dades_compra_albarans_alumne,
                 file_dades_compra_factures_alumne,
-                file_dates_entrega_treballs,
             )
 
-            listaDFs01 = [df_real, df_ped, df_alb, df_fac, df_fechas]
+            listaDFs01 = [df_real, df_ped, df_alb, df_fac]
 
             if any(dadesCarregades is None for dadesCarregades in listaDFs01):
                 st.error("NO ES POT SEGUIR EXECUTANT EL PROGRAMA PER FALTA DE DADES")
@@ -227,69 +253,77 @@ if rol == "Professor" and acces_professor:
             st.success(
                 "✅ LA CÀRREGA DELS LLISTATS I LA SEVA CONVERSIÓ A DATAFRAMES HA ESTAT EXITOSA"
             )
+
             st.session_state.compres_carrega_llistats = True
 
             st.divider()
 
-            # ==========================================================
-            # 3.1.3 DATA ENTREGA TREBALL I NETEJA VARIABLES
-            # ==========================================================
+        # ==========================================================
+        # 3.1.3 DATA ENTREGA TREBALL
+        # ==========================================================
 
-            if st.session_state.compres_carrega_llistats:
+        if st.session_state.compres_carrega_llistats:
 
-                st.write(
-                    "Com ja sabem les factures de compra estan disponibles al dia següent d'haver fet la comanda. Per determinar si l'alumnat ha d'haver registrat o no les factures de compra, cal introduir les dates d'entrega dels treballs i comparar-les amb la dates en que la factures de compra estan disponibles."
+            st.write(
+                "Com ja sabem les factures de compra estan disponibles al dia següent d'haver fet la comanda. Per determinar si l'alumnat ha d'haver registrat o no les factures de compra, cal introduir les dates d'entrega dels treballs i comparar-les amb la dates en que la factures de compra estan disponibles."
+            )
+
+            if grup == "ADG21O":
+                df_data_lliurament_tasca = logic_comu.carregaCSV(
+                    "ADG21O_DATA_LLIURAMENT_TASCA.csv"
+                )
+            elif grup == "ADG32O":
+                df_data_lliurament_tasca = logic_comu.carregaCSV(
+                    "ADG32O_DATA_LLIURAMENT_TASCA.csv"
                 )
 
-                if st.session_state.compres_carrega_llistats:
-                    st.write(
-                        "També cal realitzar una serie d'operacions dirigidaes a la neteja i homogenitzacio de les dades incloses en els llistats (dates, valors numerics...)"
-                    )
+            print(df_data_lliurament_tasca)
+            st.dataframe(df_data_lliurament_tasca)
 
-                if st.session_state.compres_carrega_llistats:
-                    if st.button(
-                        "⚙️ INSERCIÓ DATA ENTREGA i NETEJA DE VALORS", type="primary"
-                    ):
+            # ==========================================================
+            # 3.1.4 NETEJA VARIABLES
+            # ==========================================================
 
-                        # Executam funció
+            st.write(
+                "També cal realitzar una serie d'operacions dirigidaes a la neteja i homogenitzacio de les dades incloses en els llistats (dates, valors numerics...)"
+            )
 
-                        st.write(
-                            "Iniciant procés de neteja i inserció de data d'entrega..."
-                        )
-                        st.write(
-                            "Aquest procés pot tardar uns minuts, si la tasca te molta dades"
-                        )
-                        st.write(
-                            "Si no tens paciència, puc parar el procés amb el botó 'Parar procés'"
-                        )
+            # if st.button("⚙️ INSERCIÓ DATA ENTREGA i NETEJA DE VALORS", type="primary"):
+            """
+            df_real, df_ped, df_alb, df_fac = (
+                logic_compres.insertaDataEntrega_netejaTipusDades(
+                    df_real, df_ped, df_alb, df_fac, df_fechas
+                )
+            )
 
-                        df_real, df_ped, df_alb, df_fac = (
-                            logic_compres.insertaDataEntrega_netejaTipusDades(
-                                df_real, df_ped, df_alb, df_fac, df_fechas
-                            )
-                        )
+            listaDFs02 = [df_real, df_ped, df_alb, df_fac]
 
-                        listaDFs02 = [df_real, df_ped, df_alb, df_fac]
+            if any(dadesCarregades is None for dadesCarregades in listaDFs02):
+                st.error("NO ES POT SEGUIR EXECUTANT EL PROGRAMA PER FALTA DE DADES")
+                # ATURAM L'EXECUCIO DEL PROGRAMA. EL CODI POSTERIOR NO
+                # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
+                st.stop()
+            """
+            st.success(
+                "✅ LA INSERCIÓ DE LA DATA DE ENTREGA I LA NETEJA DELS TIPUS DE DADES HA ESTAT EXITOSA"
+            )
+            st.session_state.compres_neteja_tipus = True
 
-                        if any(
-                            dadesCarregades is None for dadesCarregades in listaDFs02
-                        ):
-                            st.error(
-                                "NO ES POT SEGUIR EXECUTANT EL PROGRAMA PER FALTA DE DADES"
-                            )
-                            # ATURAM L'EXECUCIO DEL PROGRAMA. EL CODI POSTERIOR NO
-                            # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
-                            st.stop()
+            st.divider()
 
-                        st.success(
-                            "✅ LA INSERCIÓ DE LA DATA DE ENTREGA I LA NETEJA DELS TIPUS DE DADES HA ESTAT EXITOSA"
-                        )
-                        st.session_state.compres_insercio_dates_entrega_neteja = True
+        if st.session_state.compres_neteja_tipus:
 
-                        st.write("PROVAM CODI ABANS DE CONTINUAR")
-                    else:
-                        st.error("MERDA No s'han carregat tots els arxius necessaris")
-                        st.stop()
+            st.write(
+                "Com ja sabem les factures de compra estan disponibles al dia següent d'haver fet la comanda. Per determinar si l'alumnat ha d'haver registrat o no les factures de compra, cal introduir les dates d'entrega dels treballs i comparar-les amb la dates en que la factures de compra estan disponibles."
+            )
+
+            st.write(
+                "També cal realitzar una serie d'operacions dirigidaes a la neteja i homogenitzacio de les dades incloses en els llistats (dates, valors numerics...)"
+            )
+
+            # if st.button("⚙️ INSERCIÓ DATA ENTREGA i NETEJA DE VALORS", type="primary"):
+
+            st.write("PROVAM CODI ABANS DE CONTINUAR")
 
     with tab_vendes:
         st.write("Gestió de correccions de vendes")

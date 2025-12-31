@@ -20,7 +20,6 @@ def carregaArxius(
     file_dades_compra_comandes_alumne,
     file_dades_compra_albarans_alumne,
     file_dades_compra_factures_alumne,
-    file_dates_entrega_treballs,
 ):
 
     # Intentam llegirs el contingut dels fitxers
@@ -38,13 +37,10 @@ def carregaArxius(
         df_fac = pd.read_csv(
             file_dades_compra_factures_alumne, sep=None, engine="python", dtype=str
         )
-        df_fechas = pd.read_csv(
-            file_dates_entrega_treballs, sep=None, engine="python", dtype=str
-        )
 
     except Exception as e:
         print(f"Error carregant els arxius: {e}")
-        return None, None, None, None, None
+        return None, None, None, None
 
     # Imprimim els df per verificar que s'han carregat correctament
     # print(df_real)
@@ -58,7 +54,7 @@ def carregaArxius(
     # print(df_fechas)
     # print("====================================")
 
-    return df_real, df_ped, df_alb, df_fac, df_fechas
+    return df_real, df_ped, df_alb, df_fac
 
 
 # ==============================================================================
