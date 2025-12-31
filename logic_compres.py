@@ -47,16 +47,16 @@ def carregaArxius(
         return None, None, None, None, None
 
     # Imprimim els df per verificar que s'han carregat correctament
-    print(df_real)
-    print("====================================")
-    print(df_ped)
-    print("====================================")
-    print(df_alb)
-    print("====================================")
-    print(df_fac)
-    print("====================================")
-    print(df_fechas)
-    print("====================================")
+    # print(df_real)
+    # print("====================================")
+    # print(df_ped)
+    # print("====================================")
+    # print(df_alb)
+    # print("====================================")
+    # print(df_fac)
+    # print("====================================")
+    # print(df_fechas)
+    # print("====================================")
 
     return df_real, df_ped, df_alb, df_fac, df_fechas
 
@@ -65,77 +65,76 @@ def carregaArxius(
 # 1. FINAL CÀRREGA ARXIUS
 # ==============================================================================
 
+# ==============================================================================
+# 2. INSERIM DATA ENTREGA TREBALL EN df_real i NETEJA DE TIPUS DE DADES
+# ==============================================================================
+
+
+def insertaDataEntrega_netejaTipusDades(df_real, df_ped, df_alb, df_fac, df_fechas):
+
+    # ========================================================================
+    # INSERIM DATA ENTREGA TREBALL EN df_real
+    # ========================================================================
+
+    # PER DETERMINAR SI LA FACTURA DE COMPRA ESTA DISPONIBLE O NO
+    # I PER TANT, SI HA D'ESTAR REGISTRADA O NO
+    # OBLIGATORIAMENT HEM DE FER SERVIR LA DATA ENTREGA INSERIDA EN df_real
+    # EN df_real HI HA TOTES LES OPERACIONS DE COMPRA QUE L'ALUMNE
+    # HA DE REGISTRAR
+
+    df_real = logic_comu.insereixDataEntregaEnDFDesti(
+        df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_fechas
+    )
+
+    # ==========================================================================
+    # INSERIM DATA ENTREGA TREBALL EN df_fac,
+    # PERÒ SI NOMES INSERIM DATA ENTREGA TREBALL EN df_fac,
+    # TINDREM UN PROBLEMA QUAN L'ALUMNE NO INTRODUEIX UNA
+    # O MÉS FACTURES, ES A DIR, SINO INTRODUEIX LA FACTURA
+    # LA DATA ENTREGA TREBALL NO S'INSERIRA EN df_fac,
+    # D'AQUESTA FORMA NO PODREM DETERMINAR SI AQUELLA FACTURA
+    # HA D'ESTAR REGISTRADA O NO
+    # ==========================================================================
+
+    df_fac = logic_comu.insereixDataEntregaEnDFDesti(
+        df_fac, "A_FECHA_ENTREGA_CF", "A_EMPRESA_CF", df_fechas
+    )
+
+    # ========================================================================
+    # NETEJA TIPUS DE DADES
+    # ========================================================================
+
+    # df_real
+    df_real = logic_comu.netejaTipusDadesDFReal(df_real)
+
+    # df_ped
+    df_ped = logic_comu.netejaTipusDadesDFPed(df_ped)
+
+    # df_alb
+    df_alb = logic_comu.netejaTipusDadesDFAlb(df_alb)
+
+    # df_fac
+    df_fac = logic_comu.netejaTipusDadesDFFac(df_fac)
+
+    # Imprimim els df per verificar que s'han carregat correctament
+    print(df_real)
+    print("====================================")
+    print(df_ped)
+    print("====================================")
+    print(df_alb)
+    print("====================================")
+    print(df_fac)
+    print("====================================")
+
+    return df_real, df_ped, df_alb, df_fac
+
 
 """
-0_DATOS_COMPRAS_REALES.csv	    1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv  2_DATOS_ALBARANES_COMPRA_ALUMNOS.csv  3_DATOS_FACTURAS_COMPRA_ALUMNOS.csv
-ID-TOTS	                        ID-TOTS	                            ID-TOTS	                                ID-TOTS
-CLAU_UNICA	                    CLAU_UNICA	                        CLAU_UNICA	                            CLAU_UNICA
-ID	                            A_CON_CP	                        A_CON_CA	                            A_CON_CF
-R_EXPEDIENT_C	                A_EXPEDIENT_CP	                    A_EXPEDIENT_CA	                        A_EXPEDIENT_CF
-R_EMPRESA_C	                    A_EMPRESA_CP	                    A_EMPRESA_CA	                        A_EMPRESA_CF
-R_ESTADO_FC	                    A_REF_ODOO_CP	                    A_REF_ODOO_CA	                        A_REF_ODOO_CF
-R_PROVEEDOR_C	                A_FECHA_ALTA_ODOO_CP	            A_FECHA_ALTA_ODOO_CA	                A_PROVEEDOR_CF
-R_FECHA_EMISION_C	            A_NUMERO_CP	                        A_NUMERO_CA	                            A_NUMERO_CF
-R_NUMERO_CP	                    A_FECHA_EMISION_CP	                A_FECHA_EMISION_CA	                    A_FECHA_EMISION_CF
-R_NUMERO_CA	                    A_PROVEEDOR_CP	                    A_PROVEEDOR_CA	                        A_ORIGEN_CF
-R_NUMERO_CF	                    A_IMPORTE_CP	                    A_ORIGEN_CA	                           A_IMPORTE_CF
-R_IMPORTE_C	                    A_ACUMULADO_CP	                    A_IMPORTE_CA	                        A_ACUMULADO_CF
-R_ACUMULADO_C	                A_ESTADO_CP	                        A_ACUMULADO_CA	                        A_ESTADO_PAGO_CF
-                                A_ESTADO_FACTURACION_CP	            A_ESTADO_CA	
+    # ==============================================================================
+    # 3. DUPLICATS
+    # ==============================================================================
 
-"""
-
-"""
-# ==============================================================================
-# INSERIM DATA ENTREGA TREBALL EN df_real
-# PER DETERMINAR SI LA FACTURA DE COMPRA ESTA DISPONIBLE O NO
-# I PER TANT, SI HA D'ESTAR REGISTRADA O NO
-# OBLIGATORIAMENT HEM DE FER SERVIR LA DATA ENTREGA INSERIDA EN df_real
-# EN df_real HI HA TOTES LES OPERACIONS DE COMPRA QUE L'ALUMNE
-# HA DE REGISTRAR
-# ==============================================================================
-
-df_real = logic_comu.insereixDataEntregaEnDFDesti(
-    df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_fechas
-)
-
-# ==============================================================================
-# INSERIM DATA ENTREGA TREBALL EN df_fac,
-# PERÒ SI NOMES INSERIM DATA ENTREGA TREBALL EN df_fac,
-# TINDREM UN PROBLEMA QUAN L'ALUMNE NO INTRODUEIX UNA
-# O MÉS FACTURES, ES A DIR, SINO INTRODUEIX LA FACTURA
-# LA DATA ENTREGA TREBALL NO S'INSERIRA EN df_fac,
-# D'AQUESTA FORMA NO PODREM DETERMINAR SI AQUELLA FACTURA
-# HA D'ESTAR REGISTRADA O NO
-# ==============================================================================
-
-df_fac = logic_comu.insereixDataEntregaEnDFDesti(
-    df_fac, "A_FECHA_ENTREGA_CF", "A_EMPRESA_CF", df_fechas
-)
-
-
-# ==============================================================================
-# 2. NETEJA TIPUS DE DADES
-# ==============================================================================
-
-# df_real
-df_real = logic_comu.netejaTipusDadesDFReal(df_real)
-
-# df_ped
-df_ped = logic_comu.netejaTipusDadesDFPed(df_ped)
-
-# df_alb
-df_alb = logic_comu.netejaTipusDadesDFAlb(df_alb)
-
-# df_fac
-df_fac = logic_comu.netejaTipusDadesDFFac(df_fac)
-
-# ==============================================================================
-# 3. DUPLICATS
-# ==============================================================================
-
-
-# A NIVELL DE COMPRES, LES UNIQUES OPERACIONS QUE PODEN SER DUPLICADES
+    # A NIVELL DE COMPRES, LES UNIQUES OPERACIONS QUE PODEN SER DUPLICADES
 # SON QUAN UN ALUMNE INTRODUEIX DOS COPS LA MATEIXA COMANDA, O BE
 # INTRODUEIX DUES COMANDES DIFERENTS, PERÒ AMB EL MATEIX NUMEERO AMBDUES
 # PER TOT AIXÒ, NOMES TINDREM EN COMPTE POSSIBLES DUPLICATS EN df_ped
