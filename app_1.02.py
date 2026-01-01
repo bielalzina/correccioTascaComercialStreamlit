@@ -89,6 +89,7 @@ if rol == "Professor" and acces_professor:
                 placeholder="Selecciona el grup...",
             )
 
+        with colB:
             tasca = st.selectbox(
                 "Selecciona la tasca: ",
                 [
@@ -147,26 +148,11 @@ if rol == "Professor" and acces_professor:
                 placeholder="Selecciona la tasca...",
             )
 
-        with colB:
+        with colC:
             dataVto = st.date_input(
                 "Indica la data de venciment de la tasca: ",
                 value=None,
                 format="DD/MM/YYYY",
-            )
-
-        with colC:
-            dataVtoesDataEntrega = st.selectbox(
-                "Vols configurar la data de venciment de la tasca com la data de entrega de la tasca? ",
-                ["Sí", "No"],
-                index=None,
-                placeholder="Selecciona una opció...",
-            )
-
-            volsModificarDataEntrega = st.selectbox(
-                "Vols modificar la data de entrega de la tasca per les empreses que ho requereixin? ",
-                ["Sí", "No"],
-                index=None,
-                placeholder="Selecciona una opció...",
             )
 
         if grup is None:
@@ -296,80 +282,113 @@ if rol == "Professor" and acces_professor:
             # CARREGAM EN DATAFRAME LA PLANTILLA QUE JA TENIM DISSENYADA
 
             if grup == "ADG21O":
-                df_data_lliurament_tasca = logic_comu.carregaCSV(
+                df_dataEntrega = logic_comu.carregaCSV(
                     "ADG21O_DATA_LLIURAMENT_TASCA.csv"
                 )
             elif grup == "ADG32O":
-                df_data_lliurament_tasca = logic_comu.carregaCSV(
+                df_dataEntrega = logic_comu.carregaCSV(
                     "ADG32O_DATA_LLIURAMENT_TASCA.csv"
                 )
 
-            # SI AIXÍ HO HEM INDICAT, INSERIM COM A DATA DE ENTREGA DE LA TASCA
+            # INSERIM COM A DATA DE ENTREGA DE LA TASA
             # LA DATA DE VENCIMENT DE LA TASCA
-            if dataVtoesDataEntrega == "Sí":
-                df_data_lliurament_tasca["FECHA_ENTREGA"] = dataVto
+            df_dataEntrega["FECHA_ENTREGA"] = dataVto
 
-            df_data_lliurament_tasca["FECHA_ENTREGA"] = pd.to_datetime(
-                df_data_lliurament_tasca["FECHA_ENTREGA"]
+            df_dataEntrega["FECHA_ENTREGA"] = pd.to_datetime(
+                df_dataEntrega["FECHA_ENTREGA"], format="%y-%m-%d"
+            ).dt.date
+
+            # INSERIM 3n df_real la nova columna ['R_FECHA_ENTREGA'] amb la data de vencimient de la tasca
+            df_real["R_FECHA_ENTREGA"] = dataVto
+            df_real["R_FECHA_ENTREGA"] = pd.to_datetime(
+                df_real["R_FECHA_ENTREGA"], format="%y-%m-%d"
+            ).dt.date
+            print(df_real)
+
+            # CREAM EDITOR DE DADES
+            # Amb aquest editor podem modificar les
+            # dates de lliurament de cada alumne
+            # 'column_config' permet que la columna de data
+            # faci servir un widget de calendari
+
+            # Inicializar los datos en el estado de la sesión
+            if "df_dataEntrega" not in st.session_state:
+                st.session_state.df_dataEntrega = df_dataEntrega
+
+            """            
+            df_editado = st.data_editor(
+                st.session_state.mi_df,
+                column_config={
+                    "nombre": st.column_config.TextColumn("Nombre", disabled=True),
+                    "fecha": st.column_config.DateColumn(
+                        "Fecha (AA-MM-DD)",
+                        format="YY-MM-DD",  # Cómo se muestra en la interfaz
+                    ),
+                },
+                hide_index=True,
+                use_container_width=True
             )
 
-            if volsModificarDataEntrega == "Sí":
+            """
 
-                # CREAM EDITOR DE DADES
-                # Amb aquest editor podem modificar les
-                # dates de lliurament de cada alumne
-                # 'column_config' permet que la columna de data
-                # faci servir un widget de calendari
-                edited_df = st.data_editor(
-                    df_data_lliurament_tasca,
-                    column_config={
-                        "FECHA_ENTREGA": st.column_config.DateColumn(
-                            "Fecha de Entrega",
-                            format="DD-MM-YYYY",
-                        ),
-                        "EXPEDIENT": st.column_config.NumberColumn(
-                            disabled=True
-                        ),  # Bloqueamos edición de ID
-                        "EMPRESA_ALUMNO": st.column_config.TextColumn(
-                            disabled=True
-                        ),  # Bloqueamos edición de Nombre
-                    },
-                    hide_index=True,
+            # 2. Configurar el editor de datos
+
+            edited_df = st.data_editor(
+                df_dataEntrega,
+                column_config={
+                    "FECHA_ENTREGA": st.column_config.DateColumn(
+                        "Fecha de Entrega",
+                        format="DD-MM-YYYY",
+                    ),
+                    "EXPEDIENT": st.column_config.NumberColumn(
+                        disabled=True
+                    ),  # Bloqueamos edición de ID
+                    "EMPRESA_ALUMNO": st.column_config.TextColumn(
+                        disabled=True
+                    ),  # Bloqueamos edición de Nombre
+                },
+                hide_index=True,
+            )
+            print("DATAFRAME EDITED_DF...")
+            print(edited_df)
+
+            # Botó per desar els canvis
+            if st.button("Desar canvis"):
+
+                # Un cop modificades les dates en edited_df,
+                # hem d'inserir aquesta data en df_real per poder comparar-la
+                # amb la data en que la factures de compra estan disponibles
+                # i determinar si l'alumnat ha d'haver registrat o no les
+                # factures de compra
+                df_real = logic_comu.insereixDataEntregaEnDFDesti(
+                    df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", edited_df
                 )
 
-                # Botó per desar els canvis
-                if st.button("Desar canvis"):
-                    # Un cop modificades les dates en edited_df,
-                    # hem d'inserir aquesta data en df_real per poder comparar-la
-                    # amb la data en que la factures de compra estan disponibles
-                    # i determinar si l'alumnat ha d'haver registrat o no les
-                    # factures de compra
-                    df_real = logic_comu.insereixDataEntregaEnDFDesti(
-                        df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", edited_df
+                if df_real is None:
+                    st.error("Error al inserir la data de entrega en el dataframe")
+                    st.stop()
+
+                st.success(
+                    "Les dates d'entrega s'han introduït en el dataframe (df_real) per cada empresa/operacio (DF_REAL recull totes les operacions de compra realitzades pels alumnes en EMPRESAULA)"
+                )
+                print(df_real)
+
+                # Desam edited_df com a fitxer CSV per si l'hem de tornar
+                # a utilitzar
+                if grup == "ADG21O":
+                    nombre_archivo = "ADG21O_DATA_LLIURAMENT_TASCA.csv"
+                elif grup == "ADG32O":
+                    nombre_archivo = "ADG32O_DATA_LLIURAMENT_TASCA.csv"
+
+                result = logic_comu.desaCSV(edited_df, nombre_archivo)
+                if result:
+                    st.success(
+                        f"Fitxer desat correctament en: {os.path.abspath(nombre_archivo)}"
                     )
 
-                    if df_real is None:
-                        st.error("Error al inserir la data de entrega en el dataframe")
-                        st.stop()
-
-                    # Desam edited_df com a fitxer CSV per si l'hem de tornar fer
-                    # servir
-                    if grup == "ADG21O":
-                        nombre_archivo = "ADG21O_DATA_LLIURAMENT_TASCA.csv"
-                    elif grup == "ADG32O":
-                        nombre_archivo = "ADG32O_DATA_LLIURAMENT_TASCA.csv"
-
-                    result = logic_comu.desaCSV(edited_df, nombre_archivo)
-                    if result:
-                        st.success(
-                            f"Fitxer desat correctament en: {os.path.abspath(nombre_archivo)}"
-                        )
-
-                    else:
-                        st.error("Error al desar el fitxer")
-                        st.stop()
                 else:
-                    st.dataframe(df_data_lliurament_tasca)
+                    st.error("Error al desar el fitxer")
+                    st.stop()
 
             st.session_state.compres_insercio_data_entrega = True
 
