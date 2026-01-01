@@ -66,12 +66,11 @@ def carregaArxius(
 # ==============================================================================
 
 
-"""
-    # ==============================================================================
-    # 3. DUPLICATS
-    # ==============================================================================
+# ==============================================================================
+# 3. DUPLICATS
+# ==============================================================================
 
-    # A NIVELL DE COMPRES, LES UNIQUES OPERACIONS QUE PODEN SER DUPLICADES
+# A NIVELL DE COMPRES, LES UNIQUES OPERACIONS QUE PODEN SER DUPLICADES
 # SON QUAN UN ALUMNE INTRODUEIX DOS COPS LA MATEIXA COMANDA, O BE
 # INTRODUEIX DUES COMANDES DIFERENTS, PERÒ AMB EL MATEIX NUMEERO AMBDUES
 # PER TOT AIXÒ, NOMES TINDREM EN COMPTE POSSIBLES DUPLICATS EN df_ped
@@ -81,7 +80,7 @@ df_duplicats_df_ped_a_numero_cp = logic_comu.obtenirDuplicats(df_ped, "A_NUMERO_
 
 print(df_duplicats_df_ped_a_numero_cp)
 
-
+"""
 # ==============================================================================
 # 4. UNIO DE TOTS ELS DATAFRAMES
 # ==============================================================================

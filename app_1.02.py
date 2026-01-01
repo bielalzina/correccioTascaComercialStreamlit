@@ -17,7 +17,12 @@ if "compres_insercio_data_entrega" not in st.session_state:
     st.session_state.compres_insercio_data_entrega = False
 if "compres_neteja_tipus" not in st.session_state:
     st.session_state.compres_neteja_tipus = False
-
+if "compres_duplicats" not in st.session_state:
+    st.session_state.compres_duplicats = False
+if "compres_merge_dataframes" not in st.session_state:
+    st.session_state.compres_merge_dataframes = False
+if "compres_operacions_orfes" not in st.session_state:
+    st.session_state.compres_operacions_orfes = False
 
 # ==============================================================================
 # 1. CONFIGURACIÓN Y GESTIÓN DE CARPETAS
@@ -279,6 +284,8 @@ if rol == "Professor" and acces_professor:
                 "Com ja sabem les factures de compra estan disponibles al dia següent d'haver fet la comanda. Per determinar si l'alumnat ha d'haver registrat o no les factures de compra, cal introduir les dates d'entrega dels treballs i comparar-les amb la dates en que la factures de compra estan disponibles."
             )
 
+            # print(df_real)
+
             # CARREGAM EN DATAFRAME LA PLANTILLA QUE JA TENIM DISSENYADA
 
             if grup == "ADG21O":
@@ -295,14 +302,15 @@ if rol == "Professor" and acces_professor:
             df_dataEntrega["FECHA_ENTREGA"] = dataVto
 
             df_dataEntrega["FECHA_ENTREGA"] = pd.to_datetime(
-                df_dataEntrega["FECHA_ENTREGA"], format="%y-%m-%d"
+                df_dataEntrega["FECHA_ENTREGA"], format="%Y-%m-%d"
             ).dt.date
 
             # INSERIM 3n df_real la nova columna ['R_FECHA_ENTREGA'] amb la data de vencimient de la tasca
             df_real["R_FECHA_ENTREGA"] = dataVto
             df_real["R_FECHA_ENTREGA"] = pd.to_datetime(
-                df_real["R_FECHA_ENTREGA"], format="%y-%m-%d"
+                df_real["R_FECHA_ENTREGA"], format="%Y-%m-%d"
             ).dt.date
+            print("ABANS DE MODIFICAR DATA ENTREGA AMB st.data_editor")
             print(df_real)
 
             # CREAM EDITOR DE DADES
@@ -322,7 +330,7 @@ if rol == "Professor" and acces_professor:
                     "nombre": st.column_config.TextColumn("Nombre", disabled=True),
                     "fecha": st.column_config.DateColumn(
                         "Fecha (AA-MM-DD)",
-                        format="YY-MM-DD",  # Cómo se muestra en la interfaz
+                        format="YYYY-MM-DD",  # Cómo se muestra en la interfaz
                     ),
                 },
                 hide_index=True,
@@ -333,24 +341,23 @@ if rol == "Professor" and acces_professor:
 
             # 2. Configurar el editor de datos
 
-            edited_df = st.data_editor(
-                df_dataEntrega,
+            df_editat = st.data_editor(
+                st.session_state.df_dataEntrega,
                 column_config={
                     "FECHA_ENTREGA": st.column_config.DateColumn(
-                        "Fecha de Entrega",
-                        format="DD-MM-YYYY",
+                        "Fecha de Entrega (AAAA-MM-DD)",
+                        format="YYYY-MM-DD",
                     ),
                     "EXPEDIENT": st.column_config.NumberColumn(
-                        disabled=True
+                        "Expedient", disabled=True
                     ),  # Bloqueamos edición de ID
                     "EMPRESA_ALUMNO": st.column_config.TextColumn(
-                        disabled=True
+                        "Empresa alumne", disabled=True
                     ),  # Bloqueamos edición de Nombre
                 },
                 hide_index=True,
+                width="stretch",
             )
-            print("DATAFRAME EDITED_DF...")
-            print(edited_df)
 
             # Botó per desar els canvis
             if st.button("Desar canvis"):
@@ -360,10 +367,18 @@ if rol == "Professor" and acces_professor:
                 # amb la data en que la factures de compra estan disponibles
                 # i determinar si l'alumnat ha d'haver registrat o no les
                 # factures de compra
+
+                # Canviam l'estat de la session de df_dataEntrega a df_editat,
+                st.session_state.df_dataEntrega = df_editat
+                st.success(
+                    "Les dates d'entrega s'han desat correctament en el dataframe (df_dataEntrega)"
+                )
+                # Inserim la data de entrega en df_real
                 df_real = logic_comu.insereixDataEntregaEnDFDesti(
-                    df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", edited_df
+                    df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_editat
                 )
 
+                # Comprovem si la funcio ha retornat None
                 if df_real is None:
                     st.error("Error al inserir la data de entrega en el dataframe")
                     st.stop()
@@ -371,26 +386,27 @@ if rol == "Professor" and acces_professor:
                 st.success(
                     "Les dates d'entrega s'han introduït en el dataframe (df_real) per cada empresa/operacio (DF_REAL recull totes les operacions de compra realitzades pels alumnes en EMPRESAULA)"
                 )
-                print(df_real)
 
-                # Desam edited_df com a fitxer CSV per si l'hem de tornar
+                # Desam df_editat com a fitxer CSV per si l'hem de tornar
                 # a utilitzar
                 if grup == "ADG21O":
                     nombre_archivo = "ADG21O_DATA_LLIURAMENT_TASCA.csv"
                 elif grup == "ADG32O":
                     nombre_archivo = "ADG32O_DATA_LLIURAMENT_TASCA.csv"
 
-                result = logic_comu.desaCSV(edited_df, nombre_archivo)
+                result = logic_comu.desaCSV(df_editat, nombre_archivo)
                 if result:
                     st.success(
                         f"Fitxer desat correctament en: {os.path.abspath(nombre_archivo)}"
                     )
-
+                    st.session_state.compres_insercio_data_entrega = True
+                    st.divider()
+                    print("DESPRES DE MODIFICAR DATA ENTREGA AMB st.data_editor")
+                    print(df_real)
                 else:
                     st.error("Error al desar el fitxer")
+                    st.divider()
                     st.stop()
-
-            st.session_state.compres_insercio_data_entrega = True
 
         # ==========================================================
         # 3.1.4 NETEJA VARIABLES
@@ -415,15 +431,36 @@ if rol == "Professor" and acces_professor:
                 # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
                 st.stop()
 
-            st.success(
-                "✅ LA INSERCIÓ DE LA DATA DE ENTREGA I LA NETEJA DELS TIPUS DE DADES HA ESTAT EXITOSA"
-            )
+            st.success("✅ LA NETEJA DELS TIPUS DE DADES HA ESTAT EXITOSA")
             st.session_state.compres_neteja_tipus = True
 
             st.divider()
 
         if st.session_state.compres_neteja_tipus:
+
             st.subheader("COMANDES DUPLICADES")
+            missatge = (
+                "A nivell de compres, les operacions que normalment es dupliquen "
+                "son les comandes: l'alumne introdueix 2 cops la mateixa comanda "
+                "o bé introdueix dues comandes diferents, introduint el mateix número de comanda. "
+                "Per tot això, nomes tindrem en compte possibles duplicats en df_ped."
+            )
+            st.write(missatge)
+
+            df_ped_duplicats = logic_comu.obtenirDuplicats(df_ped, "A_NUMERO_CP")
+
+            if len(df_ped_duplicats) > 0:
+                st.write("S'han trobat les següents comandes duplicades en df_ped:")
+                st.dataframe(df_ped_duplicats)
+                st.session_state.compres_duplicats = True
+                st.divider()
+            elif len(df_ped_duplicats) == 0 or df_ped_duplicats is None:
+                st.write("No s'han trobat comandes duplicades en df_ped")
+                st.session_state.compres_duplicats = False
+                st.divider()
+
+        if st.session_state.compres_duplicats == True:
+            st.subheader("Unio de DATAFRAMES (merge)")
 
     with tab_vendes:
         st.write("Gestió de correccions de vendes")

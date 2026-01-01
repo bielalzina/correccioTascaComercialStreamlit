@@ -92,8 +92,12 @@ def insereixDataEntregaEnDFDesti(
 
 # NETEJA TIPUS DE DADES EN df_real
 def netejaTipusDadesDFReal(df_real):
-    df_real["R_FECHA_EMISION_C"] = pd.to_datetime(df_real["R_FECHA_EMISION_C"])
-    df_real["R_FECHA_ENTREGA"] = pd.to_datetime(df_real["R_FECHA_ENTREGA"])
+    df_real["R_FECHA_EMISION_C"] = pd.to_datetime(
+        df_real["R_FECHA_EMISION_C"], format="%Y-%m-%d"
+    ).dt.date
+    df_real["R_FECHA_ENTREGA"] = pd.to_datetime(
+        df_real["R_FECHA_ENTREGA"], format="%Y-%m-%d"
+    ).dt.date
     df_real["R_IMPORTE_C"] = pd.to_numeric(
         df_real["R_IMPORTE_C"], errors="coerce"
     ).fillna(0.00)
@@ -105,8 +109,12 @@ def netejaTipusDadesDFReal(df_real):
 
 # NETEJA TIPUS DE DADES EN df_ped
 def netejaTipusDadesDFPed(df_ped):
-    df_ped["A_FECHA_ALTA_ODOO_CP"] = pd.to_datetime(df_ped["A_FECHA_ALTA_ODOO_CP"])
-    df_ped["A_FECHA_EMISION_CP"] = pd.to_datetime(df_ped["A_FECHA_EMISION_CP"])
+    df_ped["A_FECHA_ALTA_ODOO_CP"] = pd.to_datetime(
+        df_ped["A_FECHA_ALTA_ODOO_CP"], format="%Y-%m-%d"
+    ).dt.date
+    df_ped["A_FECHA_EMISION_CP"] = pd.to_datetime(
+        df_ped["A_FECHA_EMISION_CP"], format="%Y-%m-%d"
+    ).dt.date
     df_ped["A_IMPORTE_CP"] = pd.to_numeric(
         df_ped["A_IMPORTE_CP"], errors="coerce"
     ).fillna(0.00)
@@ -119,8 +127,12 @@ def netejaTipusDadesDFPed(df_ped):
 
 # NETEJA TIPUS DE DADES EN df_alb
 def netejaTipusDadesDFAlb(df_alb):
-    df_alb["A_FECHA_ALTA_ODOO_CA"] = pd.to_datetime(df_alb["A_FECHA_ALTA_ODOO_CA"])
-    df_alb["A_FECHA_EMISION_CA"] = pd.to_datetime(df_alb["A_FECHA_EMISION_CA"])
+    df_alb["A_FECHA_ALTA_ODOO_CA"] = pd.to_datetime(
+        df_alb["A_FECHA_ALTA_ODOO_CA"], format="%Y-%m-%d"
+    ).dt.date
+    df_alb["A_FECHA_EMISION_CA"] = pd.to_datetime(
+        df_alb["A_FECHA_EMISION_CA"], format="%Y-%m-%d"
+    ).dt.date
     df_alb["A_IMPORTE_CA"] = pd.to_numeric(
         df_alb["A_IMPORTE_CA"], errors="coerce"
     ).fillna(0.00)
@@ -132,7 +144,9 @@ def netejaTipusDadesDFAlb(df_alb):
 
 # NETEJA TIPUS DE DADES EN df_fac
 def netejaTipusDadesDFFac(df_fac):
-    df_fac["A_FECHA_EMISION_CF"] = pd.to_datetime(df_fac["A_FECHA_EMISION_CF"])
+    df_fac["A_FECHA_EMISION_CF"] = pd.to_datetime(
+        df_fac["A_FECHA_EMISION_CF"], format="%Y-%m-%d"
+    ).dt.date
     df_fac["A_IMPORTE_CF"] = pd.to_numeric(
         df_fac["A_IMPORTE_CF"], errors="coerce"
     ).fillna(0.00)
