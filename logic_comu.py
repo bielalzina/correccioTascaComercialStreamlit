@@ -120,7 +120,9 @@ def netejaTipusDadesDFPed(df_ped):
 # NETEJA TIPUS DE DADES EN df_alb
 def netejaTipusDadesDFAlb(df_alb):
     df_alb["A_FECHA_ALTA_ODOO_CA"] = pd.to_datetime(df_alb["A_FECHA_ALTA_ODOO_CA"])
-    df_alb["A_FECHA_EMISION_CA"] = pd.to_datetime(df_alb["A_FECHA_EMISION_CA"])
+    df_alb["A_FECHA_EMISION_CA"] = pd.to_datetime(
+        df_alb["A_FECHA_EMISION_CA"], dayfirst=True
+    )
     df_alb["A_IMPORTE_CA"] = pd.to_numeric(
         df_alb["A_IMPORTE_CA"], errors="coerce"
     ).fillna(0.00)
