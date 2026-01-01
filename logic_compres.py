@@ -66,65 +66,6 @@ def carregaArxius(
 # ==============================================================================
 
 
-def insertaDataEntrega_netejaTipusDades(df_real, df_ped, df_alb, df_fac, df_fechas):
-
-    # ========================================================================
-    # INSERIM DATA ENTREGA TREBALL EN df_real
-    # ========================================================================
-
-    # PER DETERMINAR SI LA FACTURA DE COMPRA ESTA DISPONIBLE O NO
-    # I PER TANT, SI HA D'ESTAR REGISTRADA O NO
-    # OBLIGATORIAMENT HEM DE FER SERVIR LA DATA ENTREGA INSERIDA EN df_real
-    # EN df_real HI HA TOTES LES OPERACIONS DE COMPRA QUE L'ALUMNE
-    # HA DE REGISTRAR
-
-    df_real = logic_comu.insereixDataEntregaEnDFDesti(
-        df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_fechas
-    )
-
-    # ==========================================================================
-    # INSERIM DATA ENTREGA TREBALL EN df_fac,
-    # PERÒ SI NOMES INSERIM DATA ENTREGA TREBALL EN df_fac,
-    # TINDREM UN PROBLEMA QUAN L'ALUMNE NO INTRODUEIX UNA
-    # O MÉS FACTURES, ES A DIR, SINO INTRODUEIX LA FACTURA
-    # LA DATA ENTREGA TREBALL NO S'INSERIRA EN df_fac,
-    # D'AQUESTA FORMA NO PODREM DETERMINAR SI AQUELLA FACTURA
-    # HA D'ESTAR REGISTRADA O NO
-    # ==========================================================================
-
-    df_fac = logic_comu.insereixDataEntregaEnDFDesti(
-        df_fac, "A_FECHA_ENTREGA_CF", "A_EMPRESA_CF", df_fechas
-    )
-
-    # ========================================================================
-    # NETEJA TIPUS DE DADES
-    # ========================================================================
-
-    # df_real
-    df_real = logic_comu.netejaTipusDadesDFReal(df_real)
-
-    # df_ped
-    df_ped = logic_comu.netejaTipusDadesDFPed(df_ped)
-
-    # df_alb
-    df_alb = logic_comu.netejaTipusDadesDFAlb(df_alb)
-
-    # df_fac
-    df_fac = logic_comu.netejaTipusDadesDFFac(df_fac)
-
-    # Imprimim els df per verificar que s'han carregat correctament
-    print(df_real)
-    print("====================================")
-    print(df_ped)
-    print("====================================")
-    print(df_alb)
-    print("====================================")
-    print(df_fac)
-    print("====================================")
-
-    return df_real, df_ped, df_alb, df_fac
-
-
 """
     # ==============================================================================
     # 3. DUPLICATS

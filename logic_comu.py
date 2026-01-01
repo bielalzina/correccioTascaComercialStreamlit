@@ -25,6 +25,18 @@ def carregaCSV(fileName):
     return df
 
 
+def desaCSV(df, fileName):
+    # obtenim ruta actual
+    rutaActual = os.getcwd()
+    rutaFitxer = rutaActual + "/LLISTATS_CSV/" + fileName
+    # Desam fitxer
+    try:
+        df.to_csv(rutaFitxer, index=False)
+        return True
+    except Exception as e:
+        return False
+
+
 def exportToExcel(df, fileName):
     # obtenim ruta actual
     rutaActual = os.getcwd()
@@ -121,7 +133,6 @@ def netejaTipusDadesDFAlb(df_alb):
 # NETEJA TIPUS DE DADES EN df_fac
 def netejaTipusDadesDFFac(df_fac):
     df_fac["A_FECHA_EMISION_CF"] = pd.to_datetime(df_fac["A_FECHA_EMISION_CF"])
-    df_fac["A_FECHA_ENTREGA_CF"] = pd.to_datetime(df_fac["A_FECHA_ENTREGA_CF"])
     df_fac["A_IMPORTE_CF"] = pd.to_numeric(
         df_fac["A_IMPORTE_CF"], errors="coerce"
     ).fillna(0.00)

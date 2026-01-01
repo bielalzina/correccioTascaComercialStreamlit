@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timedelta
 import logic_compres
 import logic_comu
+import time
 
 # INICIALITZACIO DELS ESTATS DE LES ETAPES DE CORRECCIÓ
 if "introduccio_grup_tasca_data" not in st.session_state:
@@ -12,6 +13,8 @@ if "compres_preparacio_llistats" not in st.session_state:
     st.session_state.compres_preparacio_llistats = False
 if "compres_carrega_llistats" not in st.session_state:
     st.session_state.compres_carrega_llistats = False
+if "compres_insercio_data_entrega" not in st.session_state:
+    st.session_state.compres_insercio_data_entrega = False
 if "compres_neteja_tipus" not in st.session_state:
     st.session_state.compres_neteja_tipus = False
 
@@ -230,6 +233,8 @@ if rol == "Professor" and acces_professor:
 
             # if st.button("⚙️ PUJAR I PROCESSAMENT INICIAL DE LLISTATS", type="primary"):
 
+            st.subheader("Carrega inicial de les dades")
+
             st.write("⏳ Pujant arxius al servidor... ⏳")
 
             # --- 2. PUJAM ELS ARXIUS AMB FUNCIO carregaArxius() ---
@@ -250,6 +255,8 @@ if rol == "Professor" and acces_professor:
                 # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
                 st.stop()
 
+            time.sleep(3)
+
             st.success(
                 "✅ LA CÀRREGA DELS LLISTATS I LA SEVA CONVERSIÓ A DATAFRAMES HA ESTAT EXITOSA"
             )
@@ -264,9 +271,15 @@ if rol == "Professor" and acces_professor:
 
         if st.session_state.compres_carrega_llistats:
 
+            st.subheader(
+                "Data de lliurament de la tasca i disponibilitat de les factures de compra per al seu registre en ODOO"
+            )
+
             st.write(
                 "Com ja sabem les factures de compra estan disponibles al dia següent d'haver fet la comanda. Per determinar si l'alumnat ha d'haver registrat o no les factures de compra, cal introduir les dates d'entrega dels treballs i comparar-les amb la dates en que la factures de compra estan disponibles."
             )
+
+            # CARREGAM EN DATAFRAME LA PLANTILLA QUE JA TENIM DISSENYADA
 
             if grup == "ADG21O":
                 df_data_lliurament_tasca = logic_comu.carregaCSV(
@@ -277,33 +290,88 @@ if rol == "Professor" and acces_professor:
                     "ADG32O_DATA_LLIURAMENT_TASCA.csv"
                 )
 
-            print(df_data_lliurament_tasca)
-            st.dataframe(df_data_lliurament_tasca)
+            # INSERIM COM A DATA DE ENTREGA LA DATA DE VENCIMENT DE LA TASCA
+            df_data_lliurament_tasca["FECHA_ENTREGA"] = dataVto
 
-            # ==========================================================
-            # 3.1.4 NETEJA VARIABLES
-            # ==========================================================
+            df_data_lliurament_tasca["FECHA_ENTREGA"] = pd.to_datetime(
+                df_data_lliurament_tasca["FECHA_ENTREGA"]
+            )
 
+            # CREAM EDITOR DE DADES
+            # Amb aquest editor podem modificar les
+            # dates de lliurament de cada alumne
+            # 'column_config' permet que la columna de data faci servir un widget de calendari
+            edited_df = st.data_editor(
+                df_data_lliurament_tasca,
+                column_config={
+                    "FECHA_ENTREGA": st.column_config.DateColumn(
+                        "Fecha de Entrega",
+                        format="DD-MM-YYYY",
+                    ),
+                    "EXPEDIENT": st.column_config.NumberColumn(
+                        disabled=True
+                    ),  # Bloqueamos edición de ID
+                    "EMPRESA_ALUMNO": st.column_config.TextColumn(
+                        disabled=True
+                    ),  # Bloqueamos edición de Nombre
+                },
+                hide_index=True,
+            )
+
+            # Botó per desar els canvis
+            if st.button("Desar canvis"):
+                # Un cop modificades les dates en edited_df,
+                # hem d'inserir aquesta data en df_real per poder comparar-la   # amb la data en que la factures de compra estan disponibles i # determinar si l'alumnat ha d'haver registrat o no les
+                # factures de compra
+                df_real = logic_comu.insereixDataEntregaEnDFDesti(
+                    df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", edited_df
+                )
+
+                if df_real is None:
+                    st.error("Error al inserir la data de entrega en el dataframe")
+                    st.stop()
+
+                # Desam edited_df com a fitxer CSV per si l'hem de tornar fer
+                # servir
+                if grup == "ADG21O":
+                    nombre_archivo = "ADG21O_DATA_LLIURAMENT_TASCA.csv"
+                elif grup == "ADG32O":
+                    nombre_archivo = "ADG32O_DATA_LLIURAMENT_TASCA.csv"
+
+                result = logic_comu.desaCSV(edited_df, nombre_archivo)
+                if result:
+                    st.success(
+                        f"Fitxer desat correctament en: {os.path.abspath(nombre_archivo)}"
+                    )
+                    st.session_state.compres_insercio_data_entrega = True
+
+                else:
+                    st.error("Error al desar el fitxer")
+                    st.stop()
+
+        # ==========================================================
+        # 3.1.4 NETEJA VARIABLES
+        # ==========================================================
+
+        if st.session_state.compres_insercio_data_entrega:
+            st.subheader("Neteja de variables")
             st.write(
                 "També cal realitzar una serie d'operacions dirigidaes a la neteja i homogenitzacio de les dades incloses en els llistats (dates, valors numerics...)"
             )
 
-            # if st.button("⚙️ INSERCIÓ DATA ENTREGA i NETEJA DE VALORS", type="primary"):
-            """
-            df_real, df_ped, df_alb, df_fac = (
-                logic_compres.insertaDataEntrega_netejaTipusDades(
-                    df_real, df_ped, df_alb, df_fac, df_fechas
+            df_real = logic_comu.netejaTipusDadesDFReal(df_real)
+            df_ped = logic_comu.netejaTipusDadesDFPed(df_ped)
+            df_alb = logic_comu.netejaTipusDadesDFAlb(df_alb)
+            df_fac = logic_comu.netejaTipusDadesDFFac(df_fac)
+
+            if df_real is None or df_ped is None or df_alb is None or df_fac is None:
+                st.error(
+                    "No es pot executar la neteja en el tipus de variable. Finalitza la execució d'aquesta APP"
                 )
-            )
-
-            listaDFs02 = [df_real, df_ped, df_alb, df_fac]
-
-            if any(dadesCarregades is None for dadesCarregades in listaDFs02):
-                st.error("NO ES POT SEGUIR EXECUTANT EL PROGRAMA PER FALTA DE DADES")
                 # ATURAM L'EXECUCIO DEL PROGRAMA. EL CODI POSTERIOR NO
                 # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
                 st.stop()
-            """
+
             st.success(
                 "✅ LA INSERCIÓ DE LA DATA DE ENTREGA I LA NETEJA DELS TIPUS DE DADES HA ESTAT EXITOSA"
             )
@@ -312,18 +380,7 @@ if rol == "Professor" and acces_professor:
             st.divider()
 
         if st.session_state.compres_neteja_tipus:
-
-            st.write(
-                "Com ja sabem les factures de compra estan disponibles al dia següent d'haver fet la comanda. Per determinar si l'alumnat ha d'haver registrat o no les factures de compra, cal introduir les dates d'entrega dels treballs i comparar-les amb la dates en que la factures de compra estan disponibles."
-            )
-
-            st.write(
-                "També cal realitzar una serie d'operacions dirigidaes a la neteja i homogenitzacio de les dades incloses en els llistats (dates, valors numerics...)"
-            )
-
-            # if st.button("⚙️ INSERCIÓ DATA ENTREGA i NETEJA DE VALORS", type="primary"):
-
-            st.write("PROVAM CODI ABANS DE CONTINUAR")
+            st.subheader("COMANDES DUPLICADES")
 
     with tab_vendes:
         st.write("Gestió de correccions de vendes")
