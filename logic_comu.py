@@ -25,10 +25,10 @@ def carregaCSV(fileName):
     return df
 
 
-def desaCSV(df, fileName):
+def desaCSV(df, fileName, carpetaDesti):
     # obtenim ruta actual
     rutaActual = os.getcwd()
-    rutaFitxer = rutaActual + "/LLISTATS_CSV/" + fileName
+    rutaFitxer = rutaActual + "/" + carpetaDesti + "/" + fileName
     # Desam fitxer
     try:
         df.to_csv(rutaFitxer, index=False)
@@ -37,10 +37,10 @@ def desaCSV(df, fileName):
         return False
 
 
-def exportToExcel(df, fileName):
+def exportToExcel(df, fileName, carpetaDesti):
     # obtenim ruta actual
     rutaActual = os.getcwd()
-    rutaFitxer = rutaActual + "/HISTORIC_CORRECCIONS/" + fileName
+    rutaFitxer = rutaActual + "/" + carpetaDesti + "/" + fileName
     try:
         df.to_excel(rutaFitxer, index=False)
         print(f"✅ Exportacio a Excel correcta: {fileName}")
@@ -158,4 +158,8 @@ def netejaTipusDadesDFFac(df_fac):
 
 # OBTENCIÓ DUPLICATS
 def obtenirDuplicats(df, columna):
-    return df[df.duplicated(columna, keep=False)]
+    # print("OBTENINT DUPLICATS, dins funcio obtenirDuplicats")
+    # print(df)
+    df_duplicats = df[df.duplicated(columna, keep=False)]
+    # print(df_duplicats)
+    return df_duplicats

@@ -1,5 +1,7 @@
+import logic_comu
 import streamlit as st
 import pandas as pd
+import numpy as np
 import os
 from datetime import datetime, timedelta
 import logic_compres
@@ -172,6 +174,8 @@ if rol == "Professor" and acces_professor:
             st.error("Per continuar, cal indicar la data de venciment de la tasca")
             st.stop()
 
+        prefNomFitxerCorreccio = grup + "_" + tasca + "_"
+
         st.divider()
 
         st.session_state.introduccio_grup_tasca_data = True
@@ -323,24 +327,6 @@ if rol == "Professor" and acces_professor:
             if "df_dataEntrega" not in st.session_state:
                 st.session_state.df_dataEntrega = df_dataEntrega
 
-            """            
-            df_editado = st.data_editor(
-                st.session_state.mi_df,
-                column_config={
-                    "nombre": st.column_config.TextColumn("Nombre", disabled=True),
-                    "fecha": st.column_config.DateColumn(
-                        "Fecha (AA-MM-DD)",
-                        format="YYYY-MM-DD",  # Cómo se muestra en la interfaz
-                    ),
-                },
-                hide_index=True,
-                use_container_width=True
-            )
-
-            """
-
-            # 2. Configurar el editor de datos
-
             df_editat = st.data_editor(
                 st.session_state.df_dataEntrega,
                 column_config={
@@ -394,7 +380,7 @@ if rol == "Professor" and acces_professor:
                 elif grup == "ADG32O":
                     nombre_archivo = "ADG32O_DATA_LLIURAMENT_TASCA.csv"
 
-                result = logic_comu.desaCSV(df_editat, nombre_archivo)
+                result = logic_comu.desaCSV(df_editat, nombre_archivo, "LLISTATS_CSV")
                 if result:
                     st.success(
                         f"Fitxer desat correctament en: {os.path.abspath(nombre_archivo)}"
@@ -436,6 +422,10 @@ if rol == "Professor" and acces_professor:
 
             st.divider()
 
+        # ==========================================================
+        # 3.1.5 COMANDES DUPLICADES
+        # ==========================================================
+
         if st.session_state.compres_neteja_tipus:
 
             st.subheader("COMANDES DUPLICADES")
@@ -454,13 +444,276 @@ if rol == "Professor" and acces_professor:
                 st.dataframe(df_ped_duplicats)
                 st.session_state.compres_duplicats = True
                 st.divider()
+                # DESAM CSV
+                carpetaDesti = "HISTORIC_CORRECCIONS"
+                filename = prefNomFitxerCorreccio + "df_ped_duplicats.csv"
+                logic_comu.desaCSV(df_ped_duplicats, filename, carpetaDesti)
             elif len(df_ped_duplicats) == 0 or df_ped_duplicats is None:
                 st.write("No s'han trobat comandes duplicades en df_ped")
-                st.session_state.compres_duplicats = False
+                st.session_state.compres_duplicats = True
                 st.divider()
+
+        # ==========================================================
+        # 3.1.6 UNIO DE DATAFRAMES (merge)
+        # ==========================================================
 
         if st.session_state.compres_duplicats == True:
             st.subheader("Unio de DATAFRAMES (merge)")
+            st.markdown(
+                """
+                Per poder corregir les operacions de compra, realitzarem 3 unions de dataframes:
+                
+                1. Unió entre df_real i df_ped
+                2. Unió entre df_real i df_alb
+                3. Unió entre df_real i df_fac
+                
+                En df_real es relacionen totes les operacions de compra que els alumnes han realitzat en EMPRESAULA, a nivell de comanda, albarà i factura. En els altres dataframes df_ped, df_alb i df_fac, es relacionen les operacions que l'alumne ha registrat a nivell de comanda (df_ped), albarà (df_alb) i factura (df_fac). 
+                Per tant, si volem determinar si els registres dels alumnes son correctes, cal relacionar l'operació real amb l'operació registrada.
+                """
+            )
+
+            # UNIO ENTRE df_real i df_ped
+            df_real_ped = logic_comu.unionDataFrames(
+                df_real,
+                df_ped,
+                "R_NUMERO_CP",
+                "A_NUMERO_CP",
+                "left",
+                "_real",
+                "_ped",
+                True,
+            )
+
+            # SI ALUMNE INTRODUEIX DUES COMANDES DIFERENTS, PERÒ EN LA 2A
+            # INDICA EL MATEIX NUM DE COMANDA QUE L'ANTERIOR, PER TANT TENIM
+            # DUES COMANDES DIFERENTS AMB NUM DE COMANDA IGUAL
+            # QUAN FEM LA UNIÓ df_real i df_ped, TENIM:
+            # R_NUMERO_CP <-> A_NUMERO_CP
+            #    53749           53749
+            #    -----           53749
+            # EN df_real NOMÉS TENIM UNA COMANDA 53749
+            # EN df_ped TENIM DUES FILES AMB EL MATEIX NUM DE COMANDA 53749
+            # QUAN ES FA EL MERGE, EN EL DF_RESULTANT (df_real_ped),
+            # ES CREA UNA FILA MÉS PER INTEGRAR LA COMANDA REPETIDA:
+            # R_NUMERO_CP <-> A_NUMERO_CP
+            #    53749           53749
+            #    53749           53749
+            # DE TAL FORMA QUE EN df_real_ped, ES DUPLICA LA COMANDA REAL,
+            # DUPLICANT TOTS ELS ELEMENTS (CLIENT, IMPORT, DATA, etc.)
+            # PER TANT ES FA NECESSARI NETEJAR AQUESTS VALORS DUPLICATS I
+            # DEIXAR NOMES UN REGISTRE EN L'APARTAT DE DADES REALS.
+
+            # VEURE IMATGE EXPLICATIVA EN IMATGES/MERGE_DUPLICAT.png
+
+            # PER ELIMINAR ELS VALORS REALS EN LA COMANDA DUPLICADA, APLICAM
+            # LES INSTRUCCIONS SEGÜENTS:
+
+            mask = df_real_ped.duplicated(subset=["R_NUMERO_CP"], keep="first")
+            columnes_a_netejar = [
+                "R_IDTOTS_C",
+                "R_ID_C",
+                "R_EXPEDIENT_C",
+                "R_EMPRESA_C",
+                "R_ESTADO_FC",
+                "R_PROVEEDOR_C",
+                "R_FECHA_EMISION_C",
+                "R_NUMERO_CP",
+                "R_NUMERO_CA",
+                "R_NUMERO_CF",
+                "R_IMPORTE_C",
+                "R_ACUMULADO_C",
+            ]
+
+            df_real_ped.loc[mask, columnes_a_netejar] = np.nan
+
+            # UNIO ENTRE df_real i df_alb
+
+            # No tenim cap relació directa entre df_real i df_alb
+            # però amb l'ajuda de df_ped podem establir una relació indirecta
+            # df_real <-> df_ped <-> NUM. COMANDA
+            # df_ped <-> df_alb <-> EXPEDIENTE + REF. ODOO COMANDA COMPRA
+            # A cada num. de comanda li correspon un (EXP. + REF. ODOO C-COMPRA)
+            # D'aquesta manera assignam aquesta clau única a cada comanda real
+
+            df_real = logic_comu.unionDataFrames(
+                df_real,
+                df_ped[["A_NUMERO_CP", "A_CLAU_UNICA_CP"]],
+                "R_NUMERO_CP",
+                "A_NUMERO_CP",
+                "left",
+                "_real",
+                "_ped",
+                True,
+            )
+
+            # Ja podem fer merge entre df_real i df_alb, aplicant clau única,
+            # però abans cal reanomenar la columna _merge (creada en el merge
+            # anterior) per evitar problemes:
+
+            df_real.rename(columns={"_merge": "_merge_01"}, inplace=True)
+
+            df_real_alb = logic_comu.unionDataFrames(
+                df_real,
+                df_alb,
+                "A_CLAU_UNICA_CP",
+                "A_CLAU_UNICA_CA",
+                "left",
+                "_real",
+                "_alb",
+                True,
+            )
+
+            # UNIO ENTRE df_real i df_fac
+            df_real_fac = logic_comu.unionDataFrames(
+                df_real,
+                df_fac,
+                "A_CLAU_UNICA_CP",
+                "A_CLAU_UNICA_CF",
+                "left",
+                "_real",
+                "_fac",
+                True,
+            )
+
+            if (
+                df_real_ped is not None
+                and df_real_alb is not None
+                and df_real_fac is not None
+            ):
+                st.success("Unió correcta entre els dataframes")
+                st.session_state.compres_merge_dataframes = True
+                st.divider()
+                # DESAM DATAFRAMES
+                filename_df_real_ped = prefNomFitxerCorreccio + "df_real_ped.csv"
+                filename_df_real_alb = prefNomFitxerCorreccio + "df_real_alb.csv"
+                filename_df_real_fac = prefNomFitxerCorreccio + "df_real_fac.csv"
+                carpetaDesti = "HISTORIC_CORRECCIONS"
+                logic_comu.desaCSV(df_real_ped, filename_df_real_ped, carpetaDesti)
+                logic_comu.desaCSV(df_real_alb, filename_df_real_alb, carpetaDesti)
+                logic_comu.desaCSV(df_real_fac, filename_df_real_fac, carpetaDesti)
+
+            else:
+                st.error("Error en la unió entre els dataframes")
+                st.divider()
+                st.stop()
+
+        # ==========================================================
+        # 3.1.7 RESEARCH OF ORPHAN OPERATIONS
+        # ==========================================================
+
+        if st.session_state.compres_merge_dataframes:
+            st.subheader("Recerca d'operacions ORFES")
+            st.markdown(
+                """
+                Es pot donar el cas que els alumnes hagin creat operacions, les quals no tenen una comanda real de referencia (quasevol operació de compra sempre està associada a una comanda real). Per exemple, pot haver registrat una comanda de compra indicant un numero de comanda equivocat, la qual cosa fa que no es pugui associar aquesta operació a cap comanda real, o per exemple, por haver introduit la factura de compra sense establir una relació a la comanda real que s'esta facturant.
+                Els registres resultants son considerats ORFES, perque no tenen cap comanda real associada.
+                
+                """
+            )
+
+            # OBTENIM COMANDES ALUMNES ORFES.
+            # Es a dir, un alumne ha introduit una comanda, la qual no
+            # apareix en les dades reals df_real
+
+            df_comandesOrfes = logic_comu.unionDataFrames(
+                df_ped,
+                df_real,
+                "A_NUMERO_CP",
+                "R_NUMERO_CP",
+                "left",
+                "_ped",
+                "_real",
+                True,
+            )
+
+            # Per obtenir només les comandes orfes, fem un subconjunt del
+            # dataframe df_comandesOrfes on la columna _merge té el valor
+            # "left_only", és a dir, aquelles files on només apareixen en
+            # df_ped i no apareixen en df_real
+
+            df_nomesComandesOrfes = df_comandesOrfes[
+                df_comandesOrfes["_merge"] == "left_only"
+            ]
+
+            # OBTENIM ALBARANS ALUMNES ORFES.
+            # Es a dir, un alumne ha introduit un albarà, el qual no
+            # apareix en les dades reals df_real
+
+            df_alb_orfes = logic_comu.unionDataFrames(
+                df_alb,
+                df_real,
+                "A_CLAU_UNICA_CA",
+                "A_CLAU_UNICA_CP",
+                "left",
+                "_alb",
+                "_real",
+                True,
+            )
+
+            df_nomesAlbaransOrfes = df_alb_orfes[df_alb_orfes["_merge"] == "left_only"]
+
+            # OBTENIM FACTURES ALUMNES ORFES.
+            # Es a dir, un alumne ha introduit una factura, el qual no
+            # apareix en les dades reals df_real
+
+            df_fac_orfes = logic_comu.unionDataFrames(
+                df_fac,
+                df_real,
+                "A_CLAU_UNICA_CF",
+                "A_CLAU_UNICA_CP",
+                "left",
+                "_fac",
+                "_real",
+                True,
+            )
+
+            df_nomesFacturesOrfes = df_fac_orfes[df_fac_orfes["_merge"] == "left_only"]
+
+            if len(df_nomesComandesOrfes) > 0:
+                st.subheader("Comandes orfes")
+                st.dataframe(df_nomesComandesOrfes)
+                # DESAM CSV
+                carpetaDesti = "HISTORIC_CORRECCIONS"
+                filename = prefNomFitxerCorreccio + "df_nomesComandesOrfes.csv"
+                logic_comu.desaCSV(df_nomesComandesOrfes, filename, carpetaDesti)
+            elif len(df_nomesComandesOrfes) == 0 or df_nomesComandesOrfes is None:
+                st.subheader("No s'han trobat comandes orfes")
+
+            if len(df_nomesAlbaransOrfes) > 0:
+                st.subheader("Albarans orfes")
+                st.dataframe(df_nomesAlbaransOrfes)
+                # DESAM CSV
+                carpetaDesti = "HISTORIC_CORRECCIONS"
+                filename = prefNomFitxerCorreccio + "df_nomesAlbaransOrfes.csv"
+                logic_comu.desaCSV(df_nomesAlbaransOrfes, filename, carpetaDesti)
+            elif len(df_nomesAlbaransOrfes) == 0 or df_nomesAlbaransOrfes is None:
+                st.subheader("No s'han trobat albarans orfes")
+
+            if len(df_nomesFacturesOrfes) > 0:
+                st.subheader("Factures orfes")
+                st.dataframe(df_nomesFacturesOrfes)
+                # DESAM CSV
+                carpetaDesti = "HISTORIC_CORRECCIONS"
+                filename = prefNomFitxerCorreccio + "df_nomesFacturesOrfes.csv"
+                logic_comu.desaCSV(df_nomesFacturesOrfes, filename, carpetaDesti)
+            elif len(df_nomesFacturesOrfes) == 0 or df_nomesFacturesOrfes is None:
+                st.subheader("No s'han trobat factures orfes")
+
+            st.divider()
+            st.session_state.compres_operacions_orfes = True
+
+        # ==========================================================
+        # 3.1.8 CORRECCIO D'OPERACIONS
+        # ==========================================================
+
+        if st.session_state.compres_operacions_orfes:
+            st.subheader("Correcció d'operacions")
+
+            dfCorrecioComandesCompra = logic_compres.correccioComandes(
+                df_real_ped, prefNomFitxerCorreccio
+            )
+
+            st.dataframe(dfCorrecioComandesCompra)
 
     with tab_vendes:
         st.write("Gestió de correccions de vendes")

@@ -76,9 +76,11 @@ def carregaArxius(
 # PER TOT AIXÒ, NOMES TINDREM EN COMPTE POSSIBLES DUPLICATS EN df_ped
 
 # OBTENIM DF ANB COMANDES QUE TENEN ASSIGNAT EL MATEIX NUMERO
-df_duplicats_df_ped_a_numero_cp = logic_comu.obtenirDuplicats(df_ped, "A_NUMERO_CP")
 
-print(df_duplicats_df_ped_a_numero_cp)
+"""
+df_duplicats_df_ped_a_numero_cp = logic_comu.obtenirDuplicats(df_ped, "A_NUMERO_CP")
+"""
+
 
 """
 # ==============================================================================
@@ -217,104 +219,114 @@ df_fac_orfes = logic_comu.unionDataFrames(
 df_nomesFacturesOrfes = df_fac_orfes[df_fac_orfes["_merge"] == "left_only"]
 
 # logic_comu.exportToExcel(df_nomesFacturesOrfes, "NOMES_FACTURES_ORFES.xlsx")
-
+"""
 
 # ==============================================================================
 # 5. LÒGICA DE CORRECCIO
 # ==============================================================================
 
-informe_pedidos = []
-informe_albarans = []
-informe_factures = []
 
 # nomsColumnes = df_final.columns.tolist()
 # print(nomsColumnes)
 
 
-# ==============================================================================
-# 5.1. LÒGICA DE CORRECCIO COMANDES
-# ==============================================================================
+def correccioComandes(df_real_ped, prefNomFitxerCorreccio):
 
-for index, row in df_real_ped.iterrows():
-    info_pedidos = {
-        "NUM. COMANDA COMPRA INICIAL": row["R_NUMERO_CP"],
-        "EMPRESAULA - EMPRESA ALUMNE": row["R_EMPRESA_C"],
-        "ALUMNE - EMPRESA ALUMNE": row["A_EMPRESA_CP"],
-        "COINCIDEIXEN EMPRESES": "✅",
-        "EMPRESAULA - PROVEÏDOR": row["R_PROVEEDOR_C"],
-        "ALUMNE - PROVEÏDOR": row["A_PROVEEDOR_CP"],
-        "COINCIDEIXEN PROVEÏDORS": "✅",
-        "EMPRESAULA - DATA EMISIÓ": row["R_FECHA_EMISION_C"],
-        "ALUMNE - DATA EMISIÓ": row["A_FECHA_EMISION_CP"],
-        "COINCIDEIXEN DATES EMISIÓ": "✅",
-        "EMPRESAULA - NUM COMANDA": row["R_NUMERO_CP"],
-        "ALUMNE - NUM COMANDA": row["A_NUMERO_CP"],
-        "COINCIDEIXEN NUM COMANDA": "✅",
-        "EMPRESAULA - IMPORT": row["R_IMPORTE_C"],
-        "ALUMNE - IMPORT": row["A_IMPORTE_CP"],
-        "COINCIDEIXEN IMPORTS": "✅",
-        "ESTAT COMANDA": row["A_ESTADO_CP"],
-        "COMPROVACIO ESTAT COMANDA": "❌",
-        "DATA ENTREGA TASCA": row["R_FECHA_ENTREGA"],
-        "DATA FACTURA COMPRA DISPONIBLE": row["R_FECHA_EMISION_C"] + timedelta(days=1),
-        "ESTAT FACTURACIO COMANDA": row["A_ESTADO_FACTURACION_CP"],
-        "COMPROVACIO ESTAT FACTURACIO COMANDA": "❌",
-    }
+    # ==========================================================================
+    # 5.1. LÒGICA DE CORRECCIO COMANDES
+    # ==========================================================================
 
-    if (
-        str(row["R_EMPRESA_C"]).strip().upper()
-        != str(row["A_EMPRESA_CP"]).strip().upper()
-    ):
-        info_pedidos["COINCIDEIXEN EMPRESES"] = "❌"
+    informe_pedidos = []
 
-    if (
-        str(row["R_PROVEEDOR_C"]).strip().upper()
-        != str(row["A_PROVEEDOR_CP"]).strip().upper()
-    ):
-        info_pedidos["COINCIDEIXEN PROVEÏDORS"] = "❌"
+    for index, row in df_real_ped.iterrows():
+        info_pedidos = {
+            "NUM. COMANDA COMPRA INICIAL": row["R_NUMERO_CP"],
+            "EMPRESAULA - EMPRESA ALUMNE": row["R_EMPRESA_C"],
+            "ALUMNE - EMPRESA ALUMNE": row["A_EMPRESA_CP"],
+            "COINCIDEIXEN EMPRESES": "✅",
+            "EMPRESAULA - PROVEÏDOR": row["R_PROVEEDOR_C"],
+            "ALUMNE - PROVEÏDOR": row["A_PROVEEDOR_CP"],
+            "COINCIDEIXEN PROVEÏDORS": "✅",
+            "EMPRESAULA - DATA EMISIÓ": row["R_FECHA_EMISION_C"],
+            "ALUMNE - DATA EMISIÓ": row["A_FECHA_EMISION_CP"],
+            "COINCIDEIXEN DATES EMISIÓ": "✅",
+            "EMPRESAULA - NUM COMANDA": row["R_NUMERO_CP"],
+            "ALUMNE - NUM COMANDA": row["A_NUMERO_CP"],
+            "COINCIDEIXEN NUM COMANDA": "✅",
+            "EMPRESAULA - IMPORT": row["R_IMPORTE_C"],
+            "ALUMNE - IMPORT": row["A_IMPORTE_CP"],
+            "COINCIDEIXEN IMPORTS": "✅",
+            "ESTAT COMANDA": row["A_ESTADO_CP"],
+            "COMPROVACIO ESTAT COMANDA": "❌",
+            "DATA ENTREGA TASCA": row["R_FECHA_ENTREGA"],
+            "DATA FACTURA COMPRA DISPONIBLE": pd.to_datetime(row["R_FECHA_EMISION_C"])
+            + timedelta(days=1),
+            "ESTAT FACTURACIO COMANDA": row["A_ESTADO_FACTURACION_CP"],
+            "COMPROVACIO ESTAT FACTURACIO COMANDA": "❌",
+        }
 
-    if row["R_FECHA_EMISION_C"] != row["A_FECHA_EMISION_CP"]:
-        info_pedidos["COINCIDEIXEN DATES EMISIÓ"] = "❌"
+        if (
+            str(row["R_EMPRESA_C"]).strip().upper()
+            != str(row["A_EMPRESA_CP"]).strip().upper()
+        ):
+            info_pedidos["COINCIDEIXEN EMPRESES"] = "❌"
 
-    if row["R_NUMERO_CP"] != row["A_NUMERO_CP"]:
-        info_pedidos["COINCIDEIXEN NUM COMANDA"] = "❌"
+        if (
+            str(row["R_PROVEEDOR_C"]).strip().upper()
+            != str(row["A_PROVEEDOR_CP"]).strip().upper()
+        ):
+            info_pedidos["COINCIDEIXEN PROVEÏDORS"] = "❌"
 
-    if row["R_IMPORTE_C"] != row["A_IMPORTE_CP"]:
-        info_pedidos["COINCIDEIXEN IMPORTS"] = "❌"
+        if row["R_FECHA_EMISION_C"] != row["A_FECHA_EMISION_CP"]:
+            info_pedidos["COINCIDEIXEN DATES EMISIÓ"] = "❌"
 
-    if row["A_ESTADO_CP"] == "Pedido de compra":
-        info_pedidos["COMPROVACIO ESTAT COMANDA"] = "✅"
+        if row["R_NUMERO_CP"] != row["A_NUMERO_CP"]:
+            info_pedidos["COINCIDEIXEN NUM COMANDA"] = "❌"
 
-    # DETERMINAM SI FACTURA DE COMPRA ESTÀ DISPONIBLE
-    dataEntregaTasca = row["R_FECHA_ENTREGA"]
-    dataDisponibleFactura = row["R_FECHA_EMISION_C"] + timedelta(days=1)
-    if dataEntregaTasca >= dataDisponibleFactura:
-        estatFactEsperat = "TOTALMENTE FACTURADO"
-        if str(row["A_ESTADO_FACTURACION_CP"]).strip().upper() == estatFactEsperat:
-            info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "✅"
+        if row["R_IMPORTE_C"] != row["A_IMPORTE_CP"]:
+            info_pedidos["COINCIDEIXEN IMPORTS"] = "❌"
+
+        if row["A_ESTADO_CP"] == "Pedido de compra":
+            info_pedidos["COMPROVACIO ESTAT COMANDA"] = "✅"
+
+        # DETERMINAM SI FACTURA DE COMPRA ESTÀ DISPONIBLE
+        dataEntregaTasca = pd.to_datetime(row["R_FECHA_ENTREGA"])
+        dataDisponibleFactura = pd.to_datetime(row["R_FECHA_EMISION_C"]) + timedelta(
+            days=1
+        )
+        if dataEntregaTasca >= dataDisponibleFactura:
+            estatFactEsperat = "TOTALMENTE FACTURADO"
+            if str(row["A_ESTADO_FACTURACION_CP"]).strip().upper() == estatFactEsperat:
+                info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "✅"
+            else:
+                info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "❌"
         else:
-            info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "❌"
-    else:
-        estatFactEsperat = "FACTURAS EN ESPERA"
-        if str(row["A_ESTADO_FACTURACION_CP"]).strip().upper() == estatFactEsperat:
-            info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "✅"
-        else:
-            info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "❌"
+            estatFactEsperat = "FACTURAS EN ESPERA"
+            if str(row["A_ESTADO_FACTURACION_CP"]).strip().upper() == estatFactEsperat:
+                info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "✅"
+            else:
+                info_pedidos["COMPROVACIO ESTAT FACTURACIO COMANDA"] = "❌"
 
-    informe_pedidos.append(info_pedidos)
+        informe_pedidos.append(info_pedidos)
+
+    # CREAM DF CORRECCIO COMANDES COMPRA
+    dfCorrecioComandesCompra = pd.DataFrame(informe_pedidos)
+
+    fileName = prefNomFitxerCorreccio + "InformeCorreccióComandesCompra.csv"
+
+    logic_comu.desaCSV(dfCorrecioComandesCompra, fileName, "HISTORIC_CORRECCIONS")
+
+    return dfCorrecioComandesCompra
 
 
-# CREAM DF CORRECCIO COMANDES COMPRA
-dfCorrecioComandesCompra = pd.DataFrame(informe_pedidos)
-
-fileName = "21_InformeCorreccióComandesCompra.xlsx"
-
-logic_comu.exportToExcel(dfCorrecioComandesCompra, fileName)
-
+"""
 
 # ==============================================================================
 # 5.2. LÒGICA DE CORRECCIO ALBARANS
 # ==============================================================================
+
+
+informe_albarans = []
 
 for index, row in df_real_alb.iterrows():
     info_albarans = {
@@ -376,6 +388,8 @@ logic_comu.exportToExcel(dfCorrecioAlbaransCompra, fileName)
 # 5.3. LÒGICA DE CORRECCIO FACTURES
 # ==============================================================================
 
+
+informe_factures = []
 
 for index, row in df_real_fac.iterrows():
     info_factures = {
