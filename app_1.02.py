@@ -26,6 +26,52 @@ if "compres_merge_dataframes" not in st.session_state:
 if "compres_operacions_orfes" not in st.session_state:
     st.session_state.compres_operacions_orfes = False
 
+if "fase01" not in st.session_state:
+    st.session_state.fase01 = False
+
+# 2. INTRODUCIO DATA ENTREGA TASCA
+
+if "fase02" not in st.session_state:
+    st.session_state.fase02 = False
+
+# 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
+
+if "fase03" not in st.session_state:
+    st.session_state.fase03 = False
+
+# 3.1.2 ENVIAMENT ARXIUS PER AL SEU TRACTAMENT
+
+if "fase04" not in st.session_state:
+    st.session_state.fase04 = False
+
+# 3.1.4 NETEJA VARIABLES
+
+if "fase05" not in st.session_state:
+    st.session_state.fase05 = False
+
+# 3.1.5 COMANDES DUPLICADES
+
+if "fase06" not in st.session_state:
+    st.session_state.fase06 = False
+
+# 3.1.6 UNIO DE DATAFRAMES (merge)
+
+if "fase07" not in st.session_state:
+    st.session_state.fase07 = False
+
+# 3.1.7 RESEARCH OF ORPHAN OPERATIONS
+
+if "fase08" not in st.session_state:
+    st.session_state.fase08 = False
+
+# 3.1.8 CORRECCIO D'OPERACIONS - COMANDES
+
+if "fase09" not in st.session_state:
+    st.session_state.fase09 = False
+
+# 3.1.9 CORRECCIO D'OPERACIONS - ALBARANS
+
+
 # ==============================================================================
 # 1. CONFIGURACIÓN Y GESTIÓN DE CARPETAS
 # ==============================================================================
@@ -178,13 +224,112 @@ if rol == "Professor" and acces_professor:
 
         st.divider()
 
-        st.session_state.introduccio_grup_tasca_data = True
+        st.session_state.fase01 = True
+
+        ####################################################################
+        ####################################################################
+        ####################################################################
+        ####################################################################
+        ####################################################################
+
+        # ====================================================================
+        # 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
+        # ====================================================================
+
+        if st.session_state.fase01:
+            st.subheader("Adjunta els llistats amb les dades per corregir la tasca")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.badge("DADES REALS FROM EMPRESAULA")
+                file_compres_real = st.file_uploader(
+                    "Adjunta el fitxer 0_DATOS_COMPRAS_REALES.csv",
+                    type=["csv"],
+                    key="real_c",
+                )
+                st.badge("DADES COMANDES FROM ALUMNAT")
+                file_dades_compra_comandes_alumne = st.file_uploader(
+                    "Subir 1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv",
+                    type=["csv"],
+                    key="ped_c",
+                )
+
+            with col2:
+                st.badge("DADES ALBARANS FROM ALUMNAT")
+                file_dades_compra_albarans_alumne = st.file_uploader(
+                    "Subir 2_DATOS_ALBARANES_COMPRA_ALUMNOS.csv",
+                    type=["csv"],
+                    key="alb_c",
+                )
+                st.badge("DADES FACTURES FROM ALUMNAT")
+                file_dades_compra_factures_alumne = st.file_uploader(
+                    "Subir 3_DATOS_FACTURAS_COMPRA_ALUMNOS.csv",
+                    type=["csv"],
+                    key="fac_c",
+                )
+
+            # Comprovam si s'han adjuntat tots els arxius per INICIAR la pujada al servidor
+            if not (
+                file_compres_real
+                and file_dades_compra_comandes_alumne
+                and file_dades_compra_albarans_alumne
+                and file_dades_compra_factures_alumne
+            ):
+                st.error(
+                    "No podrem continuar fins que no hagis adjuntat tots els llistats sol·licitats"
+                )
+                st.stop()
+
+        st.session_state.fase02 = True
+
+        st.divider()
+
+        # ====================================================================
+        # 3.1.2 ENVIAMENT ARXIUS PER AL SEU TRACTAMENT
+        # ===================================================================
+
+        if st.session_state.fase02:
+
+            # if st.button("⚙️ PUJAR I PROCESSAMENT INICIAL DE LLISTATS", type="primary"):
+
+            st.subheader("Carrega inicial de les dades")
+
+            st.write("⏳ Pujant arxius al servidor... ⏳")
+
+            # --- 2. PUJAM ELS ARXIUS AMB FUNCIO carregaArxius() ---
+            # Li passam els 5 arxius que hem pujat a la WEB
+
+            df_real, df_ped, df_alb, df_fac = logic_compres.carregaArxius(
+                file_compres_real,
+                file_dades_compra_comandes_alumne,
+                file_dades_compra_albarans_alumne,
+                file_dades_compra_factures_alumne,
+            )
+
+            listaDFs01 = [df_real, df_ped, df_alb, df_fac]
+
+            if any(dadesCarregades is None for dadesCarregades in listaDFs01):
+                st.error("NO ES POT SEGUIR EXECUTANT EL PROGRAMA PER FALTA DE DADES")
+                # ATURAM L'EXECUCIO DEL PROGRAMA. EL CODI POSTERIOR NO
+                # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
+                st.stop()
+
+            time.sleep(3)
+
+            st.success(
+                "✅ LA CÀRREGA DELS LLISTATS I LA SEVA CONVERSIÓ A DATAFRAMES HA ESTAT EXITOSA"
+            )
+
+            st.session_state.fase03 = True
+
+            st.divider()
 
         # ====================================================================
         # 2. INTRODUCIO DATA ENTREGA TASCA
         # ====================================================================
 
-        if st.session_state.introduccio_grup_tasca_data:
+        if st.session_state.fase03:
 
             st.title(
                 "Registre de les dates en que els alumnes han entregat les tasques"
@@ -293,28 +438,26 @@ if rol == "Professor" and acces_professor:
 
                 enviado = st.form_submit_button("ENVIAR DADES DEL FORMULARI")
 
-            if st.session_state.compres_insercio_data_entrega == False:
-                # El primer cop que s'executa aquesta instruccio, l'estat de la
-                # sessió es FALSE, per tant, s'executa el codi que hi ha dins
-                # d'aquesta condicio.
-                # Si executam el codi que hi ha dins d'aquesta condicio, l'estat de
-                # la sessió es TRUE, per tant, la propera vegada que l'execució del
-                # programa passi per aquesta instruccio, el codi existent en aquesta
-                # condició FALSE ja no s'executara.
-                # Aquesta condicio FALSE es la que utilitzam per a controlar
-                # el codi que hi ha dins de la segona condicio.
-                if not enviado:
-                    st.info(
-                        "NO frissam, quan hagis acabat d'emplenar el formulari, fes clic al boto 'ENVIAR DADES DEL FORMULARI i seguirem amb l'execució del programa."
-                    )
-                    st.stop()
+            if not enviado:
+                st.info(
+                    "NO frissam, quan hagis acabat d'emplenar el formulari, fes clic al boto 'ENVIAR DADES DEL FORMULARI i seguirem amb l'execució del programa."
+                )
+                st.stop()
 
                 # 4. Creación del DataFrame
                 df_data_entrega_tasca = pd.DataFrame(datos_finales)
 
+                # Aprofirem per inserir la data de entrega en df_real
+                # Si volem corregir les compres, cal disposar d'aquesta data en el
+                # dataframe de dades reals, per podetr determinar si s'han
+                # registrat les factures de compra a data de entrega
+                df_real = logic_comu.insereixDataEntregaEnDFDesti(
+                    df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_data_entrega_tasca
+                )
+
                 # Mostramos el resultado
-                st.subheader("DataFrame Resultante")
-                st.dataframe(df_data_entrega_tasca, use_container_width=True)
+                # st.subheader("DataFrame Resultante")
+                # st.dataframe(df_data_entrega_tasca, use_container_width=True)
 
                 # DESAM CSV
                 carpetaDesti = "LLISTATS_CSV"
@@ -325,109 +468,13 @@ if rol == "Professor" and acces_professor:
                     df_data_entrega_tasca, filename_df_data_entrega_tasca, carpetaDesti
                 )
                 st.divider()
-                st.session_state.compres_insercio_data_entrega = True
+                st.session_state.fase04 = True
 
-        # ====================================================================
-        # 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
-        # ====================================================================
-
-        if st.session_state.compres_insercio_data_entrega:
-            st.subheader("Adjunta els llistats amb les dades per corregir la tasca")
-
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.badge("DADES REALS FROM EMPRESAULA")
-                file_compres_real = st.file_uploader(
-                    "Adjunta el fitxer 0_DATOS_COMPRAS_REALES.csv",
-                    type=["csv"],
-                    key="real_c",
-                )
-                st.badge("DADES COMANDES FROM ALUMNAT")
-                file_dades_compra_comandes_alumne = st.file_uploader(
-                    "Subir 1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv",
-                    type=["csv"],
-                    key="ped_c",
-                )
-
-            with col2:
-                st.badge("DADES ALBARANS FROM ALUMNAT")
-                file_dades_compra_albarans_alumne = st.file_uploader(
-                    "Subir 2_DATOS_ALBARANES_COMPRA_ALUMNOS.csv",
-                    type=["csv"],
-                    key="alb_c",
-                )
-                st.badge("DADES FACTURES FROM ALUMNAT")
-                file_dades_compra_factures_alumne = st.file_uploader(
-                    "Subir 3_DATOS_FACTURAS_COMPRA_ALUMNOS.csv",
-                    type=["csv"],
-                    key="fac_c",
-                )
-
-            # Comprovam si s'han adjuntat tots els arxius per INICIAR la pujada al servidor
-            if not (
-                file_compres_real
-                and file_dades_compra_comandes_alumne
-                and file_dades_compra_albarans_alumne
-                and file_dades_compra_factures_alumne
-            ):
-                st.error(
-                    "No podrem continuar fins que no hagis adjuntat tots els llistats sol·licitats"
-                )
-                st.stop()
-
-        st.session_state.compres_preparacio_llistats = True
-
-        st.divider()
-
-        # ====================================================================
-        # 3.1.2 ENVIAMENT ARXIUS PER AL SEU TRACTAMENT
-        # ===================================================================
-
-        if st.session_state.compres_preparacio_llistats:
-
-            # if st.button("⚙️ PUJAR I PROCESSAMENT INICIAL DE LLISTATS", type="primary"):
-
-            st.subheader("Carrega inicial de les dades")
-
-            st.write("⏳ Pujant arxius al servidor... ⏳")
-
-            # --- 2. PUJAM ELS ARXIUS AMB FUNCIO carregaArxius() ---
-            # Li passam els 5 arxius que hem pujat a la WEB
-
-            df_real, df_ped, df_alb, df_fac = logic_compres.carregaArxius(
-                file_compres_real,
-                file_dades_compra_comandes_alumne,
-                file_dades_compra_albarans_alumne,
-                file_dades_compra_factures_alumne,
-            )
-
-            listaDFs01 = [df_real, df_ped, df_alb, df_fac]
-
-            if any(dadesCarregades is None for dadesCarregades in listaDFs01):
-                st.error("NO ES POT SEGUIR EXECUTANT EL PROGRAMA PER FALTA DE DADES")
-                # ATURAM L'EXECUCIO DEL PROGRAMA. EL CODI POSTERIOR NO
-                # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
-                st.stop()
-
-            time.sleep(3)
-
-            st.success(
-                "✅ LA CÀRREGA DELS LLISTATS I LA SEVA CONVERSIÓ A DATAFRAMES HA ESTAT EXITOSA"
-            )
-
-            # Aprofirem per inserir la data de entrega en df_real
-            # Anteriorment haviem desat aquesta data en un fitxer CSV
-            # Si volem corregir les compres, cal disposar d'aquesta data en el
-            # dataframe de dades reals, per podetr determinar si s'han
-            # registrat les factures de compra a data de entrega
-            df_real = logic_comu.insereixDataEntregaEnDFDesti(
-                df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_data_entrega_tasca
-            )
-
-            st.session_state.compres_carrega_llistats = True
-
-            st.divider()
+        ####################################################################
+        ####################################################################
+        ####################################################################
+        ####################################################################
+        ####################################################################
 
         """
         # ==========================================================
@@ -474,7 +521,7 @@ if rol == "Professor" and acces_professor:
         # 3.1.4 NETEJA VARIABLES
         # ==========================================================
 
-        if st.session_state.compres_carrega_llistats:
+        if st.session_state.fase04:
             st.subheader("Neteja de variables")
             st.write(
                 "També cal realitzar una serie d'operacions dirigidaes a la neteja i homogenitzacio de les dades incloses en els llistats (dates, valors numerics...)"
@@ -494,7 +541,7 @@ if rol == "Professor" and acces_professor:
                 st.stop()
 
             st.success("✅ LA NETEJA DELS TIPUS DE DADES HA ESTAT EXITOSA")
-            st.session_state.compres_neteja_tipus = True
+            st.session_state.fase05 = True
 
             st.divider()
 
@@ -502,7 +549,7 @@ if rol == "Professor" and acces_professor:
         # 3.1.5 COMANDES DUPLICADES
         # ==========================================================
 
-        if st.session_state.compres_neteja_tipus:
+        if st.session_state.fase05:
 
             st.subheader("COMANDES DUPLICADES")
             st.write(
@@ -514,7 +561,7 @@ if rol == "Professor" and acces_professor:
             if len(df_ped_duplicats) > 0:
                 st.write("S'han trobat les següents comandes duplicades en df_ped:")
                 st.dataframe(df_ped_duplicats)
-                st.session_state.compres_duplicats = True
+                st.session_state.fase06 = True
                 st.divider()
                 # DESAM CSV
                 carpetaDesti = "HISTORIC_CORRECCIONS"
@@ -522,14 +569,14 @@ if rol == "Professor" and acces_professor:
                 logic_comu.desaCSV(df_ped_duplicats, filename, carpetaDesti)
             elif len(df_ped_duplicats) == 0 or df_ped_duplicats is None:
                 st.write("No s'han trobat comandes duplicades en df_ped")
-                st.session_state.compres_duplicats = True
+                st.session_state.fase06 = True
                 st.divider()
 
         # ==========================================================
         # 3.1.6 UNIO DE DATAFRAMES (merge)
         # ==========================================================
 
-        if st.session_state.compres_duplicats == True:
+        if st.session_state.fase06:
             st.subheader("Unio de DATAFRAMES (merge)")
             st.markdown(
                 """
@@ -561,7 +608,7 @@ if rol == "Professor" and acces_professor:
                 and df_real_fac is not None
             ):
                 st.success("Unió correcta entre els dataframes")
-                st.session_state.compres_merge_dataframes = True
+                st.session_state.fase07 = True
                 st.divider()
 
             else:
@@ -573,7 +620,7 @@ if rol == "Professor" and acces_professor:
         # 3.1.7 RESEARCH OF ORPHAN OPERATIONS
         # ==========================================================
 
-        if st.session_state.compres_merge_dataframes:
+        if st.session_state.fase07:
             st.subheader("Recerca d'operacions ORFES")
             st.markdown(
                 """
@@ -611,13 +658,13 @@ if rol == "Professor" and acces_professor:
                 st.subheader("No s'han trobat factures orfes")
 
             st.divider()
-            st.session_state.compres_operacions_orfes = True
+            st.session_state.fase08 = True
 
         # ==========================================================
         # 3.1.8 CORRECCIO D'OPERACIONS - COMANDES
         # ==========================================================
 
-        if st.session_state.compres_operacions_orfes:
+        if st.session_state.fase08:
             st.subheader("Correcció d'operacions")
 
             dfCorrecioComandesCompra = logic_compres.correccioComandes(
@@ -632,7 +679,7 @@ if rol == "Professor" and acces_professor:
                 st.subheader("No s'han trobat comandes per corregir")
                 st.divider()
 
-            st.session_state.compres_operacions_corregides = True
+            st.session_state.fase09 = True
 
     with tab_vendes:
         st.write("Gestió de correccions de vendes")
