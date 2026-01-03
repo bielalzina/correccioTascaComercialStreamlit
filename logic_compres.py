@@ -172,7 +172,7 @@ def insertaDataEntregaTreball(df_real, grup, dataVto):
 # ==========================================================
 
 
-def uneixDataFrames(df_real, df_ped, df_alb, df_fac):
+def uneixDataFrames(df_real, df_ped, df_alb, df_fac, prefNomFitxerCorreccio):
 
     df_real_ped = logic_comu.unionDataFrames(
         df_real,
@@ -302,7 +302,7 @@ def uneixDataFrames(df_real, df_ped, df_alb, df_fac):
 # ==============================================================================
 
 
-def researchOrphanOperations(df_real, df_ped, df_alb, df_fac):
+def researchOrphanOperations(df_real, df_ped, df_alb, df_fac, prefNomFitxerCorreccio):
 
     # OBTENIM COMANDES ALUMNES ORFES.
     # Es a dir, un alumne ha introduit una comanda, la qual no

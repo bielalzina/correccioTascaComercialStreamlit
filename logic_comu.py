@@ -75,9 +75,7 @@ def insereixDataEntregaEnDFDesti(
     df_desti, columnaDataEntrega, columnaEmpresa, df_fechas
 ):
     # CONVERTIM df_fechas['EMPRESA_ALUMNO'] i df_fechas['FECHA_ENTREGA'] en un diccionari
-    mapaDatesEntrega = dict(
-        zip(df_fechas["EMPRESA_ALUMNO"], df_fechas["FECHA_ENTREGA"])
-    )
+    mapaDatesEntrega = dict(zip(df_fechas["Empresa"], df_fechas["Data entrega"]))
 
     # print(mapaDatesEntrega)
 

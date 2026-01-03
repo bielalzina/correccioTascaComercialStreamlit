@@ -444,31 +444,31 @@ if rol == "Professor" and acces_professor:
                 )
                 st.stop()
 
-                # 4. Creación del DataFrame
-                df_data_entrega_tasca = pd.DataFrame(datos_finales)
+            # 4. Creación del DataFrame
+            df_data_entrega_tasca = pd.DataFrame(datos_finales)
 
-                # Aprofirem per inserir la data de entrega en df_real
-                # Si volem corregir les compres, cal disposar d'aquesta data en el
-                # dataframe de dades reals, per podetr determinar si s'han
-                # registrat les factures de compra a data de entrega
-                df_real = logic_comu.insereixDataEntregaEnDFDesti(
-                    df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_data_entrega_tasca
-                )
+            # Mostramos el resultado
+            st.subheader("DataFrame Resultante")
+            st.dataframe(df_data_entrega_tasca, use_container_width=True)
 
-                # Mostramos el resultado
-                # st.subheader("DataFrame Resultante")
-                # st.dataframe(df_data_entrega_tasca, use_container_width=True)
+            # Aprofirem per inserir la data de entrega en df_real
+            # Si volem corregir les compres, cal disposar d'aquesta data en el
+            # dataframe de dades reals, per podetr determinar si s'han
+            # registrat les factures de compra a data de entrega
+            df_real = logic_comu.insereixDataEntregaEnDFDesti(
+                df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_data_entrega_tasca
+            )
 
-                # DESAM CSV
-                carpetaDesti = "LLISTATS_CSV"
-                filename_df_data_entrega_tasca = (
-                    prefNomFitxerCorreccio + "df_data_entrega_tasca.csv"
-                )
-                logic_comu.desaCSV(
-                    df_data_entrega_tasca, filename_df_data_entrega_tasca, carpetaDesti
-                )
-                st.divider()
-                st.session_state.fase04 = True
+            # DESAM CSV
+            carpetaDesti = "LLISTATS_CSV"
+            filename_df_data_entrega_tasca = (
+                prefNomFitxerCorreccio + "df_data_entrega_tasca.csv"
+            )
+            logic_comu.desaCSV(
+                df_data_entrega_tasca, filename_df_data_entrega_tasca, carpetaDesti
+            )
+            st.divider()
+            st.session_state.fase04 = True
 
         ####################################################################
         ####################################################################
@@ -476,7 +476,7 @@ if rol == "Professor" and acces_professor:
         ####################################################################
         ####################################################################
 
-        """
+        _ = """
         # ==========================================================
         # 3.1.3 DATA ENTREGA TREBALL
         # ==========================================================
@@ -516,7 +516,9 @@ if rol == "Professor" and acces_professor:
 
             st.session_state.compres_insercio_data_entrega = True
             st.divider()
-"""
+
+            """
+
         # ==========================================================
         # 3.1.4 NETEJA VARIABLES
         # ==========================================================
@@ -598,6 +600,7 @@ if rol == "Professor" and acces_professor:
                     df_ped,
                     df_alb,
                     df_fac,
+                    prefNomFitxerCorreccio,
                 )
             )
 
