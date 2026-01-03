@@ -11,12 +11,12 @@ import time
 # INICIALITZACIO DELS ESTATS DE LES ETAPES DE CORRECCIÓ
 if "introduccio_grup_tasca_data" not in st.session_state:
     st.session_state.introduccio_grup_tasca_data = False
+if "compres_insercio_data_entrega" not in st.session_state:
+    st.session_state.compres_insercio_data_entrega = False
 if "compres_preparacio_llistats" not in st.session_state:
     st.session_state.compres_preparacio_llistats = False
 if "compres_carrega_llistats" not in st.session_state:
     st.session_state.compres_carrega_llistats = False
-if "compres_insercio_data_entrega" not in st.session_state:
-    st.session_state.compres_insercio_data_entrega = False
 if "compres_neteja_tipus" not in st.session_state:
     st.session_state.compres_neteja_tipus = False
 if "compres_duplicats" not in st.session_state:
@@ -181,11 +181,151 @@ if rol == "Professor" and acces_professor:
         st.session_state.introduccio_grup_tasca_data = True
 
         # ====================================================================
-        # 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
+        # 2. INTRODUCIO DATA ENTREGA TASCA
         # ====================================================================
 
         if st.session_state.introduccio_grup_tasca_data:
 
+            st.title(
+                "Registre de les dates en que els alumnes han entregat les tasques"
+            )
+
+            # 1. Definim els expedients i noms de les empreses
+            expedients = [
+                5796,
+                6265,
+                6320,
+                6352,
+                6356,
+                6366,
+                6368,
+                6369,
+                6427,
+                6428,
+                6431,
+                6467,
+                6478,
+                6702,
+                6706,
+                6707,
+                6713,
+                6734,
+                6746,
+                6777,
+                6792,
+                6844,
+            ]
+            empreses_predefinides = [
+                "ADG32 5796 NSACARES SL",
+                "ADG32 6265 SMORENO SL",
+                "ADG32 6320 MNAVARRO SL",
+                "ADG32 6352 SAANANOU SL",
+                "ADG32 6356 WAANANOU SL",
+                "ADG32 6366 JMORAGUES SL",
+                "ADG32 6368 LPIZA SL",
+                "ADG32 6369 VMASTRANGELO SL",
+                "ADG32 6427 NANANOU SL",
+                "ADG32 6428 ABOUBAL SL",
+                "ADG32 6431 GZOUGGAGHI SL",
+                "ADG32 6467 WCHANTAH SL",
+                "ADG32 6478 CBAUZA SL",
+                "ADG32 6702 NFORNES SL",
+                "ADG32 6706 NSUIYHI SL",
+                "ADG32 6707 MOUAZINE SL",
+                "ADG32 6713 BCARBONELL SL",
+                "ADG32 6734 LABOLAFIO SL",
+                "ADG32 6746 ELLADO SL",
+                "ADG32 6777 JGARCIA SL",
+                "ADG32 6792 PCAPO SL",
+                "ADG32 6844 TTRAMULLAS SL",
+            ]
+
+            with st.form("formulari_dates_entrega_tasca"):
+                st.subheader(
+                    "Indica les dates en que els alumnes han entregat les tasques"
+                )
+
+                # Creamos listas vacías para almacenar los inputs temporalmente
+                datos_finales = []
+
+                # 2. Generamos los 44 inputs (22 nombres + 4 fechas)
+                for i in range(22):
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        exp = st.text_input(
+                            f"Expedient {i+1}",
+                            value=expedients[i],
+                            key=f"exp_{i}",
+                        )
+                    with col2:
+                        nom = st.text_input(
+                            f"Empresa {i+1}",
+                            value=empreses_predefinides[i],
+                            key=f"emp_{i}",
+                        )
+                    with col3:
+                        data = st.date_input(
+                            f"Data entrega {i+1}",
+                            value=dataVto,
+                            key=f"fec_{i}",
+                        )
+                    with col4:
+                        est = st.selectbox(
+                            f"Estat entrega {i+1}",
+                            options=["ENTREGADA", "NO ENTREGADA"],
+                            index=0,
+                            key=f"est_{i}",
+                        )
+
+                    # Guardamos cada fila como un diccionario
+                    datos_finales.append(
+                        {
+                            "Expediente": exp,
+                            "Empresa": nom,
+                            "Data entrega": data.strftime("%Y-%m-%d"),
+                            "Estat entrega": est,
+                        }
+                    )
+
+                st.markdown("---")
+
+                # Botón de envío
+
+                enviado = st.form_submit_button("ENVIAR FORMULARI")
+
+            if enviado:
+                st.success("✅ Ejecución reanudada. Datos procesados.")
+
+            # 4. Creación del DataFrame
+            df_data_entrega_tasca = pd.DataFrame(datos_finales)
+
+            # Mostramos el resultado
+            st.subheader("DataFrame Resultante")
+            st.dataframe(df_data_entrega_tasca, use_container_width=True)
+
+            # DESAM CSV
+            carpetaDesti = "LLISTATS_CSV"
+            filename_df_data_entrega_tasca = (
+                prefNomFitxerCorreccio + "df_data_entrega_tasca.csv"
+            )
+            logic_comu.desaCSV(
+                df_data_entrega_tasca, filename_df_data_entrega_tasca, carpetaDesti
+            )
+
+            # Inserim la data de entrega en df_real
+            df_real = logic_comu.insereixDataEntregaEnDFDesti(
+                df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_data_entrega_tasca
+            )
+
+            st.divider()
+            st.session_state.compres_insercio_data_entrega = True
+            
+
+        # ====================================================================
+        # 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
+        # ====================================================================
+
+        if st.session_state.compres_insercio_data_entrega:
             st.subheader("Adjunta els llistats amb les dades per corregir la tasca")
 
             col1, col2 = st.columns(2)
@@ -274,6 +414,7 @@ if rol == "Professor" and acces_professor:
 
             st.divider()
 
+        """
         # ==========================================================
         # 3.1.3 DATA ENTREGA TREBALL
         # ==========================================================
@@ -290,115 +431,35 @@ if rol == "Professor" and acces_professor:
 
             # print(df_real)
 
-            # CARREGAM EN DATAFRAME LA PLANTILLA QUE JA TENIM DISSENYADA
+            df_real = logic_compres.insertaDataEntregaTreball(df_real, grup, dataVto)
 
-            if grup == "ADG21O":
-                df_dataEntrega = logic_comu.carregaCSV(
-                    "ADG21O_DATA_LLIURAMENT_TASCA.csv"
+            if df_real is None:
+                st.error(
+                    "No ha estat possible inserir la data d'entrega en el dataframe df_real. finalitza la execució d'aquesta APP. Disculpeu les molesties."
                 )
-            elif grup == "ADG32O":
-                df_dataEntrega = logic_comu.carregaCSV(
-                    "ADG32O_DATA_LLIURAMENT_TASCA.csv"
-                )
+                # ATURAM L'EXECUCIO DEL PROGRAMA. EL CODI POSTERIOR NO
+                # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
+                st.divider()
+                st.stop()
 
-            # INSERIM COM A DATA DE ENTREGA DE LA TASA
-            # LA DATA DE VENCIMENT DE LA TASCA
-            df_dataEntrega["FECHA_ENTREGA"] = dataVto
-
-            df_dataEntrega["FECHA_ENTREGA"] = pd.to_datetime(
-                df_dataEntrega["FECHA_ENTREGA"], format="%Y-%m-%d"
-            ).dt.date
-
-            # INSERIM 3n df_real la nova columna ['R_FECHA_ENTREGA'] amb la data de vencimient de la tasca
-            df_real["R_FECHA_ENTREGA"] = dataVto
-            df_real["R_FECHA_ENTREGA"] = pd.to_datetime(
-                df_real["R_FECHA_ENTREGA"], format="%Y-%m-%d"
-            ).dt.date
-            print("ABANS DE MODIFICAR DATA ENTREGA AMB st.data_editor")
-            print(df_real)
-
-            # CREAM EDITOR DE DADES
-            # Amb aquest editor podem modificar les
-            # dates de lliurament de cada alumne
-            # 'column_config' permet que la columna de data
-            # faci servir un widget de calendari
-
-            # Inicializar los datos en el estado de la sesión
-            if "df_dataEntrega" not in st.session_state:
-                st.session_state.df_dataEntrega = df_dataEntrega
-
-            df_editat = st.data_editor(
-                st.session_state.df_dataEntrega,
-                column_config={
-                    "FECHA_ENTREGA": st.column_config.DateColumn(
-                        "Fecha de Entrega (AAAA-MM-DD)",
-                        format="YYYY-MM-DD",
-                    ),
-                    "EXPEDIENT": st.column_config.NumberColumn(
-                        "Expedient", disabled=True
-                    ),  # Bloqueamos edición de ID
-                    "EMPRESA_ALUMNO": st.column_config.TextColumn(
-                        "Empresa alumne", disabled=True
-                    ),  # Bloqueamos edición de Nombre
-                },
-                hide_index=True,
-                width="stretch",
+            # df_real no es NONE, podem continuar
+            st.success(
+                "Les dates d'entrega s'han introduït en el dataframe (df_real) per cada empresa/operacio (DF_REAL recull totes les operacions de compra realitzades pels alumnes en EMPRESAULA)"
             )
 
-            # Botó per desar els canvis
-            if st.button("Desar canvis"):
+            # Inserim la data de entrega en df_real
+            df_real = logic_comu.insereixDataEntregaEnDFDesti(
+                df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_editat
+            )
 
-                # Un cop modificades les dates en edited_df,
-                # hem d'inserir aquesta data en df_real per poder comparar-la
-                # amb la data en que la factures de compra estan disponibles
-                # i determinar si l'alumnat ha d'haver registrat o no les
-                # factures de compra
-
-                # Canviam l'estat de la session de df_dataEntrega a df_editat,
-                st.session_state.df_dataEntrega = df_editat
-                st.success(
-                    "Les dates d'entrega s'han desat correctament en el dataframe (df_dataEntrega)"
-                )
-                # Inserim la data de entrega en df_real
-                df_real = logic_comu.insereixDataEntregaEnDFDesti(
-                    df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_editat
-                )
-
-                # Comprovem si la funcio ha retornat None
-                if df_real is None:
-                    st.error("Error al inserir la data de entrega en el dataframe")
-                    st.stop()
-
-                st.success(
-                    "Les dates d'entrega s'han introduït en el dataframe (df_real) per cada empresa/operacio (DF_REAL recull totes les operacions de compra realitzades pels alumnes en EMPRESAULA)"
-                )
-
-                # Desam df_editat com a fitxer CSV per si l'hem de tornar
-                # a utilitzar
-                if grup == "ADG21O":
-                    nombre_archivo = "ADG21O_DATA_LLIURAMENT_TASCA.csv"
-                elif grup == "ADG32O":
-                    nombre_archivo = "ADG32O_DATA_LLIURAMENT_TASCA.csv"
-
-                result = logic_comu.desaCSV(df_editat, nombre_archivo, "LLISTATS_CSV")
-                if result:
-                    st.success(
-                        f"Fitxer desat correctament en: {os.path.abspath(nombre_archivo)}"
-                    )
-                    st.session_state.compres_insercio_data_entrega = True
-                    st.divider()
-                    print("DESPRES DE MODIFICAR DATA ENTREGA AMB st.data_editor")
-                    print(df_real)
-                else:
-                    st.error("Error al desar el fitxer")
-                    st.divider()
-                    st.stop()
-
+            st.session_state.compres_insercio_data_entrega = True
+            st.divider()
+"""
         # ==========================================================
         # 3.1.4 NETEJA VARIABLES
         # ==========================================================
 
-        if st.session_state.compres_insercio_data_entrega:
+        if st.session_state.compres_carrega_llistats:
             st.subheader("Neteja de variables")
             st.write(
                 "També cal realitzar una serie d'operacions dirigidaes a la neteja i homogenitzacio de les dades incloses en els llistats (dates, valors numerics...)"
@@ -429,13 +490,9 @@ if rol == "Professor" and acces_professor:
         if st.session_state.compres_neteja_tipus:
 
             st.subheader("COMANDES DUPLICADES")
-            missatge = (
-                "A nivell de compres, les operacions que normalment es dupliquen "
-                "son les comandes: l'alumne introdueix 2 cops la mateixa comanda "
-                "o bé introdueix dues comandes diferents, introduint el mateix número de comanda. "
-                "Per tot això, nomes tindrem en compte possibles duplicats en df_ped."
+            st.write(
+                "A nivell de compres, les operacions que normalment es dupliquen son les comandes: l'alumne introdueix 2 cops la mateixa comanda o bé introdueix dues comandes diferents, introduint el mateix número de comanda. Per tot això, nomes tindrem en compte possibles duplicats en df_ped."
             )
-            st.write(missatge)
 
             df_ped_duplicats = logic_comu.obtenirDuplicats(df_ped, "A_NUMERO_CP")
 
@@ -473,124 +530,24 @@ if rol == "Professor" and acces_professor:
             )
 
             # UNIO ENTRE df_real i df_ped
-            df_real_ped = logic_comu.unionDataFrames(
-                df_real,
-                df_ped,
-                "R_NUMERO_CP",
-                "A_NUMERO_CP",
-                "left",
-                "_real",
-                "_ped",
-                True,
-            )
-
-            # SI ALUMNE INTRODUEIX DUES COMANDES DIFERENTS, PERÒ EN LA 2A
-            # INDICA EL MATEIX NUM DE COMANDA QUE L'ANTERIOR, PER TANT TENIM
-            # DUES COMANDES DIFERENTS AMB NUM DE COMANDA IGUAL
-            # QUAN FEM LA UNIÓ df_real i df_ped, TENIM:
-            # R_NUMERO_CP <-> A_NUMERO_CP
-            #    53749           53749
-            #    -----           53749
-            # EN df_real NOMÉS TENIM UNA COMANDA 53749
-            # EN df_ped TENIM DUES FILES AMB EL MATEIX NUM DE COMANDA 53749
-            # QUAN ES FA EL MERGE, EN EL DF_RESULTANT (df_real_ped),
-            # ES CREA UNA FILA MÉS PER INTEGRAR LA COMANDA REPETIDA:
-            # R_NUMERO_CP <-> A_NUMERO_CP
-            #    53749           53749
-            #    53749           53749
-            # DE TAL FORMA QUE EN df_real_ped, ES DUPLICA LA COMANDA REAL,
-            # DUPLICANT TOTS ELS ELEMENTS (CLIENT, IMPORT, DATA, etc.)
-            # PER TANT ES FA NECESSARI NETEJAR AQUESTS VALORS DUPLICATS I
-            # DEIXAR NOMES UN REGISTRE EN L'APARTAT DE DADES REALS.
-
-            # VEURE IMATGE EXPLICATIVA EN IMATGES/MERGE_DUPLICAT.png
-
-            # PER ELIMINAR ELS VALORS REALS EN LA COMANDA DUPLICADA, APLICAM
-            # LES INSTRUCCIONS SEGÜENTS:
-
-            mask = df_real_ped.duplicated(subset=["R_NUMERO_CP"], keep="first")
-            columnes_a_netejar = [
-                "R_IDTOTS_C",
-                "R_ID_C",
-                "R_EXPEDIENT_C",
-                "R_EMPRESA_C",
-                "R_ESTADO_FC",
-                "R_PROVEEDOR_C",
-                "R_FECHA_EMISION_C",
-                "R_NUMERO_CP",
-                "R_NUMERO_CA",
-                "R_NUMERO_CF",
-                "R_IMPORTE_C",
-                "R_ACUMULADO_C",
-            ]
-
-            df_real_ped.loc[mask, columnes_a_netejar] = np.nan
-
-            # UNIO ENTRE df_real i df_alb
-
-            # No tenim cap relació directa entre df_real i df_alb
-            # però amb l'ajuda de df_ped podem establir una relació indirecta
-            # df_real <-> df_ped <-> NUM. COMANDA
-            # df_ped <-> df_alb <-> EXPEDIENTE + REF. ODOO COMANDA COMPRA
-            # A cada num. de comanda li correspon un (EXP. + REF. ODOO C-COMPRA)
-            # D'aquesta manera assignam aquesta clau única a cada comanda real
-
-            df_real = logic_comu.unionDataFrames(
-                df_real,
-                df_ped[["A_NUMERO_CP", "A_CLAU_UNICA_CP"]],
-                "R_NUMERO_CP",
-                "A_NUMERO_CP",
-                "left",
-                "_real",
-                "_ped",
-                True,
-            )
-
-            # Ja podem fer merge entre df_real i df_alb, aplicant clau única,
-            # però abans cal reanomenar la columna _merge (creada en el merge
-            # anterior) per evitar problemes:
-
-            df_real.rename(columns={"_merge": "_merge_01"}, inplace=True)
-
-            df_real_alb = logic_comu.unionDataFrames(
-                df_real,
-                df_alb,
-                "A_CLAU_UNICA_CP",
-                "A_CLAU_UNICA_CA",
-                "left",
-                "_real",
-                "_alb",
-                True,
-            )
-
-            # UNIO ENTRE df_real i df_fac
-            df_real_fac = logic_comu.unionDataFrames(
-                df_real,
-                df_fac,
-                "A_CLAU_UNICA_CP",
-                "A_CLAU_UNICA_CF",
-                "left",
-                "_real",
-                "_fac",
-                True,
+            df_real_ped, df_real, df_real_alb, df_real_fac = (
+                logic_compres.uneixDataFrames(
+                    df_real,
+                    df_ped,
+                    df_alb,
+                    df_fac,
+                )
             )
 
             if (
                 df_real_ped is not None
+                and df_real is not None
                 and df_real_alb is not None
                 and df_real_fac is not None
             ):
                 st.success("Unió correcta entre els dataframes")
                 st.session_state.compres_merge_dataframes = True
                 st.divider()
-                # DESAM DATAFRAMES
-                filename_df_real_ped = prefNomFitxerCorreccio + "df_real_ped.csv"
-                filename_df_real_alb = prefNomFitxerCorreccio + "df_real_alb.csv"
-                filename_df_real_fac = prefNomFitxerCorreccio + "df_real_fac.csv"
-                carpetaDesti = "HISTORIC_CORRECCIONS"
-                logic_comu.desaCSV(df_real_ped, filename_df_real_ped, carpetaDesti)
-                logic_comu.desaCSV(df_real_alb, filename_df_real_alb, carpetaDesti)
-                logic_comu.desaCSV(df_real_fac, filename_df_real_fac, carpetaDesti)
 
             else:
                 st.error("Error en la unió entre els dataframes")
@@ -611,91 +568,30 @@ if rol == "Professor" and acces_professor:
                 """
             )
 
-            # OBTENIM COMANDES ALUMNES ORFES.
-            # Es a dir, un alumne ha introduit una comanda, la qual no
-            # apareix en les dades reals df_real
-
-            df_comandesOrfes = logic_comu.unionDataFrames(
-                df_ped,
-                df_real,
-                "A_NUMERO_CP",
-                "R_NUMERO_CP",
-                "left",
-                "_ped",
-                "_real",
-                True,
+            df_nomesComandesOrfes, df_nomesAlbaransOrfes, df_nomesFacturesOrfes = (
+                logic_compres.researchOrphanOperations(
+                    df_real, df_ped, df_alb, df_fac, prefNomFitxerCorreccio
+                )
             )
-
-            # Per obtenir només les comandes orfes, fem un subconjunt del
-            # dataframe df_comandesOrfes on la columna _merge té el valor
-            # "left_only", és a dir, aquelles files on només apareixen en
-            # df_ped i no apareixen en df_real
-
-            df_nomesComandesOrfes = df_comandesOrfes[
-                df_comandesOrfes["_merge"] == "left_only"
-            ]
-
-            # OBTENIM ALBARANS ALUMNES ORFES.
-            # Es a dir, un alumne ha introduit un albarà, el qual no
-            # apareix en les dades reals df_real
-
-            df_alb_orfes = logic_comu.unionDataFrames(
-                df_alb,
-                df_real,
-                "A_CLAU_UNICA_CA",
-                "A_CLAU_UNICA_CP",
-                "left",
-                "_alb",
-                "_real",
-                True,
-            )
-
-            df_nomesAlbaransOrfes = df_alb_orfes[df_alb_orfes["_merge"] == "left_only"]
-
-            # OBTENIM FACTURES ALUMNES ORFES.
-            # Es a dir, un alumne ha introduit una factura, el qual no
-            # apareix en les dades reals df_real
-
-            df_fac_orfes = logic_comu.unionDataFrames(
-                df_fac,
-                df_real,
-                "A_CLAU_UNICA_CF",
-                "A_CLAU_UNICA_CP",
-                "left",
-                "_fac",
-                "_real",
-                True,
-            )
-
-            df_nomesFacturesOrfes = df_fac_orfes[df_fac_orfes["_merge"] == "left_only"]
 
             if len(df_nomesComandesOrfes) > 0:
                 st.subheader("Comandes orfes")
                 st.dataframe(df_nomesComandesOrfes)
-                # DESAM CSV
-                carpetaDesti = "HISTORIC_CORRECCIONS"
-                filename = prefNomFitxerCorreccio + "df_nomesComandesOrfes.csv"
-                logic_comu.desaCSV(df_nomesComandesOrfes, filename, carpetaDesti)
+                st.divider()
             elif len(df_nomesComandesOrfes) == 0 or df_nomesComandesOrfes is None:
                 st.subheader("No s'han trobat comandes orfes")
 
             if len(df_nomesAlbaransOrfes) > 0:
                 st.subheader("Albarans orfes")
                 st.dataframe(df_nomesAlbaransOrfes)
-                # DESAM CSV
-                carpetaDesti = "HISTORIC_CORRECCIONS"
-                filename = prefNomFitxerCorreccio + "df_nomesAlbaransOrfes.csv"
-                logic_comu.desaCSV(df_nomesAlbaransOrfes, filename, carpetaDesti)
+                st.divider()
             elif len(df_nomesAlbaransOrfes) == 0 or df_nomesAlbaransOrfes is None:
                 st.subheader("No s'han trobat albarans orfes")
 
             if len(df_nomesFacturesOrfes) > 0:
                 st.subheader("Factures orfes")
                 st.dataframe(df_nomesFacturesOrfes)
-                # DESAM CSV
-                carpetaDesti = "HISTORIC_CORRECCIONS"
-                filename = prefNomFitxerCorreccio + "df_nomesFacturesOrfes.csv"
-                logic_comu.desaCSV(df_nomesFacturesOrfes, filename, carpetaDesti)
+                st.divider()
             elif len(df_nomesFacturesOrfes) == 0 or df_nomesFacturesOrfes is None:
                 st.subheader("No s'han trobat factures orfes")
 
@@ -703,7 +599,7 @@ if rol == "Professor" and acces_professor:
             st.session_state.compres_operacions_orfes = True
 
         # ==========================================================
-        # 3.1.8 CORRECCIO D'OPERACIONS
+        # 3.1.8 CORRECCIO D'OPERACIONS - COMANDES
         # ==========================================================
 
         if st.session_state.compres_operacions_orfes:
@@ -713,7 +609,15 @@ if rol == "Professor" and acces_professor:
                 df_real_ped, prefNomFitxerCorreccio
             )
 
-            st.dataframe(dfCorrecioComandesCompra)
+            if dfCorrecioComandesCompra is not None:
+                st.subheader("Comandes corregides")
+                st.dataframe(dfCorrecioComandesCompra)
+                st.divider()
+            elif dfCorrecioComandesCompra is None:
+                st.subheader("No s'han trobat comandes per corregir")
+                st.divider()
+
+            st.session_state.compres_operacions_corregides = True
 
     with tab_vendes:
         st.write("Gestió de correccions de vendes")
