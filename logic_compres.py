@@ -1,4 +1,5 @@
 import pandas as pd
+import streamlit as st
 import numpy as np
 from datetime import datetime, timedelta
 import os
@@ -62,179 +63,325 @@ def carregaArxius(
 # ==============================================================================
 
 # ==============================================================================
-# 2. INSERIM DATA ENTREGA TREBALL EN df_real i NETEJA DE TIPUS DE DADES
+# 3.1.3 DATA ENTREGA TREBALL
 # ==============================================================================
 
 
+def insertaDataEntregaTreball(df_real, grup, dataVto):
+    # CARREGAM EN DATAFRAME LA PLANTILLA QUE JA TENIM DISSENYADA
+
+    if grup == "ADG21O":
+        df_dataEntrega = logic_comu.carregaCSV("ADG21O_DATA_LLIURAMENT_TASCA.csv")
+    elif grup == "ADG32O":
+        df_dataEntrega = logic_comu.carregaCSV("ADG32O_DATA_LLIURAMENT_TASCA.csv")
+
+    # INSERIM COM A DATA DE ENTREGA DE LA TASA
+    # LA DATA DE VENCIMENT DE LA TASCA
+    df_dataEntrega["FECHA_ENTREGA"] = dataVto
+
+    df_dataEntrega["FECHA_ENTREGA"] = pd.to_datetime(
+        df_dataEntrega["FECHA_ENTREGA"], format="%Y-%m-%d"
+    ).dt.date
+
+    # INSERIM en df_real la nova columna ['R_FECHA_ENTREGA'] amb la data de
+    # vencimient de la tasca
+    df_real["R_FECHA_ENTREGA"] = dataVto
+    df_real["R_FECHA_ENTREGA"] = pd.to_datetime(
+        df_real["R_FECHA_ENTREGA"], format="%Y-%m-%d"
+    ).dt.date
+    # print("ABANS DE MODIFICAR DATA ENTREGA AMB st.data_editor")
+    # print(df_real)
+
+    # CREAM EDITOR DE DADES
+    # Amb aquest editor podem modificar les
+    # dates de lliurament de cada alumne
+    # 'column_config' permet que la columna de data
+    # faci servir un widget de calendari
+
+    # Inicializar los datos en el estado de la sesión
+    if "df_dataEntrega" not in st.session_state:
+        st.session_state.df_dataEntrega = df_dataEntrega
+
+    df_editat = st.data_editor(
+        st.session_state.df_dataEntrega,
+        column_config={
+            "FECHA_ENTREGA": st.column_config.DateColumn(
+                "Fecha de Entrega (AAAA-MM-DD)",
+                format="YYYY-MM-DD",
+            ),
+            "EXPEDIENT": st.column_config.NumberColumn(
+                "Expedient", disabled=True
+            ),  # Bloqueamos edición de ID
+            "EMPRESA_ALUMNO": st.column_config.TextColumn(
+                "Empresa alumne", disabled=True
+            ),  # Bloqueamos edición de Nombre
+        },
+        hide_index=True,
+        width="stretch",
+    )
+
+    # Botó per desar els canvis
+    if st.button("Desar canvis"):
+
+        # Un cop modificades les dates en edited_df,
+        # hem d'inserir aquesta data en df_real per poder comparar-la
+        # amb la data en que la factures de compra estan disponibles
+        # i determinar si l'alumnat ha d'haver registrat o no les
+        # factures de compra
+
+        # Canviam l'estat de la session de df_dataEntrega a df_editat,
+        st.session_state.df_dataEntrega = df_editat
+        st.success(
+            "Les dates d'entrega s'han desat correctament en el dataframe (df_dataEntrega)"
+        )
+        # Inserim la data de entrega en df_real
+        df_real = logic_comu.insereixDataEntregaEnDFDesti(
+            df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_editat
+        )
+
+        # Comprovem si la funcio ha retornat None
+        if df_real is None:
+            return None
+
+        # df_real no es NONE, podem continuar
+        # Desam df_editat com a fitxer CSV per si l'hem de tornar
+        # a utilitzar
+        if grup == "ADG21O":
+            nombre_archivo = "ADG21O_DATA_LLIURAMENT_TASCA.csv"
+        elif grup == "ADG32O":
+            nombre_archivo = "ADG32O_DATA_LLIURAMENT_TASCA.csv"
+
+        logic_comu.desaCSV(df_editat, nombre_archivo, "LLISTATS_CSV")
+
+        st.session_state.compres_insercio_data_entrega = True
+
+        return df_real
+
+
+# ==========================================================
+# 3.1.4 NETEJA VARIABLES
+# ==========================================================
+
+# ==========================================================
+# 3.1.5 COMANDES DUPLICADES
+# ==========================================================
+
+
+# ==========================================================
+# 3.1.6 UNIO DE DATAFRAMES (merge)
+# ==========================================================
+
+
+def uneixDataFrames(df_real, df_ped, df_alb, df_fac):
+
+    df_real_ped = logic_comu.unionDataFrames(
+        df_real,
+        df_ped,
+        "R_NUMERO_CP",
+        "A_NUMERO_CP",
+        "left",
+        "_real",
+        "_ped",
+        True,
+    )
+
+    # SI ALUMNE INTRODUEIX DUES COMANDES DIFERENTS, PERÒ EN LA 2A
+    # INDICA EL MATEIX NUM DE COMANDA QUE L'ANTERIOR, PER TANT TENIM
+    # DUES COMANDES DIFERENTS AMB NUM DE COMANDA IGUAL
+    # QUAN FEM LA UNIÓ df_real i df_ped, TENIM:
+    # R_NUMERO_CP <-> A_NUMERO_CP
+    #    53749           53749
+    #    -----           53749
+    # EN df_real NOMÉS TENIM UNA COMANDA 53749
+    # EN df_ped TENIM DUES FILES AMB EL MATEIX NUM DE COMANDA 53749
+    # QUAN ES FA EL MERGE, EN EL DF_RESULTANT (df_real_ped),
+    # ES CREA UNA FILA MÉS PER INTEGRAR LA COMANDA REPETIDA:
+    # R_NUMERO_CP <-> A_NUMERO_CP
+    #    53749           53749
+    #    53749           53749
+    # DE TAL FORMA QUE EN df_real_ped, ES DUPLICA LA COMANDA REAL,
+    # DUPLICANT TOTS ELS ELEMENTS (CLIENT, IMPORT, DATA, etc.)
+    # PER TANT ES FA NECESSARI NETEJAR AQUESTS VALORS DUPLICATS I
+    # DEIXAR NOMES UN REGISTRE EN L'APARTAT DE DADES REALS.
+
+    # VEURE IMATGE EXPLICATIVA EN IMATGES/MERGE_DUPLICAT.png
+
+    # PER ELIMINAR ELS VALORS REALS EN LA COMANDA DUPLICADA, APLICAM
+    # LES INSTRUCCIONS SEGÜENTS:
+
+    mask = df_real_ped.duplicated(subset=["R_NUMERO_CP"], keep="first")
+    columnes_a_netejar = [
+        "R_IDTOTS_C",
+        "R_ID_C",
+        "R_EXPEDIENT_C",
+        "R_EMPRESA_C",
+        "R_ESTADO_FC",
+        "R_PROVEEDOR_C",
+        "R_FECHA_EMISION_C",
+        "R_NUMERO_CP",
+        "R_NUMERO_CA",
+        "R_NUMERO_CF",
+        "R_IMPORTE_C",
+        "R_ACUMULADO_C",
+    ]
+
+    df_real_ped.loc[mask, columnes_a_netejar] = np.nan
+
+    # DESAM CSV
+    carpetaDesti = "HISTORIC_CORRECCIONS"
+    filename_df_real_ped = prefNomFitxerCorreccio + "df_real_ped.csv"
+    logic_comu.desaCSV(df_real_ped, filename_df_real_ped, carpetaDesti)
+
+    # UNIO ENTRE df_real i df_alb
+
+    # No tenim cap relació directa entre df_real i df_alb
+    # però amb l'ajuda de df_ped podem establir una relació indirecta
+    # df_real <-> df_ped <-> NUM. COMANDA
+    # df_ped <-> df_alb <-> EXPEDIENTE + REF. ODOO COMANDA COMPRA
+    # A cada num. de comanda li correspon un (EXP. + REF. ODOO C-COMPRA)
+    # D'aquesta manera assignam aquesta clau única a cada comanda real
+
+    df_real = logic_comu.unionDataFrames(
+        df_real,
+        df_ped[["A_NUMERO_CP", "A_CLAU_UNICA_CP"]],
+        "R_NUMERO_CP",
+        "A_NUMERO_CP",
+        "left",
+        "_real",
+        "_ped",
+        True,
+    )
+
+    # DESAM CSV
+    carpetaDesti = "HISTORIC_CORRECCIONS"
+    filename_df_real = prefNomFitxerCorreccio + "df_real.csv"
+    logic_comu.desaCSV(df_real, filename_df_real, carpetaDesti)
+
+    # Ja podem fer merge entre df_real i df_alb, aplicant clau única,
+    # però abans cal reanomenar la columna _merge (creada en el merge
+    # anterior) per evitar problemes:
+
+    df_real.rename(columns={"_merge": "_merge_01"}, inplace=True)
+
+    df_real_alb = logic_comu.unionDataFrames(
+        df_real,
+        df_alb,
+        "A_CLAU_UNICA_CP",
+        "A_CLAU_UNICA_CA",
+        "left",
+        "_real",
+        "_alb",
+        True,
+    )
+
+    # DESAM CSV
+    filename_df_real_alb = prefNomFitxerCorreccio + "df_real_alb.csv"
+    logic_comu.desaCSV(df_real_alb, filename_df_real_alb, carpetaDesti)
+
+    # UNIO ENTRE df_real i df_fac
+    df_real_fac = logic_comu.unionDataFrames(
+        df_real,
+        df_fac,
+        "A_CLAU_UNICA_CP",
+        "A_CLAU_UNICA_CF",
+        "left",
+        "_real",
+        "_fac",
+        True,
+    )
+
+    # DESAM CSV
+    filename_df_real_fac = prefNomFitxerCorreccio + "df_real_fac.csv"
+    logic_comu.desaCSV(df_real_fac, filename_df_real_fac, carpetaDesti)
+
+    return df_real_ped, df_real, df_real_alb, df_real_fac
+
+
 # ==============================================================================
-# 3. DUPLICATS
-# ==============================================================================
-
-# A NIVELL DE COMPRES, LES UNIQUES OPERACIONS QUE PODEN SER DUPLICADES
-# SON QUAN UN ALUMNE INTRODUEIX DOS COPS LA MATEIXA COMANDA, O BE
-# INTRODUEIX DUES COMANDES DIFERENTS, PERÒ AMB EL MATEIX NUMEERO AMBDUES
-# PER TOT AIXÒ, NOMES TINDREM EN COMPTE POSSIBLES DUPLICATS EN df_ped
-
-# OBTENIM DF ANB COMANDES QUE TENEN ASSIGNAT EL MATEIX NUMERO
-
-"""
-df_duplicats_df_ped_a_numero_cp = logic_comu.obtenirDuplicats(df_ped, "A_NUMERO_CP")
-"""
-
-
-"""
-# ==============================================================================
-# 4. UNIO DE TOTS ELS DATAFRAMES
-# ==============================================================================
-
-# =========================================
-# 4.1. df_real + df_ped + = df_real_ped
-# =========================================
-
-df_real_ped = logic_comu.unionDataFrames(
-    df_real, df_ped, "R_NUMERO_CP", "A_NUMERO_CP", "left", "_real", "_ped", True
-)
-
-
-# logic_comu.exportToExcel(df_real_ped, "DF_REAL_PED_abans.xlsx")
-
-# SI ALUMNE INTRODUEIX DUES COMANDES DIFERENTS, PERÒ EN LA 2A
-# INDICA EL MATEIX NUM DE COMANDA QUE L'ANTERIOR, PER TANT TENIM
-# DUES COMANDES DIFERENTS AMB NUM DE COMANDA IGUAL
-# QUAN FEM LA UNIÓ df_real i df_ped, el df_resultant
-# R_NUMERO_CP <-> A_NUMERO_CP
-#    53749
-# FILES AMB EL MATEIX NUM DE COMANDA (PERO DIFERENT DETALL)
-# EN DF_FINAL DUPLICA LA COMANDA REAL, DUPLICANT EL CLIENT REAL,
-# IMPORT REAL, DATA REAL.
-# PER TANT ES FA NECESSARI NETEJAR AQUESTS VALORS DUPLICATS I
-# DEIXAR NOMES UN REGISTRE EN L'APARTAT DE DADES REALS.
-
-# VEURE IMATGE EXPLICATIVA EN IMATGES/MERGE_DUPLICAT.png
-
-mask = df_real_ped.duplicated(subset=["R_NUMERO_CP"], keep="first")
-columnes_a_netejar = [
-    "R_IDTOTS_C",
-    "R_ID_C",
-    "R_EXPEDIENT_C",
-    "R_EMPRESA_C",
-    "R_ESTADO_FC",
-    "R_PROVEEDOR_C",
-    "R_FECHA_EMISION_C",
-    "R_NUMERO_CP",
-    "R_NUMERO_CA",
-    "R_NUMERO_CF",
-    "R_IMPORTE_C",
-    "R_ACUMULADO_C",
-]
-
-df_real_ped.loc[mask, columnes_a_netejar] = np.nan
-
-logic_comu.exportToExcel(df_real_ped, "11_DF_REAL_PED.xlsx")
-
-# OBTENIM COMANDES ALUMNES ORFES.
-# Es a dir, un alumne ha introduit una comanda, la qual no
-# apareix en les dades reals df_real
-
-df_comandesOrfes = logic_comu.unionDataFrames(
-    df_ped, df_real, "A_NUMERO_CP", "R_NUMERO_CP", "left", "_ped", "_real", True
-)
-
-
-df_nomesComandesOrfes = df_comandesOrfes[df_comandesOrfes["_merge"] == "left_only"]
-
-# logic_comu.exportToExcel(nomesComandesOrfes, "NOMES_COMANDES_ORFES.xlsx")
-
-# print(df_nomesComandesOrfes)
-
-# =========================================
-# 4.2. df_real + df_alb = df_real_alb
-# =========================================
-
-# No tenim cap relació directa entre df_real i df_alb
-# però amb l'ajuda de df_ped podem establir una relació indirecta
-# df_real <-> df_ped <-> NUM. COMANDA
-# df_ped <-> df_alb <-> EXPEDIENTE + REF. INTERNA ODOO COMANDA COMPRA
-# A CADA NUM DE COMANDA LI CORRESPON UN (EXP. + REF. INTERNA ODOO COMANDA COMPRA)
-# D'AQUESTA FORMA PODEM ASSIGNAR (EXP + REF. ODOO) A CADA NUM. COMANDA EN DF_REAL
-
-df_real = logic_comu.unionDataFrames(
-    df_real,
-    df_ped[["A_NUMERO_CP", "A_CLAU_UNICA_CP"]],
-    "R_NUMERO_CP",
-    "A_NUMERO_CP",
-    "left",
-    "_real",
-    "_ped",
-    True,
-)
-
-# logic_comu.exportToExcel(df_real, "DF_REAL_AMB_CLAU_UNICA_CP.xlsx")
-
-# ARA JA PODEM UNIR DF_REAL + DF_ALB
-
-# ABANS CAL REANOMBRAR LA COLUMNA _MERGE PER EVITAR CONFLICTE
-df_real.rename(columns={"_merge": "_merge_01"}, inplace=True)
-
-
-df_real_alb = logic_comu.unionDataFrames(
-    df_real, df_alb, "A_CLAU_UNICA_CP", "A_CLAU_UNICA_CA", "left", "_real", "_alb", True
-)
-
-logic_comu.exportToExcel(df_real_alb, "12_DF_REAL_ALB.xlsx")
-
-# OBTENIM ALBARANS ALUMNES ORFES.
-# Es a dir, un alumne ha introduit un albarà, el qual no
-# apareix en les dades reals df_real
-
-df_alb_orfes = logic_comu.unionDataFrames(
-    df_alb, df_real, "A_CLAU_UNICA_CA", "A_CLAU_UNICA_CP", "left", "_alb", "_real", True
-)
-
-
-df_nomesAlbaransOrfes = df_alb_orfes[df_alb_orfes["_merge"] == "left_only"]
-
-# logic_comu.exportToExcel(df_nomesAlbaransOrfes, "NOMES_ALBARANS_ORFES.xlsx")
-
-
-# =========================================
-# 4.3. df_real + df_fac = df_real_fac
-# =========================================
-
-df_real_fac = logic_comu.unionDataFrames(
-    df_real, df_fac, "A_CLAU_UNICA_CP", "A_CLAU_UNICA_CF", "left", "_real", "_fac", True
-)
-
-logic_comu.exportToExcel(df_real_fac, "13_DF_REAL_FAC.xlsx")
-
-# OBTENIM FACTURES ALUMNES ORFES.
-# Es a dir, un alumne ha introduit una factura, el qual no
-# apareix en les dades reals df_real
-
-df_fac_orfes = logic_comu.unionDataFrames(
-    df_fac, df_real, "A_CLAU_UNICA_CF", "A_CLAU_UNICA_CP", "left", "_fac", "_real", True
-)
-
-
-df_nomesFacturesOrfes = df_fac_orfes[df_fac_orfes["_merge"] == "left_only"]
-
-# logic_comu.exportToExcel(df_nomesFacturesOrfes, "NOMES_FACTURES_ORFES.xlsx")
-"""
-
-# ==============================================================================
-# 5. LÒGICA DE CORRECCIO
+# 3.1.7 RESEARCH OF ORPHAN OPERATIONS
 # ==============================================================================
 
 
-# nomsColumnes = df_final.columns.tolist()
-# print(nomsColumnes)
+def researchOrphanOperations(df_real, df_ped, df_alb, df_fac):
+
+    # OBTENIM COMANDES ALUMNES ORFES.
+    # Es a dir, un alumne ha introduit una comanda, la qual no
+    # apareix en les dades reals df_real
+
+    df_comandesOrfes = logic_comu.unionDataFrames(
+        df_ped, df_real, "A_NUMERO_CP", "R_NUMERO_CP", "left", "_ped", "_real", True
+    )
+
+    df_nomesComandesOrfes = df_comandesOrfes[df_comandesOrfes["_merge"] == "left_only"]
+
+    # DESAM CSV
+    carpetaDesti = "HISTORIC_CORRECCIONS"
+    filename_df_nomesComandesOrfes = (
+        prefNomFitxerCorreccio + "df_nomesComandesOrfes.csv"
+    )
+    logic_comu.desaCSV(
+        df_nomesComandesOrfes, filename_df_nomesComandesOrfes, carpetaDesti
+    )
+
+    # OBTENIM ALBARANS ALUMNES ORFES.
+    # Es a dir, un alumne ha introduit un albarà, el qual no
+    # apareix en les dades reals df_real
+
+    df_alb_orfes = logic_comu.unionDataFrames(
+        df_alb,
+        df_real,
+        "A_CLAU_UNICA_CA",
+        "A_CLAU_UNICA_CP",
+        "left",
+        "_alb",
+        "_real",
+        True,
+    )
+
+    df_nomesAlbaransOrfes = df_alb_orfes[df_alb_orfes["_merge"] == "left_only"]
+
+    # DESAM CSV
+    filename_df_nomesAlbaransOrfes = (
+        prefNomFitxerCorreccio + "df_nomesAlbaransOrfes.csv"
+    )
+    logic_comu.desaCSV(
+        df_nomesAlbaransOrfes, filename_df_nomesAlbaransOrfes, carpetaDesti
+    )
+
+    # OBTENIM FACTURES ALUMNES ORFES.
+    # Es a dir, un alumne ha introduit una factura, el qual no
+    # apareix en les dades reals df_real
+
+    df_fac_orfes = logic_comu.unionDataFrames(
+        df_fac,
+        df_real,
+        "A_CLAU_UNICA_CF",
+        "A_CLAU_UNICA_CP",
+        "left",
+        "_fac",
+        "_real",
+        True,
+    )
+
+    df_nomesFacturesOrfes = df_fac_orfes[df_fac_orfes["_merge"] == "left_only"]
+
+    # DESAM CSV
+    filename_df_nomesFacturesOrfes = (
+        prefNomFitxerCorreccio + "df_nomesFacturesOrfes.csv"
+    )
+    logic_comu.desaCSV(
+        df_nomesFacturesOrfes, filename_df_nomesFacturesOrfes, carpetaDesti
+    )
+
+    return df_nomesComandesOrfes, df_nomesAlbaransOrfes, df_nomesFacturesOrfes
+
+
+# ==============================================================================
+# 3.1.8 CORRECCIO D'OPERACIONS - COMANDES
+# ==============================================================================
 
 
 def correccioComandes(df_real_ped, prefNomFitxerCorreccio):
-
-    # ==========================================================================
-    # 5.1. LÒGICA DE CORRECCIO COMANDES
-    # ==========================================================================
 
     informe_pedidos = []
 

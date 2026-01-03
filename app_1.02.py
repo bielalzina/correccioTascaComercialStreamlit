@@ -291,35 +291,41 @@ if rol == "Professor" and acces_professor:
 
                 # Botón de envío
 
-                enviado = st.form_submit_button("ENVIAR FORMULARI")
+                enviado = st.form_submit_button("ENVIAR DADES DEL FORMULARI")
 
-            if enviado:
-                st.success("✅ Ejecución reanudada. Datos procesados.")
+            if st.session_state.compres_insercio_data_entrega == False:
+                # El primer cop que s'executa aquesta instruccio, l'estat de la
+                # sessió es FALSE, per tant, s'executa el codi que hi ha dins
+                # d'aquesta condicio.
+                # Si executam el codi que hi ha dins d'aquesta condicio, l'estat de
+                # la sessió es TRUE, per tant, la propera vegada que l'execució del
+                # programa passi per aquesta instruccio, el codi existent en aquesta
+                # condició FALSE ja no s'executara.
+                # Aquesta condicio FALSE es la que utilitzam per a controlar
+                # el codi que hi ha dins de la segona condicio.
+                if not enviado:
+                    st.info(
+                        "NO frissam, quan hagis acabat d'emplenar el formulari, fes clic al boto 'ENVIAR DADES DEL FORMULARI i seguirem amb l'execució del programa."
+                    )
+                    st.stop()
 
-            # 4. Creación del DataFrame
-            df_data_entrega_tasca = pd.DataFrame(datos_finales)
+                # 4. Creación del DataFrame
+                df_data_entrega_tasca = pd.DataFrame(datos_finales)
 
-            # Mostramos el resultado
-            st.subheader("DataFrame Resultante")
-            st.dataframe(df_data_entrega_tasca, use_container_width=True)
+                # Mostramos el resultado
+                st.subheader("DataFrame Resultante")
+                st.dataframe(df_data_entrega_tasca, use_container_width=True)
 
-            # DESAM CSV
-            carpetaDesti = "LLISTATS_CSV"
-            filename_df_data_entrega_tasca = (
-                prefNomFitxerCorreccio + "df_data_entrega_tasca.csv"
-            )
-            logic_comu.desaCSV(
-                df_data_entrega_tasca, filename_df_data_entrega_tasca, carpetaDesti
-            )
-
-            # Inserim la data de entrega en df_real
-            df_real = logic_comu.insereixDataEntregaEnDFDesti(
-                df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_data_entrega_tasca
-            )
-
-            st.divider()
-            st.session_state.compres_insercio_data_entrega = True
-            
+                # DESAM CSV
+                carpetaDesti = "LLISTATS_CSV"
+                filename_df_data_entrega_tasca = (
+                    prefNomFitxerCorreccio + "df_data_entrega_tasca.csv"
+                )
+                logic_comu.desaCSV(
+                    df_data_entrega_tasca, filename_df_data_entrega_tasca, carpetaDesti
+                )
+                st.divider()
+                st.session_state.compres_insercio_data_entrega = True
 
         # ====================================================================
         # 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
@@ -408,6 +414,15 @@ if rol == "Professor" and acces_professor:
 
             st.success(
                 "✅ LA CÀRREGA DELS LLISTATS I LA SEVA CONVERSIÓ A DATAFRAMES HA ESTAT EXITOSA"
+            )
+
+            # Aprofirem per inserir la data de entrega en df_real
+            # Anteriorment haviem desat aquesta data en un fitxer CSV
+            # Si volem corregir les compres, cal disposar d'aquesta data en el
+            # dataframe de dades reals, per podetr determinar si s'han
+            # registrat les factures de compra a data de entrega
+            df_real = logic_comu.insereixDataEntregaEnDFDesti(
+                df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_data_entrega_tasca
             )
 
             st.session_state.compres_carrega_llistats = True
