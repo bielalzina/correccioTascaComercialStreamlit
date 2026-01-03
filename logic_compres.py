@@ -172,10 +172,10 @@ def insertaDataEntregaTreball(df_real, grup, dataVto):
 # ==========================================================
 
 
-def uneixDataFrames(df_real, df_ped, df_alb, df_fac, prefNomFitxerCorreccio):
+def uneixDataFrames(df_real_filtrada, df_ped, df_alb, df_fac, prefNomFitxerCorreccio):
 
     df_real_ped = logic_comu.unionDataFrames(
-        df_real,
+        df_real_filtrada,
         df_ped,
         "R_NUMERO_CP",
         "A_NUMERO_CP",
@@ -241,8 +241,8 @@ def uneixDataFrames(df_real, df_ped, df_alb, df_fac, prefNomFitxerCorreccio):
     # A cada num. de comanda li correspon un (EXP. + REF. ODOO C-COMPRA)
     # D'aquesta manera assignam aquesta clau única a cada comanda real
 
-    df_real = logic_comu.unionDataFrames(
-        df_real,
+    df_real_filtrada_clauUnica = logic_comu.unionDataFrames(
+        df_real_filtrada,
         df_ped[["A_NUMERO_CP", "A_CLAU_UNICA_CP"]],
         "R_NUMERO_CP",
         "A_NUMERO_CP",
@@ -254,17 +254,21 @@ def uneixDataFrames(df_real, df_ped, df_alb, df_fac, prefNomFitxerCorreccio):
 
     # DESAM CSV
     carpetaDesti = "HISTORIC_CORRECCIONS"
-    filename_df_real = prefNomFitxerCorreccio + "df_real.csv"
-    logic_comu.desaCSV(df_real, filename_df_real, carpetaDesti)
+    filename_df_real_filtrada_clauUnica = (
+        prefNomFitxerCorreccio + "df_real_filtrada_clauUnica.csv"
+    )
+    logic_comu.desaCSV(
+        df_real_filtrada_clauUnica, filename_df_real_filtrada_clauUnica, carpetaDesti
+    )
 
     # Ja podem fer merge entre df_real i df_alb, aplicant clau única,
     # però abans cal reanomenar la columna _merge (creada en el merge
     # anterior) per evitar problemes:
 
-    df_real.rename(columns={"_merge": "_merge_01"}, inplace=True)
+    df_real_filtrada_clauUnica.rename(columns={"_merge": "_merge_01"}, inplace=True)
 
     df_real_alb = logic_comu.unionDataFrames(
-        df_real,
+        df_real_filtrada_clauUnica,
         df_alb,
         "A_CLAU_UNICA_CP",
         "A_CLAU_UNICA_CA",
@@ -280,7 +284,7 @@ def uneixDataFrames(df_real, df_ped, df_alb, df_fac, prefNomFitxerCorreccio):
 
     # UNIO ENTRE df_real i df_fac
     df_real_fac = logic_comu.unionDataFrames(
-        df_real,
+        df_real_filtrada_clauUnica,
         df_fac,
         "A_CLAU_UNICA_CP",
         "A_CLAU_UNICA_CF",
@@ -294,7 +298,7 @@ def uneixDataFrames(df_real, df_ped, df_alb, df_fac, prefNomFitxerCorreccio):
     filename_df_real_fac = prefNomFitxerCorreccio + "df_real_fac.csv"
     logic_comu.desaCSV(df_real_fac, filename_df_real_fac, carpetaDesti)
 
-    return df_real_ped, df_real, df_real_alb, df_real_fac
+    return df_real_ped, df_real_filtrada_clauUnica, df_real_alb, df_real_fac
 
 
 # ==============================================================================
@@ -302,14 +306,23 @@ def uneixDataFrames(df_real, df_ped, df_alb, df_fac, prefNomFitxerCorreccio):
 # ==============================================================================
 
 
-def researchOrphanOperations(df_real, df_ped, df_alb, df_fac, prefNomFitxerCorreccio):
+def researchOrphanOperations(
+    df_real_filtrada_clauUnica, df_ped, df_alb, df_fac, prefNomFitxerCorreccio
+):
 
     # OBTENIM COMANDES ALUMNES ORFES.
     # Es a dir, un alumne ha introduit una comanda, la qual no
     # apareix en les dades reals df_real
 
     df_comandesOrfes = logic_comu.unionDataFrames(
-        df_ped, df_real, "A_NUMERO_CP", "R_NUMERO_CP", "left", "_ped", "_real", True
+        df_ped,
+        df_real_filtrada_clauUnica,
+        "A_NUMERO_CP",
+        "R_NUMERO_CP",
+        "left",
+        "_ped",
+        "_real",
+        True,
     )
 
     df_nomesComandesOrfes = df_comandesOrfes[df_comandesOrfes["_merge"] == "left_only"]
@@ -329,7 +342,7 @@ def researchOrphanOperations(df_real, df_ped, df_alb, df_fac, prefNomFitxerCorre
 
     df_alb_orfes = logic_comu.unionDataFrames(
         df_alb,
-        df_real,
+        df_real_filtrada_clauUnica,
         "A_CLAU_UNICA_CA",
         "A_CLAU_UNICA_CP",
         "left",
@@ -354,7 +367,7 @@ def researchOrphanOperations(df_real, df_ped, df_alb, df_fac, prefNomFitxerCorre
 
     df_fac_orfes = logic_comu.unionDataFrames(
         df_fac,
-        df_real,
+        df_real_filtrada_clauUnica,
         "A_CLAU_UNICA_CF",
         "A_CLAU_UNICA_CP",
         "left",

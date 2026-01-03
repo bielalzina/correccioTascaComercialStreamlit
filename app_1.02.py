@@ -237,93 +237,132 @@ if rol == "Professor" and acces_professor:
         # ====================================================================
 
         if st.session_state.fase01:
-            st.subheader("Adjunta els llistats amb les dades per corregir la tasca")
-
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.badge("DADES REALS FROM EMPRESAULA")
-                file_compres_real = st.file_uploader(
-                    "Adjunta el fitxer 0_DATOS_COMPRAS_REALES.csv",
-                    type=["csv"],
-                    key="real_c",
-                )
-                st.badge("DADES COMANDES FROM ALUMNAT")
-                file_dades_compra_comandes_alumne = st.file_uploader(
-                    "Subir 1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv",
-                    type=["csv"],
-                    key="ped_c",
-                )
-
-            with col2:
-                st.badge("DADES ALBARANS FROM ALUMNAT")
-                file_dades_compra_albarans_alumne = st.file_uploader(
-                    "Subir 2_DATOS_ALBARANES_COMPRA_ALUMNOS.csv",
-                    type=["csv"],
-                    key="alb_c",
-                )
-                st.badge("DADES FACTURES FROM ALUMNAT")
-                file_dades_compra_factures_alumne = st.file_uploader(
-                    "Subir 3_DATOS_FACTURAS_COMPRA_ALUMNOS.csv",
-                    type=["csv"],
-                    key="fac_c",
-                )
-
-            # Comprovam si s'han adjuntat tots els arxius per INICIAR la pujada al servidor
-            if not (
-                file_compres_real
-                and file_dades_compra_comandes_alumne
-                and file_dades_compra_albarans_alumne
-                and file_dades_compra_factures_alumne
-            ):
-                st.error(
-                    "No podrem continuar fins que no hagis adjuntat tots els llistats sol·licitats"
-                )
-                st.stop()
-
-        st.session_state.fase02 = True
-
-        st.divider()
-
-        # ====================================================================
-        # 3.1.2 ENVIAMENT ARXIUS PER AL SEU TRACTAMENT
-        # ===================================================================
-
-        if st.session_state.fase02:
-
-            # if st.button("⚙️ PUJAR I PROCESSAMENT INICIAL DE LLISTATS", type="primary"):
-
-            st.subheader("Carrega inicial de les dades")
-
-            st.write("⏳ Pujant arxius al servidor... ⏳")
-
-            # --- 2. PUJAM ELS ARXIUS AMB FUNCIO carregaArxius() ---
-            # Li passam els 5 arxius que hem pujat a la WEB
-
-            df_real, df_ped, df_alb, df_fac = logic_compres.carregaArxius(
-                file_compres_real,
-                file_dades_compra_comandes_alumne,
-                file_dades_compra_albarans_alumne,
-                file_dades_compra_factures_alumne,
+            check_llistats = st.checkbox(
+                "Els llistats per correcció ja estan pujats al servidor"
             )
 
-            listaDFs01 = [df_real, df_ped, df_alb, df_fac]
+            if not check_llistats:
 
-            if any(dadesCarregades is None for dadesCarregades in listaDFs01):
-                st.error("NO ES POT SEGUIR EXECUTANT EL PROGRAMA PER FALTA DE DADES")
-                # ATURAM L'EXECUCIO DEL PROGRAMA. EL CODI POSTERIOR NO
-                # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
-                st.stop()
+                st.subheader("Adjunta els llistats amb les dades per corregir la tasca")
 
-            time.sleep(3)
+                col1, col2 = st.columns(2)
 
-            st.success(
-                "✅ LA CÀRREGA DELS LLISTATS I LA SEVA CONVERSIÓ A DATAFRAMES HA ESTAT EXITOSA"
-            )
+                with col1:
+                    st.badge("DADES REALS FROM EMPRESAULA")
+                    file_compres_real = st.file_uploader(
+                        "Adjunta el fitxer 0_DATOS_COMPRAS_REALES.csv",
+                        type=["csv"],
+                        key="real_c",
+                    )
+                    st.badge("DADES COMANDES FROM ALUMNAT")
+                    file_dades_compra_comandes_alumne = st.file_uploader(
+                        "Subir 1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv",
+                        type=["csv"],
+                        key="ped_c",
+                    )
 
-            st.session_state.fase03 = True
+                with col2:
+                    st.badge("DADES ALBARANS FROM ALUMNAT")
+                    file_dades_compra_albarans_alumne = st.file_uploader(
+                        "Subir 2_DATOS_ALBARANES_COMPRA_ALUMNOS.csv",
+                        type=["csv"],
+                        key="alb_c",
+                    )
+                    st.badge("DADES FACTURES FROM ALUMNAT")
+                    file_dades_compra_factures_alumne = st.file_uploader(
+                        "Subir 3_DATOS_FACTURAS_COMPRA_ALUMNOS.csv",
+                        type=["csv"],
+                        key="fac_c",
+                    )
 
-            st.divider()
+                # Comprovam si s'han adjuntat tots els arxius per INICIAR la pujada al servidor
+                if not (
+                    file_compres_real
+                    and file_dades_compra_comandes_alumne
+                    and file_dades_compra_albarans_alumne
+                    and file_dades_compra_factures_alumne
+                ):
+                    st.error(
+                        "No podrem continuar fins que no hagis adjuntat tots els llistats sol·licitats"
+                    )
+                    st.stop()
+
+                st.session_state.fase02 = True
+
+                st.divider()
+
+                # ====================================================================
+                # 3.1.2 ENVIAMENT ARXIUS PER AL SEU TRACTAMENT
+                # ===================================================================
+
+                if st.session_state.fase02:
+
+                    st.subheader("Carrega inicial de les dades")
+
+                    st.write("⏳ Pujant arxius al servidor... ⏳")
+
+                    # --- 2. PUJAM ELS ARXIUS AMB FUNCIO carregaArxius() ---
+                    # Li passam els 5 arxius que hem pujat a la WEB
+
+                    df_real, df_ped, df_alb, df_fac = logic_compres.carregaArxius(
+                        file_compres_real,
+                        file_dades_compra_comandes_alumne,
+                        file_dades_compra_albarans_alumne,
+                        file_dades_compra_factures_alumne,
+                    )
+
+                    listaDFs01 = [df_real, df_ped, df_alb, df_fac]
+
+                    if any(dadesCarregades is None for dadesCarregades in listaDFs01):
+                        st.error(
+                            "NO ES POT SEGUIR EXECUTANT EL PROGRAMA PER FALTA DE DADES"
+                        )
+                        # ATURAM L'EXECUCIO DEL PROGRAMA. EL CODI POSTERIOR NO
+                        # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
+                        st.stop()
+
+                    time.sleep(3)
+
+                    st.success(
+                        "✅ LA CÀRREGA DELS LLISTATS I LA SEVA CONVERSIÓ A DATAFRAMES HA ESTAT EXITOSA"
+                    )
+
+                    st.session_state.fase03 = True
+
+                    st.divider()
+            else:
+                # Cal indicar a quin grup i tasca corresponen les dades
+                df_real = logic_comu.carregaCSV(
+                    prefNomFitxerCorreccio + "0_DATOS_COMPRAS_REALES.csv",
+                    "LLISTATS_CSV",
+                )
+                df_ped = logic_comu.carregaCSV(
+                    prefNomFitxerCorreccio + "1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv",
+                    "LLISTATS_CSV",
+                )
+                df_alb = logic_comu.carregaCSV(
+                    prefNomFitxerCorreccio + "2_DATOS_ALBARANES_COMPRA_ALUMNOS.csv",
+                    "LLISTATS_CSV",
+                )
+                df_fac = logic_comu.carregaCSV(
+                    prefNomFitxerCorreccio + "3_DATOS_FACTURAS_COMPRA_ALUMNOS.csv",
+                    "LLISTATS_CSV",
+                )
+
+                if (
+                    df_real is None
+                    or df_ped is None
+                    or df_alb is None
+                    or df_fac is None
+                ):
+                    st.error("Error al carregar els llistats. Execucio cancelada")
+                    st.stop()
+                else:
+                    st.success(
+                        "✅ LA CÀRREGA DELS LLISTATS I LA SEVA CONVERSIÓ A DATAFRAMES HA ESTAT EXITOSA"
+                    )
+                    st.session_state.fase03 = True
+                    st.divider()
 
         # ====================================================================
         # 2. INTRODUCIO DATA ENTREGA TASCA
@@ -335,138 +374,178 @@ if rol == "Professor" and acces_professor:
                 "Registre de les dates en que els alumnes han entregat les tasques"
             )
 
-            # 1. Definim els expedients i noms de les empreses
-            expedients = [
-                5796,
-                6265,
-                6320,
-                6352,
-                6356,
-                6366,
-                6368,
-                6369,
-                6427,
-                6428,
-                6431,
-                6467,
-                6478,
-                6702,
-                6706,
-                6707,
-                6713,
-                6734,
-                6746,
-                6777,
-                6792,
-                6844,
-            ]
-            empreses_predefinides = [
-                "ADG32 5796 NSACARES SL",
-                "ADG32 6265 SMORENO SL",
-                "ADG32 6320 MNAVARRO SL",
-                "ADG32 6352 SAANANOU SL",
-                "ADG32 6356 WAANANOU SL",
-                "ADG32 6366 JMORAGUES SL",
-                "ADG32 6368 LPIZA SL",
-                "ADG32 6369 VMASTRANGELO SL",
-                "ADG32 6427 NANANOU SL",
-                "ADG32 6428 ABOUBAL SL",
-                "ADG32 6431 GZOUGGAGHI SL",
-                "ADG32 6467 WCHANTAH SL",
-                "ADG32 6478 CBAUZA SL",
-                "ADG32 6702 NFORNES SL",
-                "ADG32 6706 NSUIYHI SL",
-                "ADG32 6707 MOUAZINE SL",
-                "ADG32 6713 BCARBONELL SL",
-                "ADG32 6734 LABOLAFIO SL",
-                "ADG32 6746 ELLADO SL",
-                "ADG32 6777 JGARCIA SL",
-                "ADG32 6792 PCAPO SL",
-                "ADG32 6844 TTRAMULLAS SL",
-            ]
+            check_data_entrega = st.checkbox(
+                "El llistat d'alumnes amb la data que varen entregar la tasca ja està pujat al servidor"
+            )
 
-            with st.form("formulari_dates_entrega_tasca"):
-                st.subheader(
-                    "Indica les dates en que els alumnes han entregat les tasques"
-                )
+            if not check_data_entrega:
 
-                # Creamos listas vacías para almacenar los inputs temporalmente
-                datos_finales = []
+                # 1. Definim els expedients i noms de les empreses
+                expedients = [
+                    5796,
+                    6265,
+                    6320,
+                    6352,
+                    6356,
+                    6366,
+                    6368,
+                    6369,
+                    6427,
+                    6428,
+                    6431,
+                    6467,
+                    6478,
+                    6702,
+                    6706,
+                    6707,
+                    6713,
+                    6734,
+                    6746,
+                    6777,
+                    6792,
+                    6844,
+                ]
+                empreses_predefinides = [
+                    "ADG32 5796 NSACARES SL",
+                    "ADG32 6265 SMORENO SL",
+                    "ADG32 6320 MNAVARRO SL",
+                    "ADG32 6352 SAANANOU SL",
+                    "ADG32 6356 WAANANOU SL",
+                    "ADG32 6366 JMORAGUES SL",
+                    "ADG32 6368 LPIZA SL",
+                    "ADG32 6369 VMASTRANGELO SL",
+                    "ADG32 6427 NANANOU SL",
+                    "ADG32 6428 ABOUBAL SL",
+                    "ADG32 6431 GZOUGGAGHI SL",
+                    "ADG32 6467 WCHANTAH SL",
+                    "ADG32 6478 CBAUZA SL",
+                    "ADG32 6702 NFORNES SL",
+                    "ADG32 6706 NSUIYHI SL",
+                    "ADG32 6707 MOUAZINE SL",
+                    "ADG32 6713 BCARBONELL SL",
+                    "ADG32 6734 LABOLAFIO SL",
+                    "ADG32 6746 ELLADO SL",
+                    "ADG32 6777 JGARCIA SL",
+                    "ADG32 6792 PCAPO SL",
+                    "ADG32 6844 TTRAMULLAS SL",
+                ]
 
-                # 2. Generamos los 44 inputs (22 nombres + 4 fechas)
-                for i in range(22):
-                    col1, col2, col3, col4 = st.columns(4)
-                    with col1:
-                        exp = st.text_input(
-                            f"Expedient {i+1}",
-                            value=expedients[i],
-                            key=f"exp_{i}",
-                        )
-                    with col2:
-                        nom = st.text_input(
-                            f"Empresa {i+1}",
-                            value=empreses_predefinides[i],
-                            key=f"emp_{i}",
-                        )
-                    with col3:
-                        data = st.date_input(
-                            f"Data entrega {i+1}",
-                            value=dataVto,
-                            key=f"fec_{i}",
-                        )
-                    with col4:
-                        est = st.selectbox(
-                            f"Estat entrega {i+1}",
-                            options=["ENTREGADA", "NO ENTREGADA"],
-                            index=0,
-                            key=f"est_{i}",
-                        )
-
-                    # Guardamos cada fila como un diccionario
-                    datos_finales.append(
-                        {
-                            "Expediente": exp,
-                            "Empresa": nom,
-                            "Data entrega": data.strftime("%Y-%m-%d"),
-                            "Estat entrega": est,
-                        }
+                with st.form("formulari_dates_entrega_tasca"):
+                    st.subheader(
+                        "Indica les dates en que els alumnes han entregat les tasques"
+                    )
+                    st.markdown(
+                        '<hr style="border:2px solid #2596be">', unsafe_allow_html=True
                     )
 
-                st.markdown("---")
+                    # Creamos listas vacías para almacenar los inputs temporalmente
+                    datos_finales = []
 
-                # Botón de envío
+                    # 2. Generamos los 44 inputs (22 nombres + 4 fechas)
+                    for i in range(22):
+                        col1, col2, col3, col4 = st.columns(4)
 
-                enviado = st.form_submit_button("ENVIAR DADES DEL FORMULARI")
+                        with col1:
+                            exp = st.text_input(
+                                f"Expedient {i+1}",
+                                value=expedients[i],
+                                key=f"exp_{i}",
+                            )
+                        with col2:
+                            nom = st.text_input(
+                                f"Empresa {i+1}",
+                                value=empreses_predefinides[i],
+                                key=f"emp_{i}",
+                            )
+                        with col3:
+                            data = st.date_input(
+                                f"Data entrega {i+1}",
+                                value=dataVto,
+                                key=f"fec_{i}",
+                            )
+                        with col4:
+                            est = st.selectbox(
+                                f"Estat entrega {i+1}",
+                                options=["ENTREGADA", "NO ENTREGADA"],
+                                index=0,
+                                key=f"est_{i}",
+                            )
 
-            if not enviado:
-                st.info(
-                    "NO frissam, quan hagis acabat d'emplenar el formulari, fes clic al boto 'ENVIAR DADES DEL FORMULARI i seguirem amb l'execució del programa."
-                )
-                st.stop()
+                        # Guardamos cada fila como un diccionario
+                        datos_finales.append(
+                            {
+                                "Expediente": exp,
+                                "Empresa": nom,
+                                "Data entrega": data.strftime("%Y-%m-%d"),
+                                "Estat entrega": est,
+                            }
+                        )
+                        st.markdown(
+                            '<hr style="border:2px solid #2596be">',
+                            unsafe_allow_html=True,
+                        )
 
-            # 4. Creación del DataFrame
-            df_data_entrega_tasca = pd.DataFrame(datos_finales)
+                    # Botón de envío
 
-            # Mostramos el resultado
-            st.subheader("DataFrame Resultante")
-            st.dataframe(df_data_entrega_tasca, use_container_width=True)
+                    enviado = st.form_submit_button("ENVIAR DADES DEL FORMULARI")
 
-            # Aprofirem per inserir la data de entrega en df_real
+                if not enviado:
+                    st.info(
+                        "NO frissam, quan hagis acabat d'emplenar el formulari, fes clic al boto 'ENVIAR DADES DEL FORMULARI i seguirem amb l'execució del programa."
+                    )
+                    st.stop()
+
+                # 4. Creación del DataFrame
+                df_data_lliurament_tasca = pd.DataFrame(datos_finales)
+
+                # Mostramos el resultado
+                # st.subheader("DataFrame Resultante")
+                # st.dataframe(df_data_lliurament_tasca, width="stretch")
+
+                # DESAM CSV
+                carpetaDesti = "LLISTATS_CSV"
+                filename = prefNomFitxerCorreccio + "data_lliurament_tasca.csv"
+                logic_comu.desaCSV(df_data_lliurament_tasca, filename, carpetaDesti)
+
+                st.divider()
+                st.session_state.fase04 = True
+
+            # Si el llistat no estava pujat en SERVIDOR, ara ja hi esta pq.
+            # hem executat el FALSE del checkbox.
+            # Si el llistat estava pujat en SERVIDOR, hem executat el TRUE del checkbox.
+            # Ens trobem en la mateixa situacio que amb el FALSE
+            # Tant d'una forma com de l'altre, el llistat ja hi esta pujat en el SERVIDOR
+
+            # Recuperam el llistat de les dades de lliurament de la tasca
+            # Cal indicar a quin grup i tasca corresponen les dades
+            df_data_lliurament_tasca = logic_comu.carregaCSV(
+                prefNomFitxerCorreccio + "data_lliurament_tasca.csv",
+                "LLISTATS_CSV",
+            )
+
+            # Inserim la data de entrega en df_real
             # Si volem corregir les compres, cal disposar d'aquesta data en el
             # dataframe de dades reals, per podetr determinar si s'han
             # registrat les factures de compra a data de entrega
             df_real = logic_comu.insereixDataEntregaEnDFDesti(
-                df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_data_entrega_tasca
+                df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_data_lliurament_tasca
             )
 
-            # DESAM CSV
+            # També obtindrem un llistat dels alumnes que no han lliurat la tasca
+            # No corregirem una tasca que no dsiposam
+            df_alumnes_morosos = df_data_lliurament_tasca[
+                df_data_lliurament_tasca["Estat entrega"] == "NO ENTREGADA"
+            ]
+
+            # Mostram el llistat dels alumnes que no han lliurat la tasca
+            st.subheader("Alumnes que no han lliurat la tasca")
+            st.dataframe(df_alumnes_morosos, width="stretch")
+
+            # DESAM CSV MOROSOS
             carpetaDesti = "LLISTATS_CSV"
-            filename_df_data_entrega_tasca = (
-                prefNomFitxerCorreccio + "df_data_entrega_tasca.csv"
-            )
-            logic_comu.desaCSV(
-                df_data_entrega_tasca, filename_df_data_entrega_tasca, carpetaDesti
-            )
+            filename = prefNomFitxerCorreccio + "alumnes_morosos.csv"
+            logic_comu.desaCSV(df_alumnes_morosos, filename, carpetaDesti)
+
             st.divider()
             st.session_state.fase04 = True
 
@@ -579,24 +658,47 @@ if rol == "Professor" and acces_professor:
         # ==========================================================
 
         if st.session_state.fase06:
+
+            # Abans d'unir els DFs, cal netejar df_real. ASctualment, dins df_real
+            # tenim totes les operacions de compra fetes per tots els alumnes en
+            # EMPRESAULA, però no tots els alumnes han lliurat la tasca,
+            # per tant, no cal corregir una tasca que no tenim, així que ens
+            # podem limitar als alumnes que si varen entregar la tasca.
+            # Filtrarem df_real perquè només inclogui les empreses dels alumnes
+            # que varen entregar la tasca en temps i forma.
+
+            df_real_filtrada = df_real.merge(
+                df_data_lliurament_tasca[
+                    df_data_lliurament_tasca["Estat entrega"] == "ENTREGADA"
+                ],
+                left_on="R_EXPEDIENT_C",
+                right_on="Expediente",
+                how="inner",
+            )
+
+            # DESAM CSV
+            carpetaDesti = "LLISTATS_CSV"
+            filename = prefNomFitxerCorreccio + "df_real_filtrada.csv"
+            logic_comu.desaCSV(df_real_filtrada, filename, carpetaDesti)
+
             st.subheader("Unio de DATAFRAMES (merge)")
             st.markdown(
                 """
                 Per poder corregir les operacions de compra, realitzarem 3 unions de dataframes:
                 
-                1. Unió entre df_real i df_ped
-                2. Unió entre df_real i df_alb
-                3. Unió entre df_real i df_fac
+                1. Unió entre df_real_filtrada i df_ped
+                2. Unió entre df_real_filtrada i df_alb
+                3. Unió entre df_real_filtrada i df_fac
                 
                 En df_real es relacionen totes les operacions de compra que els alumnes han realitzat en EMPRESAULA, a nivell de comanda, albarà i factura. En els altres dataframes df_ped, df_alb i df_fac, es relacionen les operacions que l'alumne ha registrat a nivell de comanda (df_ped), albarà (df_alb) i factura (df_fac). 
                 Per tant, si volem determinar si els registres dels alumnes son correctes, cal relacionar l'operació real amb l'operació registrada.
                 """
             )
 
-            # UNIO ENTRE df_real i df_ped
-            df_real_ped, df_real, df_real_alb, df_real_fac = (
+            # UNIO ENTRE df_real_filtrada i df_ped
+            df_real_ped, df_real_filtrada_clauUnica, df_real_alb, df_real_fac = (
                 logic_compres.uneixDataFrames(
-                    df_real,
+                    df_real_filtrada,
                     df_ped,
                     df_alb,
                     df_fac,
@@ -606,7 +708,7 @@ if rol == "Professor" and acces_professor:
 
             if (
                 df_real_ped is not None
-                and df_real is not None
+                and df_real_filtrada_clauUnica is not None
                 and df_real_alb is not None
                 and df_real_fac is not None
             ):
@@ -635,7 +737,11 @@ if rol == "Professor" and acces_professor:
 
             df_nomesComandesOrfes, df_nomesAlbaransOrfes, df_nomesFacturesOrfes = (
                 logic_compres.researchOrphanOperations(
-                    df_real, df_ped, df_alb, df_fac, prefNomFitxerCorreccio
+                    df_real_filtrada_clauUnica,
+                    df_ped,
+                    df_alb,
+                    df_fac,
+                    prefNomFitxerCorreccio,
                 )
             )
 
@@ -737,7 +843,7 @@ elif rol == "Alumne":
                     df_notas["EMPRESA"].astype(str) == str(empresa_seleccionada)
                 ]
 
-                st.dataframe(df_alumno, use_container_width=True, hide_index=True)
+                st.dataframe(df_alumno, width="stretch", hide_index=True)
 
                 # Resumen visual
                 errores = df_alumno[df_alumno["RESULTAT"] != "OK"]
