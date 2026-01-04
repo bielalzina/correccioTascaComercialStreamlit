@@ -1,0 +1,72 @@
+def correccioComandes(df_real_ped, prefNomFitxerCorreccio):
+
+    informe_pedidos = []
+
+    for index, row in df_real_ped.iterrows():
+        info_pedidos = {
+            "Num. Comanda compra": row["R_NUMERO_CP"],
+            "Real Empresa": row["R_EMPRESA_C"],
+            "Alumn@ Empresa": row["A_EMPRESA_CP"],
+            "Empreses ==": "✅",
+            "Real Proveïdor": row["R_PROVEEDOR_C"],
+            "Alumn@ Proveïdor": row["A_PROVEEDOR_CP"],
+            "Proveïdors ==": "✅",
+            "Real Data emisió": row["R_FECHA_EMISION_C"],
+            "Alumn@ Data emisió": row["A_FECHA_EMISION_CP"],
+            "Dates emisió ==": "✅",
+            "Real Num. Comanda": row["R_NUMERO_CP"],
+            "Alumn@ Num. Comanda": row["A_NUMERO_CP"],
+            "Num. Comanda ==": "✅",
+            "Real Import": row["R_IMPORTE_C"],
+            "Alumn@ Import": row["A_IMPORTE_CP"],
+            "Import ==": "✅",
+            "Estat Comanda": row["A_ESTADO_CP"],
+            "Estat Comanda OK": "❌",
+            "Data Entrega Tasca": row["R_FECHA_ENTREGA"],
+            "Data Factura Compra Disponible": pd.to_datetime(row["R_FECHA_EMISION_C"])
+            + timedelta(days=1),
+            "Estat Fact. Comanda": row["A_ESTADO_FACTURACION_CP"],
+            "Estat Fact. Comanda OK": "❌",
+        informe_pedidos.append(info_pedidos)
+
+
+    # CREAM DF CORRECCIO COMANDES COMPRA
+    dfCorrecioComandesCompra = pd.DataFrame(informe_pedidos)
+
+    fileName = prefNomFitxerCorreccio + "InformeCorreccióComandesCompra.csv"
+
+    logic_comu.desaCSV(dfCorrecioComandesCompra, fileName, "HISTORIC_CORRECCIONS")
+
+    return dfCorrecioComandesCompra
+
+
+def correccioFactures(df_real_fac, prefNomFitxerCorreccio):
+    
+
+    informe_factures = []
+
+    for index, row in df_real_fac.iterrows():
+        info_factures = {
+            "Num. Comanda compra": row["R_NUMERO_CP"],
+            "Data entrega tasca": row["R_FECHA_ENTREGA"],
+            "Fra. compra disponible en data entrega": "",
+            "Fra. compra registrada en ODOO": "",
+            "Real Empresa": row["R_EMPRESA_C"],
+            "Alumn@ Empresa": row["A_EMPRESA_CF"],
+            "Empreses ==": "✅",
+            "Real Proveïdor": row["R_PROVEEDOR_C"],
+            "Alumn@ Proveïdor": row["A_PROVEEDOR_CF"],
+            "Proveïdors ==": "✅",
+            "Real Data emisió": row["R_FECHA_EMISION_C"],
+            "Alumn@ Data emisió": row["A_FECHA_EMISION_CF"],
+            "Dates emisió ==": "✅",
+            "Real Num. Factura": row["R_NUMERO_CF"],
+            "Alumn@ Num. Factura": row["A_NUMERO_CF"],
+            "Num. Factura ==": "✅",
+            "Real Import": row["R_IMPORTE_C"],
+            "Alumn@ Import": row["A_IMPORTE_CF"],
+            "Import ==": "✅",
+        }
+
+
+

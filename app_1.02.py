@@ -8,69 +8,7 @@ import logic_compres
 import logic_comu
 import time
 
-# INICIALITZACIO DELS ESTATS DE LES ETAPES DE CORRECCIÓ
-if "introduccio_grup_tasca_data" not in st.session_state:
-    st.session_state.introduccio_grup_tasca_data = False
-if "compres_insercio_data_entrega" not in st.session_state:
-    st.session_state.compres_insercio_data_entrega = False
-if "compres_preparacio_llistats" not in st.session_state:
-    st.session_state.compres_preparacio_llistats = False
-if "compres_carrega_llistats" not in st.session_state:
-    st.session_state.compres_carrega_llistats = False
-if "compres_neteja_tipus" not in st.session_state:
-    st.session_state.compres_neteja_tipus = False
-if "compres_duplicats" not in st.session_state:
-    st.session_state.compres_duplicats = False
-if "compres_merge_dataframes" not in st.session_state:
-    st.session_state.compres_merge_dataframes = False
-if "compres_operacions_orfes" not in st.session_state:
-    st.session_state.compres_operacions_orfes = False
-
-if "fase01" not in st.session_state:
-    st.session_state.fase01 = False
-
-# 2. INTRODUCIO DATA ENTREGA TASCA
-
-if "fase02" not in st.session_state:
-    st.session_state.fase02 = False
-
-# 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
-
-if "fase03" not in st.session_state:
-    st.session_state.fase03 = False
-
-# 3.1.2 ENVIAMENT ARXIUS PER AL SEU TRACTAMENT
-
-if "fase04" not in st.session_state:
-    st.session_state.fase04 = False
-
-# 3.1.4 NETEJA VARIABLES
-
-if "fase05" not in st.session_state:
-    st.session_state.fase05 = False
-
-# 3.1.5 COMANDES DUPLICADES
-
-if "fase06" not in st.session_state:
-    st.session_state.fase06 = False
-
-# 3.1.6 UNIO DE DATAFRAMES (merge)
-
-if "fase07" not in st.session_state:
-    st.session_state.fase07 = False
-
-# 3.1.7 RESEARCH OF ORPHAN OPERATIONS
-
-if "fase08" not in st.session_state:
-    st.session_state.fase08 = False
-
-# 3.1.8 CORRECCIO D'OPERACIONS - COMANDES
-
-if "fase09" not in st.session_state:
-    st.session_state.fase09 = False
-
-# 3.1.9 CORRECCIO D'OPERACIONS - ALBARANS
-
+from st_sessions_state import *
 
 # ==============================================================================
 # 1. CONFIGURACIÓN Y GESTIÓN DE CARPETAS
@@ -119,6 +57,104 @@ if rol == "Professor" and acces_professor:
 
     st.title("👨‍🏫 GESTIÓ DE CORRECCIONS")
 
+    st.header("NOVA CORRECCIÓ COMPRES")
+    st.subheader("Indica el grup, la tasca i la data de venciment")
+
+    colA, colB, colC = st.columns(3)
+
+    # Definim dades identificatives de la tasca que volem corregir
+
+    with colA:
+        grup = st.selectbox(
+            "Selecciona el grup: ",
+            ["ADG21O", "ADG32O"],
+            index=None,
+            placeholder="Selecciona el grup...",
+        )
+
+    with colB:
+        tasca = st.selectbox(
+            "Selecciona la tasca: ",
+            [
+                "02.01",
+                "02.02",
+                "02.03",
+                "02.04",
+                "02.05",
+                "02.06",
+                "02.07",
+                "02.08",
+                "02.09",
+                "02.10",
+                "02.11",
+                "02.12",
+                "02.13",
+                "02.14",
+                "02.15",
+                "02.16",
+                "02.17",
+                "02.18",
+                "02.19",
+                "02.20",
+                "02.21",
+                "02.22",
+                "02.23",
+                "02.24",
+                "02.25",
+                "02.26",
+                "02.27",
+                "02.28",
+                "02.29",
+                "02.30",
+                "02.31",
+                "02.32",
+                "02.33",
+                "02.34",
+                "02.35",
+                "02.36",
+                "02.37",
+                "02.38",
+                "02.39",
+                "02.40",
+                "02.41",
+                "02.42",
+                "02.43",
+                "02.44",
+                "02.45",
+                "02.46",
+                "02.47",
+                "02.48",
+                "02.49",
+                "02.50",
+            ],
+            index=None,
+            placeholder="Selecciona la tasca...",
+        )
+
+    with colC:
+        dataVto = st.date_input(
+            "Indica la data de venciment de la tasca: ",
+            value=None,
+            format="DD/MM/YYYY",
+        )
+
+    if grup is None:
+        st.error("Per continuar, cal indicar el grup que ha fet la tasca")
+        st.stop()
+
+    if tasca is None:
+        st.error("Per continuar, cal indicar la tasca objecte de correcció")
+        st.stop()
+
+    if dataVto is None:
+        st.error("Per continuar, cal indicar la data de venciment de la tasca")
+        st.stop()
+
+    prefNomFitxerCorreccio = grup + "_" + tasca + "_"
+
+    st.session_state.fase01 = True
+    st.session_state.fase15 = True
+
     tab_compres, tab_vendes, tab_inventari = st.tabs(["COMPRES", "VENDES", "INVENTARI"])
 
     # ====================================================================
@@ -126,111 +162,6 @@ if rol == "Professor" and acces_professor:
     # ====================================================================
 
     with tab_compres:
-
-        st.header("NOVA CORRECCIÓ COMPRES")
-        st.subheader("Indica el grup, la tasca i la data de venciment")
-
-        colA, colB, colC = st.columns(3)
-
-        # Definim dades identificatives de la tasca que volem corregir
-
-        with colA:
-            grup = st.selectbox(
-                "Selecciona el grup: ",
-                ["ADG21O", "ADG32O"],
-                index=None,
-                placeholder="Selecciona el grup...",
-            )
-
-        with colB:
-            tasca = st.selectbox(
-                "Selecciona la tasca: ",
-                [
-                    "02.01",
-                    "02.02",
-                    "02.03",
-                    "02.04",
-                    "02.05",
-                    "02.06",
-                    "02.07",
-                    "02.08",
-                    "02.09",
-                    "02.10",
-                    "02.11",
-                    "02.12",
-                    "02.13",
-                    "02.14",
-                    "02.15",
-                    "02.16",
-                    "02.17",
-                    "02.18",
-                    "02.19",
-                    "02.20",
-                    "02.21",
-                    "02.22",
-                    "02.23",
-                    "02.24",
-                    "02.25",
-                    "02.26",
-                    "02.27",
-                    "02.28",
-                    "02.29",
-                    "02.30",
-                    "02.31",
-                    "02.32",
-                    "02.33",
-                    "02.34",
-                    "02.35",
-                    "02.36",
-                    "02.37",
-                    "02.38",
-                    "02.39",
-                    "02.40",
-                    "02.41",
-                    "02.42",
-                    "02.43",
-                    "02.44",
-                    "02.45",
-                    "02.46",
-                    "02.47",
-                    "02.48",
-                    "02.49",
-                    "02.50",
-                ],
-                index=None,
-                placeholder="Selecciona la tasca...",
-            )
-
-        with colC:
-            dataVto = st.date_input(
-                "Indica la data de venciment de la tasca: ",
-                value=None,
-                format="DD/MM/YYYY",
-            )
-
-        if grup is None:
-            st.error("Per continuar, cal indicar el grup que ha fet la tasca")
-            st.stop()
-
-        if tasca is None:
-            st.error("Per continuar, cal indicar la tasca objecte de correcció")
-            st.stop()
-
-        if dataVto is None:
-            st.error("Per continuar, cal indicar la data de venciment de la tasca")
-            st.stop()
-
-        prefNomFitxerCorreccio = grup + "_" + tasca + "_"
-
-        st.divider()
-
-        st.session_state.fase01 = True
-
-        ####################################################################
-        ####################################################################
-        ####################################################################
-        ####################################################################
-        ####################################################################
 
         # ====================================================================
         # 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
@@ -291,9 +222,9 @@ if rol == "Professor" and acces_professor:
 
                 st.divider()
 
-                # ====================================================================
+                # ==============================================================
                 # 3.1.2 ENVIAMENT ARXIUS PER AL SEU TRACTAMENT
-                # ===================================================================
+                # ==============================================================
 
                 if st.session_state.fase02:
 
@@ -330,6 +261,7 @@ if rol == "Professor" and acces_professor:
                     st.session_state.fase03 = True
 
                     st.divider()
+
             else:
                 # Cal indicar a quin grup i tasca corresponen les dades
                 df_real = logic_comu.carregaCSV(
@@ -364,9 +296,9 @@ if rol == "Professor" and acces_professor:
                     st.session_state.fase03 = True
                     st.divider()
 
-        # ====================================================================
+        # ==================================================================
         # 2. INTRODUCIO DATA ENTREGA TASCA
-        # ====================================================================
+        # ==================================================================
 
         if st.session_state.fase03:
 
@@ -774,7 +706,7 @@ if rol == "Professor" and acces_professor:
         # ==========================================================
 
         if st.session_state.fase08:
-            st.subheader("Correcció d'operacions")
+            st.subheader("Correcció d'operacions - Comandes")
 
             dfCorrecioComandesCompra = logic_compres.correccioComandes(
                 df_real_ped, prefNomFitxerCorreccio
@@ -790,11 +722,173 @@ if rol == "Professor" and acces_professor:
 
             st.session_state.fase09 = True
 
+        # ==========================================================
+        # 3.1.9 CORRECCIO D'OPERACIONS - ALBARANS
+        # ==========================================================
+
+        if st.session_state.fase09:
+            st.subheader("Correcció d'operacions - Albarans")
+
+            dfCorrecioAlbaransCompra = logic_compres.correccioAlbarans(
+                df_real_alb, prefNomFitxerCorreccio
+            )
+
+            if dfCorrecioAlbaransCompra is not None:
+                st.subheader("Albarans corregits")
+                st.dataframe(dfCorrecioAlbaransCompra)
+                st.divider()
+            elif dfCorrecioAlbaransCompra is None:
+                st.subheader("No s'han trobat albarans per corregir")
+                st.divider()
+
+            st.session_state.fase10 = True
+
+        # ==========================================================
+        # 3.1.10 CORRECCIO D'OPERACIONS - FACTURES
+        # ==========================================================
+
+        if st.session_state.fase10:
+            st.subheader("Correcció d'operacions")
+
+            dfCorrecioFacturesCompra = logic_compres.correccioFactures(
+                df_real_fac, prefNomFitxerCorreccio
+            )
+
+            if dfCorrecioFacturesCompra is not None:
+                st.subheader("Factures corregides")
+                st.dataframe(dfCorrecioFacturesCompra)
+                st.divider()
+            elif dfCorrecioFacturesCompra is None:
+                st.subheader("No s'han trobat factures per corregir")
+                st.divider()
+
     with tab_vendes:
         st.write("Gestió de correccions de vendes")
 
     with tab_inventari:
+
         st.write("Gestió de correccions d'inventari")
+
+        # ====================================================================
+        # 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
+        # ====================================================================
+
+        if st.session_state.fase15:
+            check_llistats_inventari = st.checkbox(
+                "Els llistats per correcció de l'inventari ja estan pujats al servidor"
+            )
+
+            if not check_llistats_inventari:
+
+                st.subheader("Adjunta els llistats amb les dades per corregir la tasca")
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.badge("RESUM DADES INVENTARI")
+                    file_resum_dades_inventari = st.file_uploader(
+                        "Adjunta el fitxer 9_RESUM_DADES_INVENTARI_ALUMNE.csv",
+                        type=["csv"],
+                        key="res_in",
+                    )
+
+                with col2:
+                    st.badge("HISTORIAL ENTRADES i SORTIDES INVENTARI")
+                    file_hes_inventari = st.file_uploader(
+                        "Adjunta el fitxer 10_HISTORIAL_E_S_INVENTARI_ALUMNE.csv",
+                        type=["csv"],
+                        key="hes_in",
+                    )
+
+                # Comprovam si s'han adjuntat tots els arxius per INICIAR la pujada al servidor
+                if not (file_resum_dades_inventari and file_hes_inventari):
+                    st.error(
+                        "No podrem continuar fins que no hagis adjuntat tots els llistats sol·licitats"
+                    )
+                    st.stop()
+
+                st.session_state.fase16 = True
+
+                st.divider()
+
+                # ==============================================================
+                # 3.1.2 ENVIAMENT ARXIUS PER AL SEU TRACTAMENT
+                # ==============================================================
+
+                if st.session_state.fase16:
+
+                    st.subheader("Carrega inicial de les dades")
+
+                    st.write("⏳ Pujant arxius al servidor... ⏳")
+
+                    # --- 2. PUJAM ELS ARXIUS AMB FUNCIO carregaArxius() ---
+                    # Li passam els 5 arxius que hem pujat a la WEB
+
+                    file_resum_dades_inventari, file_hes_inventari = (
+                        logic_compres.carregaArxius(
+                            file_resum_dades_inventari,
+                            file_hes_inventari,
+                        )
+                    )
+
+                    listaDFs01 = [file_resum_dades_inventari, file_hes_inventari]
+
+                    if any(dadesCarregades is None for dadesCarregades in listaDFs01):
+                        st.error(
+                            "NO ES POT SEGUIR EXECUTANT EL PROGRAMA PER FALTA DE DADES"
+                        )
+                        # ATURAM L'EXECUCIO DEL PROGRAMA. EL CODI POSTERIOR NO
+                        # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
+                        st.stop()
+
+                    time.sleep(3)
+
+                    st.success(
+                        "✅ LA CÀRREGA DELS LLISTATS I LA SEVA CONVERSIÓ A DATAFRAMES HA ESTAT EXITOSA"
+                    )
+
+                    st.session_state.fase17 = True
+
+                    st.divider()
+
+            else:
+                # Cal indicar a quin grup i tasca corresponen les dades que volem recupetrar
+                df_resum_dades_inventari = logic_comu.carregaCSV(
+                    prefNomFitxerCorreccio + "9_RESUM_DADES_INVENTARI_ALUMNE.csv",
+                    "LLISTATS_CSV",
+                )
+                df_hes_inventari = logic_comu.carregaCSV(
+                    prefNomFitxerCorreccio + "0_HISTORIAL_E_S_INVENTARI_ALUMNE.csv",
+                    "LLISTATS_CSV",
+                )
+
+                if df_resum_dades_inventari is None or df_hes_inventari is None:
+                    st.error("Error al carregar els llistats. Execucio cancelada")
+                    st.stop()
+                else:
+                    st.success(
+                        "✅ LA CÀRREGA DELS LLISTATS I LA SEVA CONVERSIÓ A DATAFRAMES HA ESTAT EXITOSA"
+                    )
+                    st.session_state.fase03 = True
+                    st.session_state.fase17 = True
+                    st.divider()
+
+        if st.session_state.fase17:
+
+            # NOM DE LES COLUMNES DELS 2 DF
+
+            print("9_RESUM_DADES_INVENTARI_ALUMNE.csv")
+            print("\n".join(df_resum_dades_inventari.columns.tolist()))
+            print()
+            print("10_HISTORIAL_E_S_INVENTARI_ALUMNE.csv")
+            print("\n".join(df_hes_inventari.columns.tolist()))
+            print()
+
+            st.title(
+                "Registre de les dates en que els alumnes han entregat les tasques"
+            )
+
+            ###@#@@##@@@@@@@@ AQYI
 
 # ==============================================================================
 # 4. VISTA ALUMNO (LECTURA DEL HISTÓRICO)
