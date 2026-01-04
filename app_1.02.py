@@ -265,19 +265,19 @@ if rol == "Professor" and acces_professor:
             else:
                 # Cal indicar a quin grup i tasca corresponen les dades
                 df_real = logic_comu.carregaCSV(
-                    prefNomFitxerCorreccio + "0_DATOS_COMPRAS_REALES.csv",
+                    prefNomFitxerCorreccio + "00_DATOS_COMPRAS_REALES.csv",
                     "LLISTATS_CSV",
                 )
                 df_ped = logic_comu.carregaCSV(
-                    prefNomFitxerCorreccio + "1_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv",
+                    prefNomFitxerCorreccio + "01_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv",
                     "LLISTATS_CSV",
                 )
                 df_alb = logic_comu.carregaCSV(
-                    prefNomFitxerCorreccio + "2_DATOS_ALBARANES_COMPRA_ALUMNOS.csv",
+                    prefNomFitxerCorreccio + "02_DATOS_ALBARANES_COMPRA_ALUMNOS.csv",
                     "LLISTATS_CSV",
                 )
                 df_fac = logic_comu.carregaCSV(
-                    prefNomFitxerCorreccio + "3_DATOS_FACTURAS_COMPRA_ALUMNOS.csv",
+                    prefNomFitxerCorreccio + "03_DATOS_FACTURAS_COMPRA_ALUMNOS.csv",
                     "LLISTATS_CSV",
                 )
 
@@ -854,11 +854,11 @@ if rol == "Professor" and acces_professor:
             else:
                 # Cal indicar a quin grup i tasca corresponen les dades que volem recupetrar
                 df_resum_dades_inventari = logic_comu.carregaCSV(
-                    prefNomFitxerCorreccio + "9_RESUM_DADES_INVENTARI_ALUMNE.csv",
+                    prefNomFitxerCorreccio + "09_RESUM_DADES_INVENTARI_ALUMNE.csv",
                     "LLISTATS_CSV",
                 )
                 df_hes_inventari = logic_comu.carregaCSV(
-                    prefNomFitxerCorreccio + "0_HISTORIAL_E_S_INVENTARI_ALUMNE.csv",
+                    prefNomFitxerCorreccio + "10_HISTORIAL_E_S_INVENTARI_ALUMNE.csv",
                     "LLISTATS_CSV",
                 )
 
