@@ -241,8 +241,8 @@ def uneixDataFrames(df_real_filtrada, df_ped, df_alb, df_fac, prefNomFitxerCorre
     # A cada num. de comanda li correspon un (EXP. + REF. ODOO C-COMPRA)
     # D'aquesta manera assignam aquesta clau única a cada comanda real
 
-    df_real_filtrada_clauUnica = logic_comu.unionDataFrames(
-        df_real_filtrada,
+    df_real_alumnes_tasca_entregada_clauUnica = logic_comu.unionDataFrames(
+        df_real_alumnes_tasca_entregada,
         df_ped[["A_NUMERO_CP", "A_CLAU_UNICA_CP"]],
         "R_NUMERO_CP",
         "A_NUMERO_CP",
@@ -254,21 +254,25 @@ def uneixDataFrames(df_real_filtrada, df_ped, df_alb, df_fac, prefNomFitxerCorre
 
     # DESAM CSV
     carpetaDesti = "HISTORIC_CORRECCIONS"
-    filename_df_real_filtrada_clauUnica = (
-        prefNomFitxerCorreccio + "df_real_filtrada_clauUnica.csv"
+    filename_df_real_alumnes_tasca_entregada_clauUnica = (
+        prefNomFitxerCorreccio + "df_real_alumnes_tasca_entregada_clauUnica.csv"
     )
     logic_comu.desaCSV(
-        df_real_filtrada_clauUnica, filename_df_real_filtrada_clauUnica, carpetaDesti
+        df_real_alumnes_tasca_entregada_clauUnica,
+        filename_df_real_alumnes_tasca_entregada_clauUnica,
+        carpetaDesti,
     )
 
     # Ja podem fer merge entre df_real i df_alb, aplicant clau única,
     # però abans cal reanomenar la columna _merge (creada en el merge
     # anterior) per evitar problemes:
 
-    df_real_filtrada_clauUnica.rename(columns={"_merge": "_merge_01"}, inplace=True)
+    df_real_alumnes_tasca_entregada_clauUnica.rename(
+        columns={"_merge": "_merge_01"}, inplace=True
+    )
 
     df_real_alb = logic_comu.unionDataFrames(
-        df_real_filtrada_clauUnica,
+        df_real_alumnes_tasca_entregada_clauUnica,
         df_alb,
         "A_CLAU_UNICA_CP",
         "A_CLAU_UNICA_CA",
@@ -284,7 +288,7 @@ def uneixDataFrames(df_real_filtrada, df_ped, df_alb, df_fac, prefNomFitxerCorre
 
     # UNIO ENTRE df_real i df_fac
     df_real_fac = logic_comu.unionDataFrames(
-        df_real_filtrada_clauUnica,
+        df_real_alumnes_tasca_entregada_clauUnica,
         df_fac,
         "A_CLAU_UNICA_CP",
         "A_CLAU_UNICA_CF",
@@ -298,7 +302,12 @@ def uneixDataFrames(df_real_filtrada, df_ped, df_alb, df_fac, prefNomFitxerCorre
     filename_df_real_fac = prefNomFitxerCorreccio + "df_real_fac.csv"
     logic_comu.desaCSV(df_real_fac, filename_df_real_fac, carpetaDesti)
 
-    return df_real_ped, df_real_filtrada_clauUnica, df_real_alb, df_real_fac
+    return (
+        df_real_ped,
+        df_real_alumnes_tasca_entregada_clauUnica,
+        df_real_alb,
+        df_real_fac,
+    )
 
 
 # ==============================================================================
@@ -307,7 +316,11 @@ def uneixDataFrames(df_real_filtrada, df_ped, df_alb, df_fac, prefNomFitxerCorre
 
 
 def researchOrphanOperations(
-    df_real_filtrada_clauUnica, df_ped, df_alb, df_fac, prefNomFitxerCorreccio
+    df_real_alumnes_tasca_entregada_clauUnica,
+    df_ped,
+    df_alb,
+    df_fac,
+    prefNomFitxerCorreccio,
 ):
 
     # OBTENIM COMANDES ALUMNES ORFES.
@@ -316,7 +329,7 @@ def researchOrphanOperations(
 
     df_comandesOrfes = logic_comu.unionDataFrames(
         df_ped,
-        df_real_filtrada_clauUnica,
+        df_real_alumnes_tasca_entregada_clauUnica,
         "A_NUMERO_CP",
         "R_NUMERO_CP",
         "left",
@@ -342,7 +355,7 @@ def researchOrphanOperations(
 
     df_alb_orfes = logic_comu.unionDataFrames(
         df_alb,
-        df_real_filtrada_clauUnica,
+        df_real_alumnes_tasca_entregada_clauUnica,
         "A_CLAU_UNICA_CA",
         "A_CLAU_UNICA_CP",
         "left",
@@ -367,7 +380,7 @@ def researchOrphanOperations(
 
     df_fac_orfes = logic_comu.unionDataFrames(
         df_fac,
-        df_real_filtrada_clauUnica,
+        df_real_alumnes_tasca_entregada_clauUnica,
         "A_CLAU_UNICA_CF",
         "A_CLAU_UNICA_CP",
         "left",

@@ -80,10 +80,241 @@ df_fac = logic_comu.netejaTipusDadesDFFac(df_fac)
 
 df_ped_duplicats = logic_comu.obtenirDuplicats(df_ped, "A_NUMERO_CP")
 
-# DESAM CSV
+# DESAM CSV COMANDES DUPLICADES
 carpetaDesti = "HISTORIC_CORRECCIONS"
 filename = prefNomFitxerCorreccio + "COMANDES_DUPLICADES.csv"
 logic_comu.desaCSV(df_ped_duplicats, filename, carpetaDesti)
+
+# Filtram df_real amb els alumnes que han lliurat la tasca. No cap corregir una
+# tasca que no dsiposam
+
+df_real_alumnes_tasca_entregada = df_real.merge(
+    df_fechaEntrega[df_fechaEntrega["Estat entrega"] == "ENTREGADA"],
+    left_on="R_EXPEDIENT_C",
+    right_on="Expediente",
+    how="inner",
+)
+
+# DESAM CSV DF REAL FILTRAT
+carpetaDesti = "HISTORIC_CORRECCIONS"
+filename = prefNomFitxerCorreccio + "DF_REAL_ALUMNES_TASCA_ENTREGADA.csv"
+logic_comu.desaCSV(df_real_alumnes_tasca_entregada, filename, carpetaDesti)
+
+# UNIO DATAFRAMES
+# df_real_ped = df_real_filtrada + df_ped
+
+df_real_ped = logic_comu.unionDataFrames(
+    df_real_alumnes_tasca_entregada,
+    df_ped,
+    "R_NUMERO_CP",
+    "A_NUMERO_CP",
+    "left",
+    "_real",
+    "_ped",
+    True,
+)
+
+# SI ALUMNE INTRODUEIX DUES COMANDES DIFERENTS, PERÒ EN LA 2A
+# INDICA EL MATEIX NUM DE COMANDA QUE L'ANTERIOR, PER TANT TENIM
+# DUES COMANDES DIFERENTS AMB NUM DE COMANDA IGUAL
+# QUAN FEM LA UNIÓ df_real i df_ped, TENIM:
+# R_NUMERO_CP <-> A_NUMERO_CP
+#    53749           53749
+#    -----           53749
+# EN df_real NOMÉS TENIM UNA COMANDA 53749
+# EN df_ped TENIM DUES FILES AMB EL MATEIX NUM DE COMANDA 53749
+# QUAN ES FA EL MERGE, EN EL DF_RESULTANT (df_real_ped),
+# ES CREA UNA FILA MÉS PER INTEGRAR LA COMANDA REPETIDA:
+# R_NUMERO_CP <-> A_NUMERO_CP
+#    53749           53749
+#    53749           53749
+# DE TAL FORMA QUE EN df_real_ped, ES DUPLICA LA COMANDA REAL,
+# DUPLICANT TOTS ELS ELEMENTS (CLIENT, IMPORT, DATA, etc.)
+# PER TANT ES FA NECESSARI NETEJAR AQUESTS VALORS DUPLICATS I
+# DEIXAR NOMES UN REGISTRE EN L'APARTAT DE DADES REALS.
+
+# VEURE IMATGE EXPLICATIVA EN IMATGES/MERGE_DUPLICAT.png
+
+# PER ELIMINAR ELS VALORS REALS EN LA COMANDA DUPLICADA, APLICAM
+# LES INSTRUCCIONS SEGÜENTS:
+
+mask = df_real_ped.duplicated(subset=["R_NUMERO_CP"], keep="first")
+columnes_a_netejar = [
+    "R_IDTOTS_C",
+    "R_ID_C",
+    "R_EXPEDIENT_C",
+    "R_EMPRESA_C",
+    "R_ESTADO_FC",
+    "R_PROVEEDOR_C",
+    "R_FECHA_EMISION_C",
+    "R_NUMERO_CP",
+    "R_NUMERO_CA",
+    "R_NUMERO_CF",
+    "R_IMPORTE_C",
+    "R_ACUMULADO_C",
+]
+
+# APLICAM el FILTRE
+
+df_real_ped.loc[mask, columnes_a_netejar] = np.nan
+
+# DESAM CSV "UNIO_DF_REAL_PED.csv"
+carpetaDesti = "HISTORIC_CORRECCIONS"
+filename = prefNomFitxerCorreccio + "UNIO_DF_REAL_PED.csv"
+logic_comu.desaCSV(df_real_ped, filename, carpetaDesti)
+
+# UNIO DATAFRAMES
+# df_real_alb = df_real_filtrada + df_alb
+
+# No tenim cap relació directa entre df_real i df_alb
+# però amb l'ajuda de df_ped podem establir una relació indirecta
+# df_real <-> df_ped <-> NUM. COMANDA
+# df_ped <-> df_alb <-> EXPEDIENTE + REF. ODOO COMANDA COMPRA
+# A cada num. de comanda li correspon un (EXP. + REF. ODOO C-COMPRA)
+# D'aquesta manera assignam aquesta clau única a cada comanda real
+
+df_real_alumnes_tasca_entregada_clauUnica = logic_comu.unionDataFrames(
+    df_real_alumnes_tasca_entregada,
+    df_ped[["A_NUMERO_CP", "A_CLAU_UNICA_CP"]],
+    "R_NUMERO_CP",
+    "A_NUMERO_CP",
+    "left",
+    "_real",
+    "_ped",
+    True,
+)
+
+# DESAM CSV
+carpetaDesti = "HISTORIC_CORRECCIONS"
+filename = prefNomFitxerCorreccio + "DF_REAL_ALUMNES_TASCA_ENTREGADA_CLAU_UNICA.csv"
+logic_comu.desaCSV(
+    df_real_alumnes_tasca_entregada_clauUnica,
+    filename,
+    carpetaDesti,
+)
+
+# Ja podem fer merge entre df_real i df_alb, aplicant clau única,
+# però abans cal reanomenar la columna _merge (creada en el merge
+# anterior) per evitar problemes:
+
+df_real_alumnes_tasca_entregada_clauUnica.rename(
+    columns={"_merge": "_merge_01"}, inplace=True
+)
+
+df_real_alb = logic_comu.unionDataFrames(
+    df_real_alumnes_tasca_entregada_clauUnica,
+    df_alb,
+    "A_CLAU_UNICA_CP",
+    "A_CLAU_UNICA_CA",
+    "left",
+    "_real",
+    "_alb",
+    True,
+)
+
+# DESAM CSV
+carpetaDesti = "HISTORIC_CORRECCIONS"
+filename = prefNomFitxerCorreccio + "UNIO_DF_REAL_ALB.csv"
+logic_comu.desaCSV(df_real_alb, filename, carpetaDesti)
+
+# UNIO ENTRE df_real i df_fac
+df_real_fac = logic_comu.unionDataFrames(
+    df_real_alumnes_tasca_entregada_clauUnica,
+    df_fac,
+    "A_CLAU_UNICA_CP",
+    "A_CLAU_UNICA_CF",
+    "left",
+    "_real",
+    "_fac",
+    True,
+)
+
+# DESAM CSV
+carpetaDesti = "HISTORIC_CORRECCIONS"
+filename = prefNomFitxerCorreccio + "UNIO_DF_REAL_FAC.csv"
+logic_comu.desaCSV(df_real_fac, filename, carpetaDesti)
+
+# Recerca d'operacions ORFES
+
+# Es pot donar el cas que els alumnes hagin creat operacions, les quals
+# no tenen una comanda real de referencia (quasevol operació de compra
+# sempre està associada a una comanda real). Per exemple, pot haver registrat
+# una comanda de compra indicant un numero de comanda equivocat,
+# la qual cosa fa que no es pugui associar aquesta operació a cap comanda real,
+# o per exemple, por haver introduit la factura de compra sense establir
+# una relació a la comanda real que s'esta facturant.
+# Els registres resultants son considerats ORFES, perque no tenen cap comanda
+# real associada.
+
+# OBTENIM COMANDES ALUMNES ORFES.
+# Es a dir, un alumne ha introduit una comanda, la qual no
+# apareix en les dades reals df_real.
+# Primer feim una unio entre df_ped i df_real, obtenint un df on tenim totes
+# les comandes registrades pels alumnes (esquerra) i la seva comanda real (dreta)
+# associada (existeixi o no)
+
+df_ped_real = logic_comu.unionDataFrames(
+    df_ped,
+    df_real_alumnes_tasca_entregada_clauUnica,
+    "A_NUMERO_CP",
+    "R_NUMERO_CP",
+    "left",
+    "_ped",
+    "_real",
+    True,
+)
+
+# Del df obtnigut només ens interessa les comandes regsitrades pels alumnes (esquerra)
+# que no tenen cap comanda real associada (dreta)
+
+df_comandes_orfes = df_ped_real[df_ped_real["_merge"] == "left_only"]
+
+# DESAM CSV
+carpetaDesti = "HISTORIC_CORRECCIONS"
+filename = prefNomFitxerCorreccio + "COMANDES_ALUMNES_ORFES.csv"
+logic_comu.desaCSV(df_comandes_orfes, filename, carpetaDesti)
+
+# OBTENIM ALBARANS ALUMNES ORFES.
+# Es a dir, un alumne ha introduit un albarà, el qual no
+# apareix en les dades reals df_real
+
+df_alb_real = logic_comu.unionDataFrames(
+    df_alb,
+    df_real_alumnes_tasca_entregada_clauUnica,
+    "A_CLAU_UNICA_CA",
+    "A_CLAU_UNICA_CP",
+    "left",
+    "_alb",
+    "_real",
+    True,
+)
+
+df_albarans_orfes = df_alb_real[df_alb_real["_merge"] == "left_only"]
+
+# DESAM CSV
+filename = prefNomFitxerCorreccio + "ALBARANS_ALUMNES_ORFES.csv"
+logic_comu.desaCSV(df_albarans_orfes, filename, carpetaDesti)
+
+# OBTENIM FACTURES ALUMNES ORFES.
+# Es a dir, un alumne ha introduit una factura, el qual no
+# apareix en les dades reals df_real
+
+df_fac_real = logic_comu.unionDataFrames(
+    df_fac,
+    df_real_alumnes_tasca_entregada_clauUnica,
+    "A_CLAU_UNICA_CF",
+    "A_CLAU_UNICA_CP",
+    "left",
+    "_fac",
+    "_real",
+    True,
+)
+
+df_factures_orfes = df_fac_real[df_fac_real["_merge"] == "left_only"]
+
+# DESAM CSV
+filename = prefNomFitxerCorreccio + "FACTURES_ALUMNES_ORFES.csv"
+logic_comu.desaCSV(df_factures_orfes, filename, carpetaDesti)
 
 """
 
