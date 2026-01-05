@@ -154,6 +154,14 @@ def netejaTipusDadesDFFac(df_fac):
     return df_fac
 
 
+# NETEJA TIPUS DE DADES EN df_fechaEntrega
+def netejaTipusDadesDFFechaEntrega(df_fechaEntrega):
+    df_fechaEntrega["Data entrega"] = pd.to_datetime(
+        df_fechaEntrega["Data entrega"], format="%Y-%m-%d"
+    ).dt.date
+    return df_fechaEntrega
+
+
 # OBTENCIÓ DUPLICATS
 def obtenirDuplicats(df, columna):
     # print("OBTENINT DUPLICATS, dins funcio obtenirDuplicats")

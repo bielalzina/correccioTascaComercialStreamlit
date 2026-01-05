@@ -75,58 +75,7 @@ if rol == "Professor" and acces_professor:
     with colB:
         tasca = st.selectbox(
             "Selecciona la tasca: ",
-            [
-                "02.01",
-                "02.02",
-                "02.03",
-                "02.04",
-                "02.05",
-                "02.06",
-                "02.07",
-                "02.08",
-                "02.09",
-                "02.10",
-                "02.11",
-                "02.12",
-                "02.13",
-                "02.14",
-                "02.15",
-                "02.16",
-                "02.17",
-                "02.18",
-                "02.19",
-                "02.20",
-                "02.21",
-                "02.22",
-                "02.23",
-                "02.24",
-                "02.25",
-                "02.26",
-                "02.27",
-                "02.28",
-                "02.29",
-                "02.30",
-                "02.31",
-                "02.32",
-                "02.33",
-                "02.34",
-                "02.35",
-                "02.36",
-                "02.37",
-                "02.38",
-                "02.39",
-                "02.40",
-                "02.41",
-                "02.42",
-                "02.43",
-                "02.44",
-                "02.45",
-                "02.46",
-                "02.47",
-                "02.48",
-                "02.49",
-                "02.50",
-            ],
+            llista_num_tasques,
             index=None,
             placeholder="Selecciona la tasca...",
         )
@@ -152,8 +101,16 @@ if rol == "Professor" and acces_professor:
 
     prefNomFitxerCorreccio = grup + "_" + tasca + "_"
 
+    print("ABANS DE INICIAR LES ETAPES DE CORRECCIÓ")
+    print(st.session_state.fase01)
+    print(st.session_state.fase15)
+
     st.session_state.fase01 = True
     st.session_state.fase15 = True
+
+    print("DESPRES DE INICIAR LES ETAPES DE CORRECCIÓ")
+    print(st.session_state.fase01)
+    print(st.session_state.fase15)
 
     tab_compres, tab_vendes, tab_inventari = st.tabs(["COMPRES", "VENDES", "INVENTARI"])
 
@@ -313,54 +270,9 @@ if rol == "Professor" and acces_professor:
             if not check_data_entrega:
 
                 # 1. Definim els expedients i noms de les empreses
-                expedients = [
-                    5796,
-                    6265,
-                    6320,
-                    6352,
-                    6356,
-                    6366,
-                    6368,
-                    6369,
-                    6427,
-                    6428,
-                    6431,
-                    6467,
-                    6478,
-                    6702,
-                    6706,
-                    6707,
-                    6713,
-                    6734,
-                    6746,
-                    6777,
-                    6792,
-                    6844,
-                ]
-                empreses_predefinides = [
-                    "ADG32 5796 NSACARES SL",
-                    "ADG32 6265 SMORENO SL",
-                    "ADG32 6320 MNAVARRO SL",
-                    "ADG32 6352 SAANANOU SL",
-                    "ADG32 6356 WAANANOU SL",
-                    "ADG32 6366 JMORAGUES SL",
-                    "ADG32 6368 LPIZA SL",
-                    "ADG32 6369 VMASTRANGELO SL",
-                    "ADG32 6427 NANANOU SL",
-                    "ADG32 6428 ABOUBAL SL",
-                    "ADG32 6431 GZOUGGAGHI SL",
-                    "ADG32 6467 WCHANTAH SL",
-                    "ADG32 6478 CBAUZA SL",
-                    "ADG32 6702 NFORNES SL",
-                    "ADG32 6706 NSUIYHI SL",
-                    "ADG32 6707 MOUAZINE SL",
-                    "ADG32 6713 BCARBONELL SL",
-                    "ADG32 6734 LABOLAFIO SL",
-                    "ADG32 6746 ELLADO SL",
-                    "ADG32 6777 JGARCIA SL",
-                    "ADG32 6792 PCAPO SL",
-                    "ADG32 6844 TTRAMULLAS SL",
-                ]
+                expedients = llista_expedients_alumnes
+
+                empreses_predefinides = llista_empreses_alumnes
 
                 with st.form("formulari_dates_entrega_tasca"):
                     st.subheader(
@@ -480,55 +392,6 @@ if rol == "Professor" and acces_professor:
 
             st.divider()
             st.session_state.fase04 = True
-
-        ####################################################################
-        ####################################################################
-        ####################################################################
-        ####################################################################
-        ####################################################################
-
-        _ = """
-        # ==========================================================
-        # 3.1.3 DATA ENTREGA TREBALL
-        # ==========================================================
-
-        if st.session_state.compres_carrega_llistats:
-
-            st.subheader(
-                "Data de lliurament de la tasca i disponibilitat de les factures de compra per al seu registre en ODOO"
-            )
-
-            st.write(
-                "Com ja sabem les factures de compra estan disponibles al dia següent d'haver fet la comanda. Per determinar si l'alumnat ha d'haver registrat o no les factures de compra, cal introduir les dates d'entrega dels treballs i comparar-les amb la dates en que la factures de compra estan disponibles."
-            )
-
-            # print(df_real)
-
-            df_real = logic_compres.insertaDataEntregaTreball(df_real, grup, dataVto)
-
-            if df_real is None:
-                st.error(
-                    "No ha estat possible inserir la data d'entrega en el dataframe df_real. finalitza la execució d'aquesta APP. Disculpeu les molesties."
-                )
-                # ATURAM L'EXECUCIO DEL PROGRAMA. EL CODI POSTERIOR NO
-                # S'EXECUTARA, DE TAL FORMA QUE NO NECESSITEM USAR ELSE
-                st.divider()
-                st.stop()
-
-            # df_real no es NONE, podem continuar
-            st.success(
-                "Les dates d'entrega s'han introduït en el dataframe (df_real) per cada empresa/operacio (DF_REAL recull totes les operacions de compra realitzades pels alumnes en EMPRESAULA)"
-            )
-
-            # Inserim la data de entrega en df_real
-            df_real = logic_comu.insereixDataEntregaEnDFDesti(
-                df_real, "R_FECHA_ENTREGA", "R_EMPRESA_C", df_editat
-            )
-
-            st.session_state.compres_insercio_data_entrega = True
-            st.divider()
-
-            """
 
         # ==========================================================
         # 3.1.4 NETEJA VARIABLES
@@ -767,13 +630,17 @@ if rol == "Professor" and acces_professor:
 
     with tab_inventari:
 
-        st.write("Gestió de correccions d'inventari")
+        print("DINS TAB_INVENTARI")
+        print(st.session_state.fase01)
+        print(st.session_state.fase15)
 
         # ====================================================================
         # 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
         # ====================================================================
 
         if st.session_state.fase15:
+            st.write("Gestió de correccions d'inventari")
+
             check_llistats_inventari = st.checkbox(
                 "Els llistats per correcció de l'inventari ja estan pujats al servidor"
             )
@@ -787,7 +654,7 @@ if rol == "Professor" and acces_professor:
                 with col1:
                     st.badge("RESUM DADES INVENTARI")
                     file_resum_dades_inventari = st.file_uploader(
-                        "Adjunta el fitxer 9_RESUM_DADES_INVENTARI_ALUMNE.csv",
+                        "Adjunta el fitxer 09_RESUM_DADES_INVENTARI_ALUMNE.csv",
                         type=["csv"],
                         key="res_in",
                     )
@@ -822,18 +689,16 @@ if rol == "Professor" and acces_professor:
                     st.write("⏳ Pujant arxius al servidor... ⏳")
 
                     # --- 2. PUJAM ELS ARXIUS AMB FUNCIO carregaArxius() ---
-                    # Li passam els 5 arxius que hem pujat a la WEB
+                    # Li passam els 2 arxius que hem pujat a la WEB
 
-                    file_resum_dades_inventari, file_hes_inventari = (
+                    df_resum_dades_inventari, df_hes_inventari = (
                         logic_compres.carregaArxius(
                             file_resum_dades_inventari,
                             file_hes_inventari,
                         )
                     )
 
-                    listaDFs01 = [file_resum_dades_inventari, file_hes_inventari]
-
-                    if any(dadesCarregades is None for dadesCarregades in listaDFs01):
+                    if df_resum_dades_inventari is None or df_hes_inventari is None:
                         st.error(
                             "NO ES POT SEGUIR EXECUTANT EL PROGRAMA PER FALTA DE DADES"
                         )
@@ -869,7 +734,6 @@ if rol == "Professor" and acces_professor:
                     st.success(
                         "✅ LA CÀRREGA DELS LLISTATS I LA SEVA CONVERSIÓ A DATAFRAMES HA ESTAT EXITOSA"
                     )
-                    st.session_state.fase03 = True
                     st.session_state.fase17 = True
                     st.divider()
 
@@ -877,7 +741,7 @@ if rol == "Professor" and acces_professor:
 
             # NOM DE LES COLUMNES DELS 2 DF
 
-            print("9_RESUM_DADES_INVENTARI_ALUMNE.csv")
+            print("09_RESUM_DADES_INVENTARI_ALUMNE.csv")
             print("\n".join(df_resum_dades_inventari.columns.tolist()))
             print()
             print("10_HISTORIAL_E_S_INVENTARI_ALUMNE.csv")
