@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import os
 from datetime import datetime, timedelta
-import logic_compres
+import logic_compres_1_03
 import logic_comu
 import time
 
@@ -99,49 +99,88 @@ if rol == "Professor" and acces_professor:
         st.error("Per continuar, cal indicar la data de venciment de la tasca")
         st.stop()
 
-    prefNomFitxerCorreccio = grup + "_" + tasca + "_"
-
-    print("ABANS DE INICIAR LES ETAPES DE CORRECCIÓ")
-    print(st.session_state.fase01)
-    print(st.session_state.fase15)
-
     tab_compres, tab_vendes, tab_inventari = st.tabs(["COMPRES", "VENDES", "INVENTARI"])
-
-    st.session_state.fase01 = True
-    st.session_state.fase15 = True
-
-    print("DESPRES DE INICIAR LES ETAPES DE CORRECCIÓ")
-    print(st.session_state.fase01)
-    print(st.session_state.fase15)
 
     # ====================================================================
     # 3.1 VISTA PROFESOR - TAB COMPRES
     # ====================================================================
 
     with tab_compres:
+        st.subheader("CORRECCIÓ COMPRES")
 
-        # ====================================================================
-        # 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
-        # ====================================================================
+        # dfCorreccioComandesCompra
+        # dfCorrecioAlbaransCompra
+        # dfCorrecioFacturesCompra
 
-        if st.session_state.fase01:
-            st.subheader("TAB COMPRES")
+        # Creamos el contenedor visual
+        with st.spinner(
+            "⏳ S'ESTA CORREGINT LES OPERACIONS DE COMPRES... Cal tenir una mica de paciencia (entre 10 i 15 segons)"
+        ):
+            # La ejecución se detiene aquí hasta que la función hace el return
+            (
+                dfCorreccioComandesCompra,
+                dfCorrecioAlbaransCompra,
+                dfCorrecioFacturesCompra,
+            ) = logic_compres_1_03.correccioCompres(grup, tasca)
+
+        # Una vez fuera del bloque 'with', el spinner desaparece solo
+        st.success("✅ CORRECCIÓN COMPLETADA")
+
+        # (
+        #     dfCorreccioComandesCompra,
+        #     dfCorrecioAlbaransCompra,
+        #     dfCorrecioFacturesCompra,
+        # ) = logic_compres_1_03.correccioCompres(grup, tasca)
+
+        if dfCorreccioComandesCompra is not None:
+            st.subheader("Comandes corregides")
+            # Num. Comanda compra
+            # Empreses ==
+            # Proveïdors ==
+            # Dates emisió ==
+            # Num. Comanda ==
+            # Import ==
+            # Estat Comanda OK
+            # Estat Fact. Comanda OK
+            columnesMostrar = [
+                "Real Empresa",
+                "Num. Comanda compra",
+                "Empreses ==",
+                "Proveïdors ==",
+                "Dates emisió ==",
+                "Num. Comanda ==",
+                "Import ==",
+                "Estat Comanda OK",
+                "Estat Fact. Comanda OK",
+            ]
+
+            st.dataframe(dfCorreccioComandesCompra[columnesMostrar])
+            st.divider()
+        elif dfCorreccioComandesCompra is None:
+            st.subheader("No s'han trobat comandes per corregir")
+            st.divider()
+
+        if dfCorrecioAlbaransCompra is not None:
+            st.subheader("Albarans corregits")
+            st.dataframe(dfCorrecioAlbaransCompra)
+            st.divider()
+        elif dfCorrecioAlbaransCompra is None:
+            st.subheader("No s'han trobat albarans per corregir")
+            st.divider()
+
+        if dfCorrecioFacturesCompra is not None:
+            st.subheader("Factures corregides")
+            st.dataframe(dfCorrecioFacturesCompra)
+            st.divider()
+        elif dfCorrecioFacturesCompra is None:
+            st.subheader("No s'han trobat factures per corregir")
+            st.divider()
 
     with tab_vendes:
-        st.write("Gestió de correccions de vendes")
+        st.subheader("CORRECCIÓ VENDES")
 
     with tab_inventari:
-
-        print("DINS TAB_INVENTARI")
-        print(st.session_state.fase01)
-        print(st.session_state.fase15)
-
-        # ====================================================================
-        # 3.1.1 CARREGA LLISTATS - ARXIUS AMB DADES REALS i DADES ALUMNAT
-        # ====================================================================
-
-        if st.session_state.fase15:
-            st.write("Gestió de correccions d'inventari")
+        st.subheader("CORRECCIÓ INVENTARI")
 
 
 # ==============================================================================
