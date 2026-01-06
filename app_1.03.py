@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import logic_compres_1_03
 import logic_comu
 import time
+import glob
 
 from st_sessions_state import *
 
@@ -108,29 +109,96 @@ if rol == "Professor" and acces_professor:
     with tab_compres:
         st.subheader("CORRECCIÓ COMPRES")
 
-        # dfCorreccioComandesCompra
-        # dfCorrecioAlbaransCompra
-        # dfCorrecioFacturesCompra
+        # Abans de fer la correcció, comprovem si hi ha correccions anteriors:
 
-        # Creamos el contenedor visual
-        with st.spinner(
-            "⏳ S'ESTA CORREGINT LES OPERACIONS DE COMPRES... Cal tenir una mica de paciencia (entre 10 i 15 segons)"
-        ):
-            # La ejecución se detiene aquí hasta que la función hace el return
-            (
-                dfCorreccioComandesCompra,
-                dfCorrecioAlbaransCompra,
-                dfCorrecioFacturesCompra,
-            ) = logic_compres_1_03.correccioCompres(grup, tasca)
+        carpetaHC = "HISTORIC_CORRECCIONS"
+        prefNomFitxerCORRECCIO = grup + "_" + tasca + "_" + "COMPRES_"
+        rutaHistoricsCorreccions = (
+            os.getcwd() + "/" + carpetaHC + "/" + prefNomFitxerCORRECCIO
+        )
+        patro = rutaHistoricsCorreccions + "*"
+        # la variable 'patro' a més de contenir la ruta a la carpeta, també
+        # inclou la part comé del nom del fitxer, i amb l'asterisc (*),
+        # obtindren tots els arxius que compleixen el patró
 
-        # Una vez fuera del bloque 'with', el spinner desaparece solo
-        st.success("✅ CORRECCIÓN COMPLETADA")
+        llistaFitxersCorreccio = glob.glob(patro)
 
-        # (
-        #     dfCorreccioComandesCompra,
-        #     dfCorrecioAlbaransCompra,
-        #     dfCorrecioFacturesCompra,
-        # ) = logic_compres_1_03.correccioCompres(grup, tasca)
+        calCorregirCompres = False
+
+        if len(llistaFitxersCorreccio) > 0:
+            st.warning("Hi ha correccions anteriors per a aquesta tasca")
+            opcioCorreccio = st.selectbox(
+                "Les compres han estat corregides anteriorment. Vols repetir la correcció?",
+                ("Sí", "No"),
+                index=None,
+                placeholder="Selecciona una opció...",
+            )
+            if opcioCorreccio == "Sí":
+                calCorregirCompres = True
+            elif opcioCorreccio == "No":
+                calCorregirCompres = False
+            else:
+                st.error("Per continuar, cal seleccionar una opció")
+                st.stop()
+        elif len(llistaFitxersCorreccio) == 0 or len(llistaFitxersCorreccio) is None:
+            calCorregirCompres = True
+        else:
+            st.error("Per continuar, cal seleccionar una opció")
+            st.stop()
+
+        if calCorregirCompres:
+            # Cridam a la funció de correcció de compres
+            # Creamos el contenedor visual
+            with st.spinner(
+                "⏳ S'ESTA CORREGINT LES OPERACIONS DE COMPRES... Cal tenir una mica de paciencia (entre 10 i 15 segons)"
+            ):
+                # La ejecución se detiene aquí hasta que la función hace el return
+                (
+                    dfCorreccioComandesCompra,
+                    dfCorrecioAlbaransCompra,
+                    dfCorrecioFacturesCompra,
+                ) = logic_compres_1_03.correccioCompres(grup, tasca)
+
+            # Una vez fuera del bloque 'with', el spinner desaparece solo
+            st.success("✅ CORRECCIÓN COMPLETADA")
+
+        if calCorregirCompres == False:
+            # Recuperem les dades de la correcció anterior
+            # carregaCSV(fileName, carpeta)
+            carpeta = "HISTORIC_CORRECCIONS"
+
+            fileName01 = (
+                grup
+                + "_"
+                + tasca
+                + "_"
+                + "COMPRES_"
+                + "11_DF_CORRECCIO_COMANDES_COMPRA.csv"
+            )
+
+            dfCorreccioComandesCompra = logic_comu.carregaCSV(fileName01, carpeta)
+
+            fileName02 = (
+                grup
+                + "_"
+                + tasca
+                + "_"
+                + "COMPRES_"
+                + "12_DF_CORRECCIO_ALBARANS_COMPRA.csv"
+            )
+
+            dfCorrecioAlbaransCompra = logic_comu.carregaCSV(fileName02, carpeta)
+
+            fileName03 = (
+                grup
+                + "_"
+                + tasca
+                + "_"
+                + "COMPRES_"
+                + "13_DF_CORRECCIO_FACTURES_COMPRA.csv"
+            )
+
+            dfCorrecioFacturesCompra = logic_comu.carregaCSV(fileName03, carpeta)
 
         if dfCorreccioComandesCompra is not None:
             st.subheader("Comandes corregides")
