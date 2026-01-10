@@ -3,9 +3,11 @@ from datetime import datetime, timedelta
 import os
 import logic_comu
 
-# 1. CARREGA ARXIUS 
+# CARREGA ARXIUS
 # 9_DATOS_INVENTARIO_ALUMNO.csv
 
+
+"""
 df_resum_stock= logic_comu.carregaCSV("9_DATOS_INVENTARIO_ALUMNO.csv")
 
 if any(dadesCarregades is None for dadesCarregades in [df_resum_stock]):
@@ -266,3 +268,5 @@ try:
     print(f"✅ Corrección Inventario generada: {fileName02}")
 except Exception as e:
     print(f"❌ Error al guardar: {e}")
+
+"""
