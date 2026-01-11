@@ -81,8 +81,8 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
 
     # DESAM CSV MOROSOS
 
-    filename = prefNomFitxerCORRECCIO + "01_ALUMNES_MOROSOS.csv"
-    logic_comu.desaCSV(df_alumnes_morosos, filename, carpetaHC)
+    filename = grup + "_" + tasca + "_COMPRES_" + "01_ALUMNES_MOROSOS.csv"
+    logic_comu.desaCSV(df_alumnes_morosos, filename, carpetaOUTPUT)
 
     # NETEJA DE TIPOS DE DADES
     df_real = logic_comu.netejaTipusDadesDFReal(df_real)
@@ -99,8 +99,8 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
     df_ped_duplicats = logic_comu.obtenirDuplicats(df_ped, "A_NUMERO_CP")
 
     # DESAM CSV COMANDES DUPLICADES
-    filename = prefNomFitxerCORRECCIO + "02_COMANDES_DUPLICADES.csv"
-    logic_comu.desaCSV(df_ped_duplicats, filename, carpetaHC)
+    filename = grup + "_" + tasca + "_COMPRES_" + "02_COMANDES_DUPLICADES.csv"
+    logic_comu.desaCSV(df_ped_duplicats, filename, carpetaOUTPUT)
 
     # Filtram df_real amb els alumnes que han lliurat la tasca. No cap corregir una
     # tasca que no dsiposam
@@ -113,8 +113,10 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
     )
 
     # DESAM CSV DF REAL FILTRAT
-    filename = prefNomFitxerCORRECCIO + "03_DF_REAL_ALUMNES_TASCA_ENTREGADA.csv"
-    logic_comu.desaCSV(df_real_alumnes_tasca_entregada, filename, carpetaHC)
+    filename = (
+        grup + "_" + tasca + "_COMPRES_" + "03_DF_REAL_ALUMNES_TASCA_ENTREGADA.csv"
+    )
+    logic_comu.desaCSV(df_real_alumnes_tasca_entregada, filename, carpetaOUTPUT)
 
     # UNIO DATAFRAMES
     # df_real_ped = df_real_filtrada + df_ped
@@ -175,8 +177,8 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
     df_real_ped.loc[mask, columnes_a_netejar] = np.nan
 
     # DESAM CSV "UNIO_DF_REAL_PED.csv"
-    filename = prefNomFitxerCORRECCIO + "04_UNIO_DF_REAL_PED.csv"
-    logic_comu.desaCSV(df_real_ped, filename, carpetaHC)
+    filename = grup + "_" + tasca + "_COMPRES_" + "04_UNIO_DF_REAL_PED.csv"
+    logic_comu.desaCSV(df_real_ped, filename, carpetaOUTPUT)
 
     # UNIO DATAFRAMES
     # df_real_alb = df_real_filtrada + df_alb
@@ -201,12 +203,16 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
 
     # DESAM CSV
     filename = (
-        prefNomFitxerCORRECCIO + "05_DF_REAL_ALUMNES_TASCA_ENTREGADA_CLAU_UNICA.csv"
+        grup
+        + "_"
+        + tasca
+        + "_COMPRES_"
+        + "05_DF_REAL_ALUMNES_TASCA_ENTREGADA_CLAU_UNICA.csv"
     )
     logic_comu.desaCSV(
         df_real_alumnes_tasca_entregada_clauUnica,
         filename,
-        carpetaHC,
+        carpetaOUTPUT,
     )
 
     # Ja podem fer merge entre df_real i df_alb, aplicant clau única,
@@ -229,8 +235,8 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
     )
 
     # DESAM CSV
-    filename = prefNomFitxerCORRECCIO + "06_UNIO_DF_REAL_ALB.csv"
-    logic_comu.desaCSV(df_real_alb, filename, carpetaHC)
+    filename = grup + "_" + tasca + "_COMPRES_" + "06_UNIO_DF_REAL_ALB.csv"
+    logic_comu.desaCSV(df_real_alb, filename, carpetaOUTPUT)
 
     # UNIO ENTRE df_real i df_fac
     df_real_fac = logic_comu.unionDataFrames(
@@ -245,8 +251,8 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
     )
 
     # DESAM CSV
-    filename = prefNomFitxerCORRECCIO + "07_UNIO_DF_REAL_FAC.csv"
-    logic_comu.desaCSV(df_real_fac, filename, carpetaHC)
+    filename = grup + "_" + tasca + "_COMPRES_" + "07_UNIO_DF_REAL_FAC.csv"
+    logic_comu.desaCSV(df_real_fac, filename, carpetaOUTPUT)
 
     # Recerca d'operacions ORFES
 
@@ -284,8 +290,8 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
     df_comandes_orfes = df_ped_real[df_ped_real["_merge"] == "left_only"]
 
     # DESAM CSV
-    filename = prefNomFitxerCORRECCIO + "08_COMANDES_ALUMNES_ORFES.csv"
-    logic_comu.desaCSV(df_comandes_orfes, filename, carpetaHC)
+    filename = grup + "_" + tasca + "_COMPRES_" + "08_COMANDES_ALUMNES_ORFES.csv"
+    logic_comu.desaCSV(df_comandes_orfes, filename, carpetaOUTPUT)
 
     # OBTENIM ALBARANS ALUMNES ORFES.
     # Es a dir, un alumne ha introduit un albarà, el qual no
@@ -305,8 +311,8 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
     df_albarans_orfes = df_alb_real[df_alb_real["_merge"] == "left_only"]
 
     # DESAM CSV
-    filename = prefNomFitxerCORRECCIO + "09_ALBARANS_ALUMNES_ORFES.csv"
-    logic_comu.desaCSV(df_albarans_orfes, filename, carpetaHC)
+    filename = grup + "_" + tasca + "_COMPRES_" + "09_ALBARANS_ALUMNES_ORFES.csv"
+    logic_comu.desaCSV(df_albarans_orfes, filename, carpetaOUTPUT)
 
     # OBTENIM FACTURES ALUMNES ORFES.
     # Es a dir, un alumne ha introduit una factura, el qual no
@@ -326,8 +332,8 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
     df_factures_orfes = df_fac_real[df_fac_real["_merge"] == "left_only"]
 
     # DESAM CSV
-    filename = prefNomFitxerCORRECCIO + "10_FACTURES_ALUMNES_ORFES.csv"
-    logic_comu.desaCSV(df_factures_orfes, filename, carpetaHC)
+    filename = grup + "_" + tasca + "_COMPRES_" + "10_FACTURES_ALUMNES_ORFES.csv"
+    logic_comu.desaCSV(df_factures_orfes, filename, carpetaOUTPUT)
 
     # CORRECCIO D'OPERACIONS - COMANDES
 
@@ -408,8 +414,10 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
         dfCorreccioComandesCompra = pd.DataFrame(informe_pedidos)
 
         # DESAM CSV
-        fileName = prefNomFitxerCORRECCIO + "11_DF_CORRECCIO_COMANDES_COMPRA.csv"
-        logic_comu.desaCSV(dfCorreccioComandesCompra, fileName, carpetaHC)
+        fileName = (
+            grup + "_" + tasca + "_COMPRES_" + "11_DF_CORRECCIO_COMANDES_COMPRA.csv"
+        )
+        logic_comu.desaCSV(dfCorreccioComandesCompra, fileName, carpetaOUTPUT)
 
     # CORRECCIO D'OPERACIONS - ALBARANS
 
@@ -466,9 +474,11 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
         # CREAM DF CORRECCIO ALBARANS COMPRA
         dfCorrecioAlbaransCompra = pd.DataFrame(informe_albarans)
 
-        fileName = prefNomFitxerCORRECCIO + "12_DF_CORRECCIO_ALBARANS_COMPRA.csv"
+        fileName = (
+            grup + "_" + tasca + "_COMPRES_" + "12_DF_CORRECCIO_ALBARANS_COMPRA.csv"
+        )
 
-        logic_comu.desaCSV(dfCorrecioAlbaransCompra, fileName, carpetaHC)
+        logic_comu.desaCSV(dfCorrecioAlbaransCompra, fileName, carpetaOUTPUT)
 
     # CORRECCIO D'OPERACIONS - FACTURES
 
@@ -562,9 +572,11 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
         # CREAM DF CORRECCIO FACTURES COMPRA
         dfCorrecioFacturesCompra = pd.DataFrame(informe_factures)
 
-        fileName = prefNomFitxerCORRECCIO + "13_DF_CORRECCIO_FACTURES_COMPRA.csv"
+        fileName = (
+            grup + "_" + tasca + "_COMPRES_" + "13_DF_CORRECCIO_FACTURES_COMPRA.csv"
+        )
 
-        logic_comu.desaCSV(dfCorrecioFacturesCompra, fileName, carpetaHC)
+        logic_comu.desaCSV(dfCorrecioFacturesCompra, fileName, carpetaOUTPUT)
 
     return dfCorreccioComandesCompra, dfCorrecioAlbaransCompra, dfCorrecioFacturesCompra
 

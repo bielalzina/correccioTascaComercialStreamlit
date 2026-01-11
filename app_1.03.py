@@ -5,6 +5,9 @@ import numpy as np
 import os
 from datetime import datetime, timedelta
 import logic_compres_1_03
+
+# import logic_vendes_1_03
+import logic_inventari_1_03
 import logic_comu
 import time
 import glob
@@ -149,18 +152,20 @@ if rol == "Professor" and acces_professor:
                 index=None,
                 placeholder="Selecciona una opció...",
             )
-            if opcioCorreccio == "Sí":
+            if opcioCorreccio is None:
+                st.error("❌ Per continuar, cal seleccionar una opció")
+                st.stop()
+            elif opcioCorreccio == "Sí":
                 calCorregirCompres = True
+                st.success("✅ Correcció activada")
+                # Aquí va el resto del código de compres corregides
             elif opcioCorreccio == "No":
                 calCorregirCompres = False
-            else:
-                st.error("Per continuar, cal seleccionar una opció")
-                st.stop()
+                st.info("ℹ️ Correcció desactivada")
+                # Código alternativo si no corregir
         elif len(llistaFitxersCorreccio) == 0 or len(llistaFitxersCorreccio) is None:
             calCorregirCompres = True
-        else:
-            st.error("Per continuar, cal seleccionar una opció")
-            st.stop()
+            st.success("✅ Correcció activada")
 
         if calCorregirCompres:
             # Cridam a la funció de correcció de compres
@@ -183,7 +188,6 @@ if rol == "Professor" and acces_professor:
         if calCorregirCompres == False:
             # Recuperem les dades de la correcció anterior
             # carregaCSV(fileName, carpeta)
-            carpeta = "HISTORIC_CORRECCIONS"
 
             fileName01 = (
                 grup
@@ -194,7 +198,7 @@ if rol == "Professor" and acces_professor:
                 + "11_DF_CORRECCIO_COMANDES_COMPRA.csv"
             )
 
-            dfCorreccioComandesCompra = logic_comu.carregaCSV(fileName01, carpeta)
+            dfCorreccioComandesCompra = logic_comu.carregaCSV(fileName01, carpetaOUTPUT)
 
             fileName02 = (
                 grup
@@ -205,7 +209,7 @@ if rol == "Professor" and acces_professor:
                 + "12_DF_CORRECCIO_ALBARANS_COMPRA.csv"
             )
 
-            dfCorrecioAlbaransCompra = logic_comu.carregaCSV(fileName02, carpeta)
+            dfCorrecioAlbaransCompra = logic_comu.carregaCSV(fileName02, carpetaOUTPUT)
 
             fileName03 = (
                 grup
@@ -216,7 +220,7 @@ if rol == "Professor" and acces_professor:
                 + "13_DF_CORRECCIO_FACTURES_COMPRA.csv"
             )
 
-            dfCorrecioFacturesCompra = logic_comu.carregaCSV(fileName03, carpeta)
+            dfCorrecioFacturesCompra = logic_comu.carregaCSV(fileName03, carpetaOUTPUT)
 
         if dfCorreccioComandesCompra is not None:
             st.subheader("Comandes corregides")
@@ -265,8 +269,105 @@ if rol == "Professor" and acces_professor:
     with tab_vendes:
         st.subheader("CORRECCIÓ VENDES")
 
+    # ====================================================================
+    # 3.3 VISTA PROFESOR - TAB INVENTARI
+    # ====================================================================
+
     with tab_inventari:
         st.subheader("CORRECCIÓ INVENTARI")
+
+        # Abans de fer la correcció, comprovem si hi ha correccions anteriors:
+        prefixNomFitxerCorreccioInventari = grup + "_" + tasca + "_INVENTARI_"
+        rutaLlistatsOutputInventari = (
+            os.getcwd() + "/" + carpetaOUTPUT + "/" + prefixNomFitxerCorreccioInventari
+        )
+        patro = rutaLlistatsOutputInventari + "*"
+        # la variable 'patro' a més de contenir la ruta a la carpeta, també
+        # inclou la part comé del nom del fitxer, i amb l'asterisc (*),
+        # obtindrem tots els arxius que compleixen el patró
+
+        llistaFitxersCorreccioInventari = glob.glob(patro)
+
+        calCorregirInventari = False
+
+        if len(llistaFitxersCorreccioInventari) > 0:
+            st.warning("Hi ha correccions anteriors per a aquesta tasca")
+            opcioCorreccio = st.selectbox(
+                "L'inventari ja ha estat corregit anteriorment. Vols repetir la correcció?",
+                ("Sí", "No"),
+                index=None,
+                placeholder="Selecciona una opció...",
+            )
+            if opcioCorreccio == "Sí":
+                calCorregirInventari = True
+            elif opcioCorreccio == "No":
+                calCorregirInventari = False
+            else:
+                st.error("Per continuar, cal seleccionar una opció")
+                st.stop()
+        elif (
+            len(llistaFitxersCorreccioInventari) == 0
+            or len(llistaFitxersCorreccioInventari) is None
+        ):
+            calCorregirInventari = True
+        else:
+            st.error("Per continuar, cal seleccionar una opció")
+            st.stop()
+
+        if calCorregirInventari:
+            # Cridam a la funció de correcció de l'inventari
+            # Creamos el contenedor visual
+            with st.spinner(
+                "⏳ S'ESTA CORREGINT L'INVENTARI... Cal tenir una mica de paciencia (entre 10 i 15 segons)"
+            ):
+                # La ejecución se detiene aquí hasta que la función hace el return
+                (
+                    df_correccio_inventari_empresa_producte,
+                    df_correccio_inventari_empresa,
+                ) = logic_inventari_1_03.correccioInventari(
+                    grup, tasca, carpetaINPUT, carpetaOUTPUT
+                )
+
+            # Una vez fuera del bloque 'with', el spinner desaparece solo
+            st.success("✅ CORRECCIÓN COMPLETADA")
+
+        if calCorregirInventari == False:
+            # Recuperem les dades de la correcció anterior
+            # carregaCSV(fileName, carpeta)
+
+            fileName01 = (
+                grup
+                + "_"
+                + tasca
+                + "_INVENTARI_"
+                + "40_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv"
+            )
+
+            df_correccio_inventari_empresa_producte = logic_comu.carregaCSV(
+                fileName01, carpetaOUTPUT
+            )
+
+            fileName02 = (
+                grup
+                + "_"
+                + tasca
+                + "_INVENTARI_"
+                + "41_CORRECCIO_INVENTARI_EMPRESA.csv"
+            )
+
+            df_correccio_inventari_empresa = logic_comu.carregaCSV(
+                fileName02, carpetaOUTPUT
+            )
+
+        if df_correccio_inventari_empresa_producte is not None:
+            st.subheader("CORRECCIÓ INVENTARI PER EMPRESA - PRODUCTE")
+            st.dataframe(df_correccio_inventari_empresa_producte)
+            st.divider()
+
+        if df_correccio_inventari_empresa is not None:
+            st.subheader("CORRECCIÓ INVENTARI PER EMPRESA")
+            st.dataframe(df_correccio_inventari_empresa)
+            st.divider()
 
 
 # ==============================================================================
