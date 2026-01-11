@@ -7,7 +7,7 @@ import logic_comu
 import glob
 
 
-def correccioCompres(grup, tasca):
+def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
 
     # ==============================================================================
     # 1. CARREGA ARXIUS
@@ -19,30 +19,17 @@ def correccioCompres(grup, tasca):
     #   ADG32O_02.12_03_DATOS_FACTURAS_COMPRA_ALUMNOS.csv
     #   ADG32O_02.12_04_FECHA_ENTREGA_TRABAJOS.csv
 
-    # El grup i la tasca vendran informats com a parametres de la funció, d'aquesta
-    # manera definirem dos prefixos pels arxius:
-
-    prefNomFitxerSOURCES = grup + "_" + tasca + "_"
-    # prefNomFitxerSOURCES = "ADG32O_02.12_"
-
-    prefNomFitxerCORRECCIO = grup + "_" + tasca + "_" + "COMPRES_"
-    # prefNomFitxerCORRECCIO = "ADG32O_02.12_COMPRES_"
-
-    # Carpeta LLISTATS_CSV
-    carpetaCSV = "LLISTATS_CSV"
-
-    # Carpeta HISTORIC_CORRECCIONS
-    carpetaHC = "HISTORIC_CORRECCIONS"
-
     # Abans de recuperar les fonts de dades, per fer les correccions, eliminarem tots els arxius existents relacionats amb les COMPRES:
 
     # Definim ruta y patró
     # El asterisco (*) actúa como comodín para cualquier carácter posterior
 
-    rutaHistoricsCorreccions = os.getcwd() + "/" + carpetaHC + "/"
-    patro = rutaHistoricsCorreccions + prefNomFitxerCORRECCIO + "*"
+    rutaOUTPUT = (
+        os.getcwd() + "/" + carpetaOUTPUT + "/" + grup + "_" + tasca + "_COMPRES_"
+    )
+    patro = rutaOUTPUT + "*"
 
-    # patro = C:\Users\GABRIEL\Documents\GitHub\correccioTascaComercialStreamlit\HISTORIC_CORRECCIONS\ADG32O_02.12_COMPRES_*
+    # patro = C:\Users\GABRIEL\Documents\GitHub\correccioTascaComercialStreamlit\LLISTATS_OUTPUT\ADG32O_02.12_COMPRES_*
 
     # Obté la lista de fitxers i elimina els existents
     archivos_a_eliminar = glob.glob(patro)
@@ -58,18 +45,18 @@ def correccioCompres(grup, tasca):
     # que esta en el fitxer logic_comu.py
     # carregaCSV(fileName, carpeta):
 
-    fileNameReal = prefNomFitxerSOURCES + "00_DATOS_COMPRAS_REALES.csv"
-    fileNamePed = prefNomFitxerSOURCES + "01_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv"
-    fileNameAlb = prefNomFitxerSOURCES + "02_DATOS_ALBARANES_COMPRA_ALUMNOS.csv"
-    fileNameFac = prefNomFitxerSOURCES + "03_DATOS_FACTURAS_COMPRA_ALUMNOS.csv"
-    fileNameFechaEntrega = prefNomFitxerSOURCES + "04_FECHA_ENTREGA_TRABAJOS.csv"
+    fileNameReal = grup + "_" + tasca + "_" + "00_DATOS_COMPRAS_REALES.csv"
+    fileNamePed = grup + "_" + tasca + "_" + "01_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv"
+    fileNameAlb = grup + "_" + tasca + "_" + "02_DATOS_ALBARANES_COMPRA_ALUMNOS.csv"
+    fileNameFac = grup + "_" + tasca + "_" + "03_DATOS_FACTURAS_COMPRA_ALUMNOS.csv"
+    fileNameFechaEntrega = grup + "_" + tasca + "_" + "04_FECHA_ENTREGA_TRABAJOS.csv"
 
     try:
-        df_real = logic_comu.carregaCSV(fileNameReal, carpetaCSV)
-        df_ped = logic_comu.carregaCSV(fileNamePed, carpetaCSV)
-        df_alb = logic_comu.carregaCSV(fileNameAlb, carpetaCSV)
-        df_fac = logic_comu.carregaCSV(fileNameFac, carpetaCSV)
-        df_fechaEntrega = logic_comu.carregaCSV(fileNameFechaEntrega, carpetaCSV)
+        df_real = logic_comu.carregaCSV(fileNameReal, carpetaINPUT)
+        df_ped = logic_comu.carregaCSV(fileNamePed, carpetaINPUT)
+        df_alb = logic_comu.carregaCSV(fileNameAlb, carpetaINPUT)
+        df_fac = logic_comu.carregaCSV(fileNameFac, carpetaINPUT)
+        df_fechaEntrega = logic_comu.carregaCSV(fileNameFechaEntrega, carpetaINPUT)
 
     except Exception as e:
         print(f"Error carregant els arxius: {e}")

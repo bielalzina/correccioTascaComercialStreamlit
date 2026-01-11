@@ -102,24 +102,40 @@ if rol == "Professor" and acces_professor:
 
     tab_compres, tab_vendes, tab_inventari = st.tabs(["COMPRES", "VENDES", "INVENTARI"])
 
+    # DECLARAM UNA SERIE DE VARIABLES COMUNS PER A COMPRES, VENDES I INVENTARI
+
+    # El grup i la tasca vendran informats com a parametres de la funció,
+    # d'aquesta manera definirem dos prefixos pels arxius:
+
+    # prefNomFitxerSOURCES = grup + "_" + tasca + "_"
+    # prefNomFitxerSOURCES = "ADG32O_02.12_"
+
+    # prefNomFitxerCORRECCIO = grup + "_" + tasca
+    # pefNomFitxerCORRECCIO = "ADG32O_02.12"
+
+    # Carpeta LLISTATS_INPUT
+    carpetaINPUT = "LLISTATS_INPUT"
+
+    # Carpeta LLISTATS_OUTPUT
+    carpetaOUTPUT = "LLISTATS_OUTPUT"
+
     # ====================================================================
     # 3.1 VISTA PROFESOR - TAB COMPRES
     # ====================================================================
 
     with tab_compres:
+
         st.subheader("CORRECCIÓ COMPRES")
 
         # Abans de fer la correcció, comprovem si hi ha correccions anteriors:
-
-        carpetaHC = "HISTORIC_CORRECCIONS"
-        prefNomFitxerCORRECCIO = grup + "_" + tasca + "_" + "COMPRES_"
+        prefixNomFitxerCorreccioCompres = grup + "_" + tasca + "_COMPRES_"
         rutaHistoricsCorreccions = (
-            os.getcwd() + "/" + carpetaHC + "/" + prefNomFitxerCORRECCIO
+            os.getcwd() + "/" + carpetaOUTPUT + "/" + prefixNomFitxerCorreccioCompres
         )
         patro = rutaHistoricsCorreccions + "*"
         # la variable 'patro' a més de contenir la ruta a la carpeta, també
         # inclou la part comé del nom del fitxer, i amb l'asterisc (*),
-        # obtindren tots els arxius que compleixen el patró
+        # obtindrem tots els arxius que compleixen el patró
 
         llistaFitxersCorreccio = glob.glob(patro)
 
@@ -157,7 +173,9 @@ if rol == "Professor" and acces_professor:
                     dfCorreccioComandesCompra,
                     dfCorrecioAlbaransCompra,
                     dfCorrecioFacturesCompra,
-                ) = logic_compres_1_03.correccioCompres(grup, tasca)
+                ) = logic_compres_1_03.correccioCompres(
+                    grup, tasca, carpetaINPUT, carpetaOUTPUT
+                )
 
             # Una vez fuera del bloque 'with', el spinner desaparece solo
             st.success("✅ CORRECCIÓN COMPLETADA")

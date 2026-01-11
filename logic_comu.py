@@ -28,7 +28,16 @@ def carregaCSV(fileName, carpeta):
 def desaCSV(df, fileName, carpetaDesti):
     # obtenim ruta actual
     rutaActual = os.getcwd()
+    # print("---------------------------------------")
+    # print(rutaActual)
+    # print("---------------------------------------")
+    # print(carpetaDesti)
+    # print("---------------------------------------")
+    # print(fileName)
+    # print("---------------------------------------")
     rutaFitxer = rutaActual + "/" + carpetaDesti + "/" + fileName
+    # print(rutaFitxer)
+    # print("---------------------------------------")
     # Desam fitxer
     try:
         df.to_csv(rutaFitxer, index=False)
@@ -40,6 +49,7 @@ def desaCSV(df, fileName, carpetaDesti):
 def exportToExcel(df, fileName, carpetaDesti):
     # obtenim ruta actual
     rutaActual = os.getcwd()
+
     rutaFitxer = rutaActual + "/" + carpetaDesti + "/" + fileName
     try:
         df.to_excel(rutaFitxer, index=False)
@@ -169,3 +179,44 @@ def obtenirDuplicats(df, columna):
     df_duplicats = df[df.duplicated(columna, keep=False)]
     # print(df_duplicats)
     return df_duplicats
+
+
+# NETEJA TIPUS DE DADES EN df_resum_inventari
+def netejaTipusDadesDFResumInventari(df_resum_inventari):
+    df_resum_inventari["A_COST_UNITARI_I"] = pd.to_numeric(
+        df_resum_inventari["A_COST_UNITARI_I"], errors="coerce"
+    ).fillna(0.00)
+    df_resum_inventari["A_IMPORT_I"] = pd.to_numeric(
+        df_resum_inventari["A_IMPORT_I"], errors="coerce"
+    ).fillna(0.00)
+    df_resum_inventari["A_UNITATS_REALS_I"] = pd.to_numeric(
+        df_resum_inventari["A_UNITATS_REALS_I"], errors="coerce"
+    ).fillna(0.00)
+    df_resum_inventari["A_UNITATS_DISPONIBLES_I"] = pd.to_numeric(
+        df_resum_inventari["A_UNITATS_DISPONIBLES_I"], errors="coerce"
+    ).fillna(0.00)
+    df_resum_inventari["A_UNITATS_PENDENTS_ENTRAR_I"] = pd.to_numeric(
+        df_resum_inventari["A_UNITATS_PENDENTS_ENTRAR_I"], errors="coerce"
+    ).fillna(0.00)
+    df_resum_inventari["A_UNITATS_PENDENTS_SORTIR_I"] = pd.to_numeric(
+        df_resum_inventari["A_UNITATS_PENDENTS_SORTIR_I"], errors="coerce"
+    ).fillna(0.00)
+    return df_resum_inventari
+
+
+# NETEJA TIPUS DE DADES EN df_hes_inventari
+def netejaTipusDadesDFHesInventari(df_hes_inventari):
+    df_hes_inventari["A_UNITATS_HES"] = pd.to_numeric(
+        df_hes_inventari["A_UNITATS_HES"], errors="coerce"
+    ).fillna(0.00)
+    df_hes_inventari["A_IN_HES"] = pd.to_numeric(
+        df_hes_inventari["A_IN_HES"], errors="coerce"
+    ).fillna(0.00)
+    df_hes_inventari["A_OUT_HES"] = pd.to_numeric(
+        df_hes_inventari["A_OUT_HES"], errors="coerce"
+    ).fillna(0.00)
+    df_hes_inventari["A_STOCK_HES"] = pd.to_numeric(
+        df_hes_inventari["A_STOCK_HES"], errors="coerce"
+    ).fillna(0.00)
+    df_hes_inventari["A_DATA_HES"] = pd.to_datetime(df_hes_inventari["A_DATA_HES"])
+    return df_hes_inventari
