@@ -288,6 +288,46 @@ if rol == "Professor" and acces_professor:
 
         llistaFitxersCorreccioInventari = glob.glob(patro)
 
+        st.warning("*******************************************************")
+        # Ruta específica al directori LLISTATS_OUTPUT
+        ruta = os.getcwd() + "/" + carpetaOUTPUT
+
+        # Todos los archivos del directorio (cualquier extensión)
+        todos_archivos = glob.glob(os.path.join(ruta, '*'))
+        nombres_todos = [os.path.basename(f) for f in todos_archivos if os.path.isfile(f)]
+        # print("Archivos en la carpeta:", nombres_todos)
+
+        # ADG32O_02.12_INVENTARI_40_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv 
+        # ADG32O_02.12_INVENTARI_41_CORRECCIO_INVENTARI_EMPRESA.csv
+ 
+        fitxer40 = grup + "_" + tasca + "_INVENTARI_" + "40_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv"
+        fitxer41 = grup + "_" + tasca + "_INVENTARI_" + "41_CORRECCIO_INVENTARI_EMPRESA.csv"
+
+        if fitxer40 in nombres_todos:
+            missatge = "✅ S'HA TROBAT L'ARXIU DE CORRECCIÓ: " + fitxer40
+            st.success(missatge)
+            existeixFitxer40 = True
+        else:
+            missatge = "❌ NO S'HA TROBAT L'ARXIU DE CORRECCIÓ: " + fitxer40
+            st.error(missatge)
+            existeixFitxer40 = False
+        
+        if fitxer41 in nombres_todos:    
+            missatge = "✅ S'HA TROBAT L'ARXIU DE CORRECCIÓ: " + fitxer41
+            st.success(missatge)
+            existeixFitxer41 = True
+        else:
+            missatge = "❌ NO S'HA TROBAT L'ARXIU DE CORRECCIÓ: " + fitxer41
+            st.error(missatge)
+            existeixFitxer41 = False
+
+        if existeixFitxer40 and existeixFitxer41:
+            st.success("AQUI ESTA LA CORRECCIÓ DESADA")
+        else:
+            st.error("❌ CAL TORNAR REALITZAR LA CORRECCIÓ")
+       
+        st.warning("*******************************************************")
+
         calCorregirInventari = False
 
         if len(llistaFitxersCorreccioInventari) > 0:
