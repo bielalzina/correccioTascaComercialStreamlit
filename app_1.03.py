@@ -154,18 +154,18 @@ if rol == "Professor" and acces_professor:
             )
             if opcioCorreccio is None:
                 st.error("❌ Per continuar, cal seleccionar una opció")
-                st.stop()
+                # st.stop()
             elif opcioCorreccio == "Sí":
                 calCorregirCompres = True
-                st.success("✅ Correcció activada")
+                st.success("✅ CORRECCIÓ ACTIVADA")
                 # Aquí va el resto del código de compres corregides
             elif opcioCorreccio == "No":
                 calCorregirCompres = False
-                st.info("ℹ️ Correcció desactivada")
+                st.info("ℹ️ CORRECCIÓ DESACTIVADA")
                 # Código alternativo si no corregir
         elif len(llistaFitxersCorreccio) == 0 or len(llistaFitxersCorreccio) is None:
             calCorregirCompres = True
-            st.success("✅ Correcció activada")
+            st.success("✅ CORRECCIÓ ACTIVADA")
 
         if calCorregirCompres:
             # Cridam a la funció de correcció de compres
@@ -298,21 +298,24 @@ if rol == "Professor" and acces_professor:
                 index=None,
                 placeholder="Selecciona una opció...",
             )
-            if opcioCorreccio == "Sí":
+            if opcioCorreccio is None:
+                st.error("❌ Per continuar, cal seleccionar una opció")
+                # st.stop()
+            elif opcioCorreccio == "Sí":
                 calCorregirInventari = True
+                st.success("✅ CORRECCIÓ ACTIVADA")
+                # Aquí va el resto del código de compres corregides
             elif opcioCorreccio == "No":
                 calCorregirInventari = False
-            else:
-                st.error("Per continuar, cal seleccionar una opció")
-                st.stop()
+                st.info("ℹ️ CORRECCIÓ DESACTIVADA")
+                # Código alternativo si no corregir
+
         elif (
             len(llistaFitxersCorreccioInventari) == 0
             or len(llistaFitxersCorreccioInventari) is None
         ):
             calCorregirInventari = True
-        else:
-            st.error("Per continuar, cal seleccionar una opció")
-            st.stop()
+            st.success("✅ CORRECCIÓ ACTIVADA")
 
         if calCorregirInventari:
             # Cridam a la funció de correcció de l'inventari
@@ -363,11 +366,19 @@ if rol == "Professor" and acces_professor:
             st.subheader("CORRECCIÓ INVENTARI PER EMPRESA - PRODUCTE")
             st.dataframe(df_correccio_inventari_empresa_producte)
             st.divider()
+        else:
+            st.info(
+                "ℹ️ No hi ha correcció de l'inventari per empresa-producte per a aquesta tasca"
+            )
 
         if df_correccio_inventari_empresa is not None:
             st.subheader("CORRECCIÓ INVENTARI PER EMPRESA")
             st.dataframe(df_correccio_inventari_empresa)
             st.divider()
+        else:
+            st.info(
+                "ℹ️ No hi ha correcció de l'inventari per empresa per a aquesta tasca"
+            )
 
 
 # ==============================================================================
