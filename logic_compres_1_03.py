@@ -61,6 +61,9 @@ def correccioCompres(grup, tasca, carpetaINPUT, carpetaOUTPUT):
     except Exception as e:
         print(f"Error carregant els arxius: {e}")
 
+    print("DATAFRAME DATA ENTREGA TASQUES")
+    print(df_fechaEntrega)
+    print("******************************************")
     # Inserim la data de entrega en df_real
     # Si volem corregir les compres, cal disposar d'aquesta data en el
     # dataframe de dades reals, per podetr determinar si s'han

@@ -8,11 +8,12 @@ import logic_compres_1_03
 
 # import logic_vendes_1_03
 import logic_inventari_1_03
+import logic_estructura_1_03
 import logic_comu
 import time
 import glob
 
-from st_sessions_state import *
+from dades_varies import *
 
 # ==============================================================================
 # 1. CONFIGURACIÓN Y GESTIÓN DE CARPETAS
@@ -103,7 +104,9 @@ if rol == "Professor" and acces_professor:
         st.error("Per continuar, cal indicar la data de venciment de la tasca")
         st.stop()
 
-    tab_compres, tab_vendes, tab_inventari = st.tabs(["COMPRES", "VENDES", "INVENTARI"])
+    tab_estat_correcio, tab_compres, tab_vendes, tab_inventari = st.tabs(
+        ["ESTAT CORRECCIÓ", "COMPRES", "VENDES", "INVENTARI"]
+    )
 
     # DECLARAM UNA SERIE DE VARIABLES COMUNS PER A COMPRES, VENDES I INVENTARI
 
@@ -121,6 +124,83 @@ if rol == "Professor" and acces_professor:
 
     # Carpeta LLISTATS_OUTPUT
     carpetaOUTPUT = "LLISTATS_OUTPUT"
+
+    # ====================================================================
+    # 3.0 VISTA PROFESOR - TAB ESTAT CORRECCIÓ
+    # ====================================================================
+
+    with tab_estat_correcio:
+        st.subheader("ESTAT ACTUAL DE LA CORRECCIÓ")
+
+        # Comprovem si existeix el directori INPUT
+        # La carpeta INPUT es on desam els arxius que contenen la tasca dels
+        # alumnes que hem de corregir
+        st.subheader("COMPROVACIÓ EXISTENCIA CARPETA INPUT")
+
+        existeixCarpetaInput = logic_estructura_1_03.existeixDirectori(
+            "INPUT", grup + "_" + tasca
+        )
+
+        if existeixCarpetaInput:
+            missatge = (
+                "✅ El directori LLISTATS_INPUT/" + grup + "_" + tasca + " existeix"
+            )
+            st.success(missatge)
+            # Recuperem els arxius existents en el directori INPUT
+            arxiusInput = logic_estructura_1_03.llistaFitxersDirectori(
+                "INPUT", grup + "_" + tasca
+            )
+
+            # Recuperem la llista d'arxius teorics
+            llistaArxiusTeoricsInput = logic_estructura_1_03.llistaArxiusTeorics(
+                "INPUT", grup, tasca
+            )
+
+            # Comprovem si els arxius teorics existen en el directori INPUT
+            fitxerInputDisponible = []
+            for arxiu in llistaArxiusTeoricsInput:
+                if arxiu not in arxiusInput:
+                    disponibilitat = "❌"
+                else:
+                    disponibilitat = "✅"
+                fitxerInputDisponible.append(disponibilitat)
+
+            relacioArxiusInput = {
+                "ARXIU": llistaArxiusTeoricsInput,
+                "DISPONIBLE": fitxerInputDisponible,
+            }
+
+            st.dataframe(
+                relacioArxiusInput,
+                width="stretch",
+                column_config={
+                    "ARXIU": "Arxiu",
+                    "DISPONIBLE": "Disponible",
+                },
+            )
+
+        else:
+            missatge = (
+                "❌ El directori LLISTATS_INPUT/" + grup + "_" + tasca + " NO existeix"
+            )
+            st.error(missatge)
+
+        st.subheader("COMPROVACIÓ EXISTENCIA CARPETA OUTPUT")
+        # Comprovem si existeix el directori OUTPUT
+        # La carpeta OUTPUT es on desam els arxius amb la correcció de les tasques dels alumnes
+        existeixCarpetaOutput = logic_estructura_1_03.existeixDirectori(
+            "OUTPUT", grup + "_" + tasca
+        )
+        if existeixCarpetaOutput:
+            missatge = (
+                "✅ El directori LLISTATS_OUTPUT/" + grup + "_" + tasca + " existeix"
+            )
+            st.success(missatge)
+        else:
+            missatge = (
+                "❌ El directori LLISTATS_OUTPUT/" + grup + "_" + tasca + " NO existeix"
+            )
+            st.error(missatge)
 
     # ====================================================================
     # 3.1 VISTA PROFESOR - TAB COMPRES
@@ -288,20 +368,31 @@ if rol == "Professor" and acces_professor:
 
         llistaFitxersCorreccioInventari = glob.glob(patro)
 
+        _ = """
         st.warning("*******************************************************")
         # Ruta específica al directori LLISTATS_OUTPUT
         ruta = os.getcwd() + "/" + carpetaOUTPUT
 
         # Todos los archivos del directorio (cualquier extensión)
-        todos_archivos = glob.glob(os.path.join(ruta, '*'))
-        nombres_todos = [os.path.basename(f) for f in todos_archivos if os.path.isfile(f)]
+        todos_archivos = glob.glob(os.path.join(ruta, "*"))
+        nombres_todos = [
+            os.path.basename(f) for f in todos_archivos if os.path.isfile(f)
+        ]
         # print("Archivos en la carpeta:", nombres_todos)
 
-        # ADG32O_02.12_INVENTARI_40_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv 
+        # ADG32O_02.12_INVENTARI_40_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv
         # ADG32O_02.12_INVENTARI_41_CORRECCIO_INVENTARI_EMPRESA.csv
- 
-        fitxer40 = grup + "_" + tasca + "_INVENTARI_" + "40_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv"
-        fitxer41 = grup + "_" + tasca + "_INVENTARI_" + "41_CORRECCIO_INVENTARI_EMPRESA.csv"
+
+        fitxer40 = (
+            grup
+            + "_"
+            + tasca
+            + "_INVENTARI_"
+            + "40_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv"
+        )
+        fitxer41 = (
+            grup + "_" + tasca + "_INVENTARI_" + "41_CORRECCIO_INVENTARI_EMPRESA.csv"
+        )
 
         if fitxer40 in nombres_todos:
             missatge = "✅ S'HA TROBAT L'ARXIU DE CORRECCIÓ: " + fitxer40
@@ -311,8 +402,8 @@ if rol == "Professor" and acces_professor:
             missatge = "❌ NO S'HA TROBAT L'ARXIU DE CORRECCIÓ: " + fitxer40
             st.error(missatge)
             existeixFitxer40 = False
-        
-        if fitxer41 in nombres_todos:    
+
+        if fitxer41 in nombres_todos:
             missatge = "✅ S'HA TROBAT L'ARXIU DE CORRECCIÓ: " + fitxer41
             st.success(missatge)
             existeixFitxer41 = True
@@ -325,8 +416,10 @@ if rol == "Professor" and acces_professor:
             st.success("AQUI ESTA LA CORRECCIÓ DESADA")
         else:
             st.error("❌ CAL TORNAR REALITZAR LA CORRECCIÓ")
-       
+
         st.warning("*******************************************************")
+
+        """
 
         calCorregirInventari = False
 
