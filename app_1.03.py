@@ -142,32 +142,19 @@ if rol == "Professor" and acces_professor:
         )
 
         if existeixCarpetaInput:
+            
             missatge = (
                 "✅ El directori LLISTATS_INPUT/" + grup + "_" + tasca + " existeix"
             )
             st.success(missatge)
-            # Recuperem els arxius existents en el directori INPUT
-            arxiusInput = logic_estructura_1_03.llistaFitxersDirectori(
-                "INPUT", grup + "_" + tasca
-            )
 
-            # Recuperem la llista d'arxius teorics
-            llistaArxiusTeoricsInput = logic_estructura_1_03.llistaArxiusTeorics(
-                "INPUT", grup, tasca
-            )
+            # Comprovam si existeixen els documents adequats en el directori INPUT
 
-            # Comprovem si els arxius teorics existen en el directori INPUT
-            fitxerInputDisponible = []
-            for arxiu in llistaArxiusTeoricsInput:
-                if arxiu not in arxiusInput:
-                    disponibilitat = "❌"
-                else:
-                    disponibilitat = "✅"
-                fitxerInputDisponible.append(disponibilitat)
+            llistaArxiusTeoricsInput, disponibilitatArxiuInput = logic_estructura_1_03.relacioArxiusPresents("INPUT", grup, tasca)
 
             relacioArxiusInput = {
                 "ARXIU": llistaArxiusTeoricsInput,
-                "DISPONIBLE": fitxerInputDisponible,
+                "DISPONIBLE": disponibilitatArxiuInput,
             }
 
             st.dataframe(
@@ -180,10 +167,18 @@ if rol == "Professor" and acces_professor:
             )
 
         else:
+            
             missatge = (
                 "❌ El directori LLISTATS_INPUT/" + grup + "_" + tasca + " NO existeix"
             )
             st.error(missatge)
+            creaCarpetaInput = st.checkbox("Activa el check si vols crear el directori LLISTATS_INPUT/" + grup + "_" + tasca)
+            if creaCarpetaInput:
+                novaCarpetaInput = logic_estructura_1_03.creaDirectori("INPUT", grup, tasca)
+                missatge = "✅ El directori LLISTATS_INPUT/" + grup + "_" + tasca + " ha estat creat amb èxit"
+                st.success(missatge)
+                if st.button("Refresca la pàgina"):
+                    st.rerun()
 
         st.subheader("COMPROVACIÓ EXISTENCIA CARPETA OUTPUT")
         # Comprovem si existeix el directori OUTPUT
@@ -196,11 +191,31 @@ if rol == "Professor" and acces_professor:
                 "✅ El directori LLISTATS_OUTPUT/" + grup + "_" + tasca + " existeix"
             )
             st.success(missatge)
+
+            # Comprovam si existeixen els documents adequats en el directori OUTPUT
+
+            llistaArxiusTeoricsOutput, disponibilitatArxiuOutput = logic_estructura_1_03.relacioArxiusPresents("OUTPUT", grup, tasca)
+
+            relacioArxiusOutput = {
+                "ARXIU": llistaArxiusTeoricsOutput,
+                "DISPONIBLE": disponibilitatArxiuOutput,
+            }
+
+            st.dataframe(
+                relacioArxiusOutput,
+                width="stretch",
+                column_config={
+                    "ARXIU": "Arxiu",
+                    "DISPONIBLE": "Disponible",
+                },
+            )
+
         else:
             missatge = (
                 "❌ El directori LLISTATS_OUTPUT/" + grup + "_" + tasca + " NO existeix"
             )
             st.error(missatge)
+
 
     # ====================================================================
     # 3.1 VISTA PROFESOR - TAB COMPRES
@@ -476,7 +491,7 @@ if rol == "Professor" and acces_professor:
                 + "_"
                 + tasca
                 + "_INVENTARI_"
-                + "40_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv"
+                + "31_DF_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv"
             )
 
             df_correccio_inventari_empresa_producte = logic_comu.carregaCSV(
@@ -488,7 +503,7 @@ if rol == "Professor" and acces_professor:
                 + "_"
                 + tasca
                 + "_INVENTARI_"
-                + "41_CORRECCIO_INVENTARI_EMPRESA.csv"
+                + "32_DF_CORRECCIO_INVENTARI_EMPRESA.csv"
             )
 
             df_correccio_inventari_empresa = logic_comu.carregaCSV(

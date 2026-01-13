@@ -223,7 +223,7 @@ def correccioInventari(grup, tasca, carpetaINPUT, carpetaOUTPUT):
         + "_"
         + tasca
         + "_INVENTARI_"
-        + "40_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv"
+        + "31_DF_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv"
     )
 
     logic_comu.desaCSV(df_correccio_inventari_empresa_producte, fileName, carpetaOUTPUT)
@@ -299,7 +299,7 @@ def correccioInventari(grup, tasca, carpetaINPUT, carpetaOUTPUT):
     df_correccio_inventari_empresa = pd.DataFrame(informe02)
 
     # GUARDEM INFORME
-    fileName = grup + "_" + tasca + "_INVENTARI_" + "41_CORRECCIO_INVENTARI_EMPRESA.csv"
+    fileName = grup + "_" + tasca + "_INVENTARI_" + "41_DF_CORRECCIO_INVENTARI_EMPRESA.csv"
 
     try:
         logic_comu.desaCSV(df_correccio_inventari_empresa, fileName, carpetaOUTPUT)
