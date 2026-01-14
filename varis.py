@@ -107,7 +107,15 @@ def creaDirectori(carpetes):
         rutaFinsInput = os.getcwd() + "/" + "LLISTATS_INPUT"
         rutaFinsOutput = os.getcwd() + "/" + "LLISTATS_OUTPUT"
         os.mkdir(rutaFinsInput + "/" + carpeta)
+        ruta = rutaFinsInput + "/" + carpeta
+        # Instrucción para crear el .gitkeep
+        with open(ruta + "/.gitkeep", "w") as f:
+            pass
         os.mkdir(rutaFinsOutput + "/" + carpeta)
+        ruta = rutaFinsOutput + "/" + carpeta
+        # Instrucción para crear el .gitkeep
+        with open(ruta + "/.gitkeep", "w") as f:
+            pass
     return carpetes
 
 
