@@ -165,10 +165,13 @@ if rol == "Professor" and acces_professor:
         )
 
         if existeixCarpetaINPUTGrupTasca:
+            # Canviem el valor de la variable a True
+            existeixCarpetaINPUTGrupTasca = True
 
             missatge = (
                 "✅ El directori LLISTATS_INPUT/" + grup + "_" + tasca + " existeix"
             )
+
             st.success(missatge)
 
             # Comprovam si existeixen els documents adequats en el directori INPUT
@@ -271,26 +274,6 @@ if rol == "Professor" and acces_professor:
                 "❌ El directori LLISTATS_INPUT/" + grup + "_" + tasca + " NO existeix"
             )
             st.error(missatge)
-            creaCarpetaInput = st.checkbox(
-                "Activa el check si vols crear el directori LLISTATS_INPUT/"
-                + grup
-                + "_"
-                + tasca
-            )
-            if creaCarpetaInput:
-                novaCarpetaInput = logic_estructura_1_03.creaDirectori(
-                    "INPUT", grup, tasca
-                )
-                missatge = (
-                    "✅ El directori LLISTATS_INPUT/"
-                    + grup
-                    + "_"
-                    + tasca
-                    + " ha estat creat amb èxit"
-                )
-                st.success(missatge)
-                if st.button("Refresca la pàgina"):
-                    st.rerun()
 
         st.subheader("COMPROVACIÓ EXISTENCIA CARPETA OUTPUT")
         # Comprovem si existeix el directori OUTPUT
@@ -299,6 +282,8 @@ if rol == "Professor" and acces_professor:
             "OUTPUT", grup + "_" + tasca
         )
         if existeixCarpetaOUTPUTGrupTasca:
+            # Canviem el valor de la variable a True
+            existeixCarpetaOUTPUTGrupTasca = True
             missatge = (
                 "✅ El directori LLISTATS_OUTPUT/" + grup + "_" + tasca + " existeix"
             )
@@ -329,6 +314,33 @@ if rol == "Professor" and acces_professor:
                 "❌ El directori LLISTATS_OUTPUT/" + grup + "_" + tasca + " NO existeix"
             )
             st.error(missatge)
+
+        # OPCIONS PER USUARI
+        # CREAR CARPETA INPUT
+        if existeixCarpetaINPUTGrupTasca == False:
+            creaCarpetaInput = st.checkbox(
+                "Activa el check si vols crear el directori LLISTATS_INPUT/"
+                + grup
+                + "_"
+                + tasca
+            )
+            if creaCarpetaInput:
+                novaCarpetaInput = logic_estructura_1_03.creaDirectori(
+                    "INPUT", grup, tasca
+                )
+                missatge = (
+                    "✅ El directori LLISTATS_INPUT/"
+                    + grup
+                    + "_"
+                    + tasca
+                    + " ha estat creat amb èxit"
+                )
+                st.success(missatge)
+                if st.button("Refresca la pàgina"):
+                    st.rerun()
+
+        # CREAR CARPETA OUTPUT
+        if existeixCarpetaOUTPUTGrupTasca == False:
             creaCarpetaOutput = st.checkbox(
                 "Activa el check si vols crear el directori LLISTATS_OUTPUT/"
                 + grup
