@@ -119,12 +119,6 @@ if rol == "Professor" and acces_professor:
     # prefNomFitxerCORRECCIO = grup + "_" + tasca
     # pefNomFitxerCORRECCIO = "ADG32O_02.12"
 
-    # Carpeta LLISTATS_INPUT
-    carpetaINPUT = "LLISTATS_INPUT"
-
-    # Carpeta LLISTATS_OUTPUT
-    carpetaOUTPUT = "LLISTATS_OUTPUT"
-
     # ====================================================================
     # 3.0 VISTA PROFESOR - TAB ESTAT CORRECCIÓ
     # ====================================================================
@@ -132,17 +126,46 @@ if rol == "Professor" and acces_professor:
     with tab_estat_correcio:
         st.subheader("ESTAT ACTUAL DE LA CORRECCIÓ")
 
+        # Carpeta LLISTATS_INPUT
+        carpetaINPUT = "LLISTATS_INPUT"
+
+        # Carpeta LLISTATS_OUTPUT
+        carpetaOUTPUT = "LLISTATS_OUTPUT"
+
+        # Rutes
+
+        rutaFinsInput = os.getcwd() + "/" + carpetaINPUT
+        rutaFinsOutput = os.getcwd() + "/" + carpetaOUTPUT
+
+        rutaFinsInputGrupTasca = rutaFinsInput + "/" + grup + "_" + tasca
+        rutaFinsOutputGrupTasca = rutaFinsOutput + "/" + grup + "_" + tasca
+
+        # VARIABLES
+        existeixCarpetaINPUTGrupTasca = None
+        existeixCarpetaOUTPUTGrupTasca = None
+
+        # INPUT
+
+        disponibilitatArxiusINPUTCompres = None
+        disponibilitatArxiusINPUTVendes = None
+        disponibilitatArxiusINPUTInventari = None
+
+        # OUTPUT
+        disponibilitatArxiusOUTPUTCompres = None
+        disponibilitatArxiusOUTPUTVendes = None
+        disponibilitatArxiusOUTPUTInventari = None
+
         # Comprovem si existeix el directori INPUT
         # La carpeta INPUT es on desam els arxius que contenen la tasca dels
         # alumnes que hem de corregir
         st.subheader("COMPROVACIÓ EXISTENCIA CARPETA INPUT")
 
-        existeixCarpetaInput = logic_estructura_1_03.existeixDirectori(
+        existeixCarpetaINPUTGrupTasca = logic_estructura_1_03.existeixDirectori(
             "INPUT", grup + "_" + tasca
         )
 
-        if existeixCarpetaInput:
-            
+        if existeixCarpetaINPUTGrupTasca:
+
             missatge = (
                 "✅ El directori LLISTATS_INPUT/" + grup + "_" + tasca + " existeix"
             )
@@ -150,7 +173,9 @@ if rol == "Professor" and acces_professor:
 
             # Comprovam si existeixen els documents adequats en el directori INPUT
 
-            llistaArxiusTeoricsInput, disponibilitatArxiuInput = logic_estructura_1_03.relacioArxiusPresents("INPUT", grup, tasca)
+            llistaArxiusTeoricsInput, disponibilitatArxiuInput = (
+                logic_estructura_1_03.relacioArxiusPresents("INPUT", grup, tasca)
+            )
 
             relacioArxiusInput = {
                 "ARXIU": llistaArxiusTeoricsInput,
@@ -166,16 +191,103 @@ if rol == "Professor" and acces_professor:
                 },
             )
 
+            # COMPROVAM QUINS ARXIUS ESTAN DISPONIBLES PER INPUT COMPRES
+            # nomCurtArxiusTeoricsInputCOMPRES
+
+            # QUINS ARXIUS ESTAN DISPONIBLES PER INPUT VENDES
+            # nomCurtArxiusTeoricsInputVENDES
+
+            # QUINS ARXIUS ESTAN DISPONIBLES PER INVENTARI
+            # nomCurtArxiusTeoricsInputINVENTARI
+
+            disponibilitatArxiusINPUTCompres = (
+                logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
+                    "INPUT",
+                    grup,
+                    tasca,
+                    logic_estructura_1_03.nomCurtArxiusTeoricsInputCOMPRES,
+                )
+            )
+            disponibilitatArxiusINPUTVendes = (
+                logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
+                    "INPUT",
+                    grup,
+                    tasca,
+                    logic_estructura_1_03.nomCurtArxiusTeoricsInputVENDES,
+                )
+            )
+            disponibilitatArxiusINPUTInventari = (
+                logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
+                    "INPUT",
+                    grup,
+                    tasca,
+                    logic_estructura_1_03.nomCurtArxiusTeoricsInputINVENTARI,
+                )
+            )
+
+            # COMPROVAM QUINS ARXIUS ESTAN DISPONIBLES PER OUTPUT COMPRES
+            # nomCurtArxiusTeoricsOutputCOMPRES
+
+            # QUINS ARXIUS ESTAN DISPONIBLES PER OUTPUT VENDES
+            # nomCurtArxiusTeoricsOutputVENDES
+
+            # QUINS ARXIUS ESTAN DISPONIBLES PER INVENTARI
+            # nomCurtArxiusTeoricsOutputINVENTARI
+
+            disponibilitatArxiusOUTPUTCompres = (
+                logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
+                    "OUTPUT",
+                    grup,
+                    tasca,
+                    logic_estructura_1_03.nomCurtArxiusTeoricsOutputCOMPRES,
+                )
+            )
+            disponibilitatArxiusOUTPUTVendes = (
+                logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
+                    "OUTPUT",
+                    grup,
+                    tasca,
+                    logic_estructura_1_03.nomCurtArxiusTeoricsOutputVENDES,
+                )
+            )
+            disponibilitatArxiusOUTPUTInventari = (
+                logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
+                    "OUTPUT",
+                    grup,
+                    tasca,
+                    logic_estructura_1_03.nomCurtArxiusTeoricsOutputINVENTARI,
+                )
+            )
+            print("disponibilitatArxiusOUTPUTCompres")
+            print(disponibilitatArxiusOUTPUTCompres)
+            print("disponibilitatArxiusOUTPUTVendes")
+            print(disponibilitatArxiusOUTPUTVendes)
+            print("disponibilitatArxiusOUTPUTInventari")
+            print(disponibilitatArxiusOUTPUTInventari)
+
         else:
-            
+
             missatge = (
                 "❌ El directori LLISTATS_INPUT/" + grup + "_" + tasca + " NO existeix"
             )
             st.error(missatge)
-            creaCarpetaInput = st.checkbox("Activa el check si vols crear el directori LLISTATS_INPUT/" + grup + "_" + tasca)
+            creaCarpetaInput = st.checkbox(
+                "Activa el check si vols crear el directori LLISTATS_INPUT/"
+                + grup
+                + "_"
+                + tasca
+            )
             if creaCarpetaInput:
-                novaCarpetaInput = logic_estructura_1_03.creaDirectori("INPUT", grup, tasca)
-                missatge = "✅ El directori LLISTATS_INPUT/" + grup + "_" + tasca + " ha estat creat amb èxit"
+                novaCarpetaInput = logic_estructura_1_03.creaDirectori(
+                    "INPUT", grup, tasca
+                )
+                missatge = (
+                    "✅ El directori LLISTATS_INPUT/"
+                    + grup
+                    + "_"
+                    + tasca
+                    + " ha estat creat amb èxit"
+                )
                 st.success(missatge)
                 if st.button("Refresca la pàgina"):
                     st.rerun()
@@ -183,10 +295,10 @@ if rol == "Professor" and acces_professor:
         st.subheader("COMPROVACIÓ EXISTENCIA CARPETA OUTPUT")
         # Comprovem si existeix el directori OUTPUT
         # La carpeta OUTPUT es on desam els arxius amb la correcció de les tasques dels alumnes
-        existeixCarpetaOutput = logic_estructura_1_03.existeixDirectori(
+        existeixCarpetaOUTPUTGrupTasca = logic_estructura_1_03.existeixDirectori(
             "OUTPUT", grup + "_" + tasca
         )
-        if existeixCarpetaOutput:
+        if existeixCarpetaOUTPUTGrupTasca:
             missatge = (
                 "✅ El directori LLISTATS_OUTPUT/" + grup + "_" + tasca + " existeix"
             )
@@ -194,7 +306,9 @@ if rol == "Professor" and acces_professor:
 
             # Comprovam si existeixen els documents adequats en el directori OUTPUT
 
-            llistaArxiusTeoricsOutput, disponibilitatArxiuOutput = logic_estructura_1_03.relacioArxiusPresents("OUTPUT", grup, tasca)
+            llistaArxiusTeoricsOutput, disponibilitatArxiuOutput = (
+                logic_estructura_1_03.relacioArxiusPresents("OUTPUT", grup, tasca)
+            )
 
             relacioArxiusOutput = {
                 "ARXIU": llistaArxiusTeoricsOutput,
@@ -215,7 +329,26 @@ if rol == "Professor" and acces_professor:
                 "❌ El directori LLISTATS_OUTPUT/" + grup + "_" + tasca + " NO existeix"
             )
             st.error(missatge)
-
+            creaCarpetaOutput = st.checkbox(
+                "Activa el check si vols crear el directori LLISTATS_OUTPUT/"
+                + grup
+                + "_"
+                + tasca
+            )
+            if creaCarpetaOutput:
+                novaCarpetaOutput = logic_estructura_1_03.creaDirectori(
+                    "OUTPUT", grup, tasca
+                )
+                missatge = (
+                    "✅ El directori LLISTATS_OUTPUT/"
+                    + grup
+                    + "_"
+                    + tasca
+                    + " ha estat creat amb èxit"
+                )
+                st.success(missatge)
+                if st.button("Refresca la pàgina"):
+                    st.rerun()
 
     # ====================================================================
     # 3.1 VISTA PROFESOR - TAB COMPRES
