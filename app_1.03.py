@@ -160,7 +160,7 @@ if rol == "Professor" and acces_professor:
         # alumnes que hem de corregir
         missatgeInput = "CONTINGUT CARPETA: LLISTATS_INPUT/" + grup + "_" + tasca
         st.subheader(missatgeInput)
-
+        st.write("")
         # Mostram els arxiua existents en el directori LLISTATS_INPUT
 
         llistaArxiusTeoricsInput, disponibilitatArxiuInput = (
@@ -169,19 +169,75 @@ if rol == "Professor" and acces_professor:
             )
         )
 
-        relacioArxiusInput = {
+        relacioArxiusInputCol = {
             "ARXIU": llistaArxiusTeoricsInput,
             "DISPONIBLE": disponibilitatArxiuInput,
         }
 
-        st.dataframe(
-            relacioArxiusInput,
-            width="stretch",
-            column_config={
-                "ARXIU": "Arxiu",
-                "DISPONIBLE": "Disponible",
-            },
-        )
+        # st.dataframe(
+        #     relacioArxiusInputCol,
+        #     width="stretch",
+        #     column_config={
+        #         "ARXIU": "Arxiu",
+        #         "DISPONIBLE": "Disponible",
+        #     },
+        # )
+
+        # print(relacioArxiusInputCol)
+
+        relacioArxiusInput = [
+            {"ARXIU": arx, "DISPONIBLE": disp}
+            for arx, disp in zip(
+                relacioArxiusInputCol["ARXIU"], relacioArxiusInputCol["DISPONIBLE"]
+            )
+        ]
+
+        # print(relacioArxiusInput)
+
+        # Cabecera de la "tabla"
+        col1, col2, col3 = st.columns([2, 2, 3])
+        col1.write("#### NOM ARXIU")
+        col2.write("#### DISPONIBLE")
+        col3.write("#### ACCIO")
+
+        st.divider()
+
+        # for index, row in relacioArxiusInput.iterrows():
+        #     col1.write(row["ARXIU"])
+        #     col2.write(row["DISPONIBLE"])
+        #     col3.write(row["DISPONIBLE"])
+
+        # 2. Generar las filas de la tabla
+        for i, item in enumerate(relacioArxiusInput):
+            c1, c2, c3 = st.columns([2, 2, 3])
+
+            # Primera columna: Nombre
+            c1.text(item["ARXIU"])
+
+            # Segunda columna: Estado
+            c2.write(item["DISPONIBLE"])
+
+            # Tercera columna: Formulario de subida
+            # Usamos la clave 'key' única para cada file_uploader
+            with c3:
+                with st.popover("Puja o actualitza l'arxiu"):
+                    arxiuPujat = st.file_uploader(
+                        f"Puja o actualitza {item['ARXIU']}",
+                        type="csv",
+                        key=f"uploader_{i}",
+                        label_visibility="collapsed",
+                    )
+
+            if arxiuPujat is not None:
+                pujadaArxiu = logic_estructura_1_03.pujaArxiu(
+                    arxiuPujat,
+                    item["ARXIU"],
+                    rutaFinsLlistatsInputGrupTasca,
+                )
+                if pujadaArxiu:
+                    st.rerun()
+                else:
+                    st.error(f"Error al subir {item['ARXIU']}")
 
         # COMPROVAM QUINS ARXIUS ESTAN DISPONIBLES PER INPUT COMPRES
         # nomArxiusTeoricsInputCOMPRES

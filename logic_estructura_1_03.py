@@ -58,39 +58,51 @@ llista_num_tasques = [
     "02.50",
 ]
 
-nomArxiusTeoricsInput = [
+
+nomArxiusTeoricsInputCOMPRES = [
     "00_DATOS_COMPRAS_REALES.csv",
     "01_DATOS_PEDIDOS_COMPRA_ALUMNOS.csv",
     "02_DATOS_ALBARANES_COMPRA_ALUMNOS.csv",
     "03_DATOS_FACTURAS_COMPRA_ALUMNOS.csv",
     "04_FECHA_ENTREGA_TRABAJOS.csv",
+]
+nomArxiusTeoricsInputVENDES = [
     "05_DATOS_VENTAS_REALES.csv",
     "06_DATOS_PEDIDOS_VENTAS_ALUMNOS.csv",
     "07_DATOS_ALBARANES_VENTAS_ALUMNOS.csv",
     "08_DATOS_FACTURAS_VENTAS_ALUMNOS.csv",
+]
+nomArxiusTeoricsInputINVENTARI = [
     "09_RESUM_DADES_INVENTARI_ALUMNE.csv",
     "10_HISTORIAL_E_S_INVENTARI_ALUMNE.csv",
 ]
 
-nomArxiusTeoricsInputCOMPRES = nomArxiusTeoricsInput[:5]
-nomArxiusTeoricsInputVENDES = nomArxiusTeoricsInput[5:9]
-nomArxiusTeoricsInputINVENTARI = nomArxiusTeoricsInput[9:]
+nomArxiusTeoricsInput = (
+    nomArxiusTeoricsInputCOMPRES
+    + nomArxiusTeoricsInputVENDES
+    + nomArxiusTeoricsInputINVENTARI
+)
 
-nomArxiusTeoricsOutput = [
+
+nomArxiusTeoricsOutputCOMPRES = [
     "11_DF_CORRECCIO_COMANDES_COMPRA.csv",
     "12_DF_CORRECCIO_ALBARANS_COMPRA.csv",
     "13_DF_CORRECCIO_FACTURES_COMPRA.csv",
+]
+nomArxiusTeoricsOutputVENDES = [
     "21_DF_CORRECCIO_COMANDES_VENDES.csv",
     "22_DF_CORRECCIO_ALBARANS_VENDES.csv",
     "23_DF_CORRECCIO_FACTURES_VENDES.csv",
+]
+nomArxiusTeoricsOutputINVENTARI = [
     "31_DF_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv",
     "32_DF_CORRECCIO_INVENTARI_EMPRESA.csv",
 ]
-
-nomArxiusTeoricsOutputCOMPRES = nomArxiusTeoricsOutput[:3]
-nomArxiusTeoricsOutputVENDES = nomArxiusTeoricsOutput[3:6]
-nomArxiusTeoricsOutputINVENTARI = nomArxiusTeoricsOutput[6:]
-
+nomArxiusTeoricsOutput = (
+    nomArxiusTeoricsOutputCOMPRES
+    + nomArxiusTeoricsOutputVENDES
+    + nomArxiusTeoricsOutputINVENTARI
+)
 
 # Llista expedients
 
@@ -152,6 +164,21 @@ rutaCarpetaINPUT = os.getcwd() + "/LLISTATS_INPUT/"
 
 # Carpeta LLISTATS_OUTPUT
 rutaCarpetaOUTPUT = os.getcwd() + "/LLISTATS_OUTPUT/"
+
+
+def pujaArxiu(arxiu, nomArxiu, rutaDirectori):
+    try:
+        # 1. Construir la ruta completa
+        rutaCompleta = os.path.join(rutaDirectori, nomArxiu)
+
+        # 2. Desar l'arxiu en mode binari ("wb")
+        with open(rutaCompleta, "wb") as f:
+            f.write(arxiu.getbuffer())
+            retornat = True
+    except Exception as e:
+        print(f"Error al desar l'arxiu {nomArxiu}: {str(e)}")
+        retornat = False
+    return retornat
 
 
 def relacioArxiusPresents(in_out, rutaDirectori):
