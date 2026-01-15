@@ -1,7 +1,6 @@
 import streamlit as st
 
 
-
 # VARIABLES GLOBALES
 
 # ARXIUS LLISTATS_INPUT
@@ -32,60 +31,6 @@ fitxerOutput08 = ""
 fitxerOutput40 = "INVENTARI_40_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv"
 fitxerOutput41 = "INVENTARI_41_CORRECCIO_INVENTARI_EMPRESA.csv"
 
-# LLISTA NUM. TASQUES PER SELECTBOX INICIAL
-
-llista_num_tasques = [
-    "02.01",
-    "02.02",
-    "02.03",
-    "02.04",
-    "02.05",
-    "02.06",
-    "02.07",
-    "02.08",
-    "02.09",
-    "02.10",
-    "02.11",
-    "02.12",
-    "02.13",
-    "02.14",
-    "02.15",
-    "02.16",
-    "02.17",
-    "02.18",
-    "02.19",
-    "02.20",
-    "02.21",
-    "02.22",
-    "02.23",
-    "02.24",
-    "02.25",
-    "02.26",
-    "02.27",
-    "02.28",
-    "02.29",
-    "02.30",
-    "02.31",
-    "02.32",
-    "02.33",
-    "02.34",
-    "02.35",
-    "02.36",
-    "02.37",
-    "02.38",
-    "02.39",
-    "02.40",
-    "02.41",
-    "02.42",
-    "02.43",
-    "02.44",
-    "02.45",
-    "02.46",
-    "02.47",
-    "02.48",
-    "02.49",
-    "02.50",
-]
 
 # Llista expedients
 

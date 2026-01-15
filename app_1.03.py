@@ -80,7 +80,7 @@ if rol == "Professor" and acces_professor:
     with colB:
         tasca = st.selectbox(
             "Selecciona la tasca: ",
-            llista_num_tasques,
+            logic_estructura_1_03.llista_num_tasques,
             index=None,
             placeholder="Selecciona la tasca...",
         )
@@ -137,12 +137,12 @@ if rol == "Professor" and acces_professor:
         rutaFinsInput = os.getcwd() + "/" + carpetaINPUT
         rutaFinsOutput = os.getcwd() + "/" + carpetaOUTPUT
 
-        rutaFinsInputGrupTasca = rutaFinsInput + "/" + grup + "_" + tasca
-        rutaFinsOutputGrupTasca = rutaFinsOutput + "/" + grup + "_" + tasca
+        rutaFinsLlistatsInputGrupTasca = rutaFinsInput + "/" + grup + "_" + tasca
+        rutaFinsLlistatsOutputGrupTasca = rutaFinsOutput + "/" + grup + "_" + tasca
 
         # VARIABLES
-        existeixCarpetaINPUTGrupTasca = None
-        existeixCarpetaOUTPUTGrupTasca = None
+        # existeixCarpetaINPUTGrupTasca = None
+        # existeixCarpetaOUTPUTGrupTasca = None
 
         # INPUT
 
@@ -155,212 +155,156 @@ if rol == "Professor" and acces_professor:
         disponibilitatArxiusOUTPUTVendes = None
         disponibilitatArxiusOUTPUTInventari = None
 
-        # Comprovem si existeix el directori INPUT
+        # Comprovem el contingut del directori LLISTATS_INPUT
         # La carpeta INPUT es on desam els arxius que contenen la tasca dels
         # alumnes que hem de corregir
-        st.subheader("COMPROVACIÓ EXISTENCIA CARPETA INPUT")
+        missatgeInput = "CONTINGUT CARPETA: LLISTATS_INPUT/" + grup + "_" + tasca
+        st.subheader(missatgeInput)
 
-        existeixCarpetaINPUTGrupTasca = logic_estructura_1_03.existeixDirectori(
-            "INPUT", grup + "_" + tasca
+        # Mostram els arxiua existents en el directori LLISTATS_INPUT
+
+        llistaArxiusTeoricsInput, disponibilitatArxiuInput = (
+            logic_estructura_1_03.relacioArxiusPresents(
+                "INPUT", rutaFinsLlistatsInputGrupTasca
+            )
         )
 
-        if existeixCarpetaINPUTGrupTasca:
-            # Canviem el valor de la variable a True
-            existeixCarpetaINPUTGrupTasca = True
+        relacioArxiusInput = {
+            "ARXIU": llistaArxiusTeoricsInput,
+            "DISPONIBLE": disponibilitatArxiuInput,
+        }
 
-            missatge = (
-                "✅ El directori LLISTATS_INPUT/" + grup + "_" + tasca + " existeix"
+        st.dataframe(
+            relacioArxiusInput,
+            width="stretch",
+            column_config={
+                "ARXIU": "Arxiu",
+                "DISPONIBLE": "Disponible",
+            },
+        )
+
+        # COMPROVAM QUINS ARXIUS ESTAN DISPONIBLES PER INPUT COMPRES
+        # nomArxiusTeoricsInputCOMPRES
+
+        # QUINS ARXIUS ESTAN DISPONIBLES PER INPUT VENDES
+        # nomArxiusTeoricsInputVENDES
+
+        # QUINS ARXIUS ESTAN DISPONIBLES PER INPUT INVENTARI
+        # nomArxiusTeoricsInputINVENTARI
+
+        disponibilitatArxiusINPUTCompres = (
+            logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
+                "INPUT",
+                rutaFinsLlistatsInputGrupTasca,
+                logic_estructura_1_03.nomArxiusTeoricsInputCOMPRES,
             )
-
-            st.success(missatge)
-
-            # Comprovam si existeixen els documents adequats en el directori INPUT
-
-            llistaArxiusTeoricsInput, disponibilitatArxiuInput = (
-                logic_estructura_1_03.relacioArxiusPresents("INPUT", grup, tasca)
+        )
+        disponibilitatArxiusINPUTVendes = (
+            logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
+                "INPUT",
+                rutaFinsLlistatsInputGrupTasca,
+                logic_estructura_1_03.nomArxiusTeoricsInputVENDES,
             )
-
-            relacioArxiusInput = {
-                "ARXIU": llistaArxiusTeoricsInput,
-                "DISPONIBLE": disponibilitatArxiuInput,
-            }
-
-            st.dataframe(
-                relacioArxiusInput,
-                width="stretch",
-                column_config={
-                    "ARXIU": "Arxiu",
-                    "DISPONIBLE": "Disponible",
-                },
+        )
+        disponibilitatArxiusINPUTInventari = (
+            logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
+                "INPUT",
+                rutaFinsLlistatsInputGrupTasca,
+                logic_estructura_1_03.nomArxiusTeoricsInputINVENTARI,
             )
+        )
 
-            # COMPROVAM QUINS ARXIUS ESTAN DISPONIBLES PER INPUT COMPRES
-            # nomCurtArxiusTeoricsInputCOMPRES
-
-            # QUINS ARXIUS ESTAN DISPONIBLES PER INPUT VENDES
-            # nomCurtArxiusTeoricsInputVENDES
-
-            # QUINS ARXIUS ESTAN DISPONIBLES PER INVENTARI
-            # nomCurtArxiusTeoricsInputINVENTARI
-
-            disponibilitatArxiusINPUTCompres = (
-                logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
-                    "INPUT",
-                    grup,
-                    tasca,
-                    logic_estructura_1_03.nomCurtArxiusTeoricsInputCOMPRES,
-                )
+        if disponibilitatArxiusINPUTCompres:
+            st.success(
+                "Els arxius FONT per corregir les compres han estat carregats correctament"
             )
-            disponibilitatArxiusINPUTVendes = (
-                logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
-                    "INPUT",
-                    grup,
-                    tasca,
-                    logic_estructura_1_03.nomCurtArxiusTeoricsInputVENDES,
-                )
-            )
-            disponibilitatArxiusINPUTInventari = (
-                logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
-                    "INPUT",
-                    grup,
-                    tasca,
-                    logic_estructura_1_03.nomCurtArxiusTeoricsInputINVENTARI,
-                )
-            )
-
-            # COMPROVAM QUINS ARXIUS ESTAN DISPONIBLES PER OUTPUT COMPRES
-            # nomCurtArxiusTeoricsOutputCOMPRES
-
-            # QUINS ARXIUS ESTAN DISPONIBLES PER OUTPUT VENDES
-            # nomCurtArxiusTeoricsOutputVENDES
-
-            # QUINS ARXIUS ESTAN DISPONIBLES PER INVENTARI
-            # nomCurtArxiusTeoricsOutputINVENTARI
-
-            disponibilitatArxiusOUTPUTCompres = (
-                logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
-                    "OUTPUT",
-                    grup,
-                    tasca,
-                    logic_estructura_1_03.nomCurtArxiusTeoricsOutputCOMPRES,
-                )
-            )
-            disponibilitatArxiusOUTPUTVendes = (
-                logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
-                    "OUTPUT",
-                    grup,
-                    tasca,
-                    logic_estructura_1_03.nomCurtArxiusTeoricsOutputVENDES,
-                )
-            )
-            disponibilitatArxiusOUTPUTInventari = (
-                logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
-                    "OUTPUT",
-                    grup,
-                    tasca,
-                    logic_estructura_1_03.nomCurtArxiusTeoricsOutputINVENTARI,
-                )
-            )
-            print("disponibilitatArxiusOUTPUTCompres")
-            print(disponibilitatArxiusOUTPUTCompres)
-            print("disponibilitatArxiusOUTPUTVendes")
-            print(disponibilitatArxiusOUTPUTVendes)
-            print("disponibilitatArxiusOUTPUTInventari")
-            print(disponibilitatArxiusOUTPUTInventari)
-
         else:
-
-            missatge = (
-                "❌ El directori LLISTATS_INPUT/" + grup + "_" + tasca + " NO existeix"
+            st.error("No s'han carregat els arxius FONT per corregir les compres")
+        if disponibilitatArxiusINPUTVendes:
+            st.success(
+                "Els arxius FONT per corregir les vendes han estat carregats correctament"
             )
-            st.error(missatge)
+        else:
+            st.error("No s'han carregat els arxius FONT per corregir les vendes")
+        if disponibilitatArxiusINPUTInventari:
+            st.success(
+                "Els arxius FONT per corregir l'inventari han estat carregats correctament"
+            )
+        else:
+            st.error("No s'han carregat els arxius FONT per corregir l'inventari")
 
-        st.subheader("COMPROVACIÓ EXISTENCIA CARPETA OUTPUT")
-        # Comprovem si existeix el directori OUTPUT
+        # Comprovem el contingut del directori LLISTATS_OUTPUT
         # La carpeta OUTPUT es on desam els arxius amb la correcció de les tasques dels alumnes
-        existeixCarpetaOUTPUTGrupTasca = logic_estructura_1_03.existeixDirectori(
-            "OUTPUT", grup + "_" + tasca
+        missatgeOutput = "CONTINGUT CARPETA: LLISTATS_OUTPUT/" + grup + "_" + tasca
+        st.subheader(missatgeOutput)
+
+        # Mostram els arxiua existents en el directori LLISTATS_OUTPUT
+
+        llistaArxiusTeoricsOutput, disponibilitatArxiuOutput = (
+            logic_estructura_1_03.relacioArxiusPresents(
+                "OUTPUT", rutaFinsLlistatsOutputGrupTasca
+            )
         )
-        if existeixCarpetaOUTPUTGrupTasca:
-            # Canviem el valor de la variable a True
-            existeixCarpetaOUTPUTGrupTasca = True
-            missatge = (
-                "✅ El directori LLISTATS_OUTPUT/" + grup + "_" + tasca + " existeix"
+
+        relacioArxiusOutput = {
+            "ARXIU": llistaArxiusTeoricsOutput,
+            "DISPONIBLE": disponibilitatArxiuOutput,
+        }
+
+        st.dataframe(
+            relacioArxiusOutput,
+            width="stretch",
+            column_config={
+                "ARXIU": "Arxiu",
+                "DISPONIBLE": "Disponible",
+            },
+        )
+
+        # COMPROVAM QUINS ARXIUS ESTAN DISPONIBLES PER OUTPUT COMPRES
+        # nomArxiusTeoricsOutputCOMPRES
+
+        # QUINS ARXIUS ESTAN DISPONIBLES PER OUTPUT VENDES
+        # nomArxiusTeoricsOutputVENDES
+
+        # QUINS ARXIUS ESTAN DISPONIBLES PER OUTPUT INVENTARI
+        # nomArxiusTeoricsOutputINVENTARI
+
+        disponibilitatArxiusOUTPUTCompres = (
+            logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
+                "OUTPUT",
+                rutaFinsLlistatsOutputGrupTasca,
+                logic_estructura_1_03.nomArxiusTeoricsOutputCOMPRES,
             )
-            st.success(missatge)
-
-            # Comprovam si existeixen els documents adequats en el directori OUTPUT
-
-            llistaArxiusTeoricsOutput, disponibilitatArxiuOutput = (
-                logic_estructura_1_03.relacioArxiusPresents("OUTPUT", grup, tasca)
+        )
+        disponibilitatArxiusOUTPUTVendes = (
+            logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
+                "OUTPUT",
+                rutaFinsLlistatsOutputGrupTasca,
+                logic_estructura_1_03.nomArxiusTeoricsOutputVENDES,
             )
-
-            relacioArxiusOutput = {
-                "ARXIU": llistaArxiusTeoricsOutput,
-                "DISPONIBLE": disponibilitatArxiuOutput,
-            }
-
-            st.dataframe(
-                relacioArxiusOutput,
-                width="stretch",
-                column_config={
-                    "ARXIU": "Arxiu",
-                    "DISPONIBLE": "Disponible",
-                },
+        )
+        disponibilitatArxiusOUTPUTInventari = (
+            logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
+                "OUTPUT",
+                rutaFinsLlistatsOutputGrupTasca,
+                logic_estructura_1_03.nomArxiusTeoricsOutputINVENTARI,
             )
+        )
 
+        if disponibilitatArxiusOUTPUTCompres:
+            st.success("Actualment existeix una correcció de les compres")
         else:
-            missatge = (
-                "❌ El directori LLISTATS_OUTPUT/" + grup + "_" + tasca + " NO existeix"
-            )
-            st.error(missatge)
+            st.error("A hores d'ara les compres no han estat corregides")
+        if disponibilitatArxiusOUTPUTVendes:
+            st.success("Actualment existeix una correcció de les vendes")
+        else:
+            st.error("A hores d'ara les vendes no han estat corregides")
+        if disponibilitatArxiusOUTPUTInventari:
+            st.success("Actualment existeix una correcció de l'inventari")
+        else:
+            st.error("A hores d'ara l'inventari no ha estat corregit")
 
         # OPCIONS PER USUARI
-        # CREAR CARPETA INPUT
-        if existeixCarpetaINPUTGrupTasca == False:
-            creaCarpetaInput = st.checkbox(
-                "Activa el check si vols crear el directori LLISTATS_INPUT/"
-                + grup
-                + "_"
-                + tasca
-            )
-            if creaCarpetaInput:
-                novaCarpetaInput = logic_estructura_1_03.creaDirectori(
-                    "INPUT", grup, tasca
-                )
-                missatge = (
-                    "✅ El directori LLISTATS_INPUT/"
-                    + grup
-                    + "_"
-                    + tasca
-                    + " ha estat creat amb èxit"
-                )
-                st.success(missatge)
-                if st.button("Refresca la pàgina"):
-                    st.rerun()
-
-        # CREAR CARPETA OUTPUT
-        if existeixCarpetaOUTPUTGrupTasca == False:
-            creaCarpetaOutput = st.checkbox(
-                "Activa el check si vols crear el directori LLISTATS_OUTPUT/"
-                + grup
-                + "_"
-                + tasca
-            )
-            if creaCarpetaOutput:
-                novaCarpetaOutput = logic_estructura_1_03.creaDirectori(
-                    "OUTPUT", grup, tasca
-                )
-                missatge = (
-                    "✅ El directori LLISTATS_OUTPUT/"
-                    + grup
-                    + "_"
-                    + tasca
-                    + " ha estat creat amb èxit"
-                )
-                st.success(missatge)
-                if st.button("Refresca la pàgina"):
-                    st.rerun()
 
     # ====================================================================
     # 3.1 VISTA PROFESOR - TAB COMPRES
