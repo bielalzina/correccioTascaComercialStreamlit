@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import os
 from datetime import datetime, timedelta
+from sessionsEstat import inicialitzaSessionsEstat, inicialitzaRutesFinsGrupTasca
 import logic_compres_1_03
 
 # import logic_vendes_1_03
@@ -13,7 +14,11 @@ import logic_comu
 import time
 import glob
 
-from dades_varies import *
+# from dades_varies import *
+
+# ABANS DE RES, INICIALITZEM LES SESSIONS
+inicialitzaSessionsEstat()
+
 
 # ==============================================================================
 # 1. CONFIGURACIÓN Y GESTIÓN DE CARPETAS
@@ -70,38 +75,40 @@ if rol == "Professor" and acces_professor:
     # Definim dades identificatives de la tasca que volem corregir
 
     with colA:
-        grup = st.selectbox(
+        st.selectbox(
             "Selecciona el grup: ",
             ["ADG21O", "ADG32O"],
+            key="grup",
+            on_change=inicialitzaRutesFinsGrupTasca,
             index=None,
             placeholder="Selecciona el grup...",
         )
 
     with colB:
-        tasca = st.selectbox(
+        st.selectbox(
             "Selecciona la tasca: ",
             logic_estructura_1_03.llista_num_tasques,
+            key="tasca",
+            on_change=inicialitzaRutesFinsGrupTasca,
             index=None,
             placeholder="Selecciona la tasca...",
         )
 
     with colC:
-        dataVto = st.date_input(
+        st.session_state.dataVto = st.date_input(
             "Indica la data de venciment de la tasca: ",
             value=None,
             format="DD/MM/YYYY",
         )
 
-    if grup is None:
-        st.error("Per continuar, cal indicar el grup que ha fet la tasca")
-        st.stop()
-
-    if tasca is None:
-        st.error("Per continuar, cal indicar la tasca objecte de correcció")
-        st.stop()
-
-    if dataVto is None:
-        st.error("Per continuar, cal indicar la data de venciment de la tasca")
+    if (
+        st.session_state.grup is None
+        or st.session_state.tasca is None
+        or st.session_state.dataVto is None
+    ):
+        st.warning(
+            "Per continuar, cal indicar el grup, la tasca i la data de venciment"
+        )
         st.stop()
 
     tab_estat_correcio, tab_compres, tab_vendes, tab_inventari = st.tabs(
@@ -127,18 +134,18 @@ if rol == "Professor" and acces_professor:
         st.subheader("ESTAT ACTUAL DE LA CORRECCIÓ")
 
         # Carpeta LLISTATS_INPUT
-        carpetaINPUT = "LLISTATS_INPUT"
+        # carpetaINPUT = "LLISTATS_INPUT"
 
         # Carpeta LLISTATS_OUTPUT
-        carpetaOUTPUT = "LLISTATS_OUTPUT"
+        # carpetaOUTPUT = "LLISTATS_OUTPUT"
 
         # Rutes
 
-        rutaFinsInput = os.getcwd() + "/" + carpetaINPUT
-        rutaFinsOutput = os.getcwd() + "/" + carpetaOUTPUT
+        # rutaFinsInput = os.getcwd() + "/" + carpetaINPUT
+        # rutaFinsOutput = os.getcwd() + "/" + carpetaOUTPUT
 
-        rutaFinsLlistatsInputGrupTasca = rutaFinsInput + "/" + grup + "_" + tasca
-        rutaFinsLlistatsOutputGrupTasca = rutaFinsOutput + "/" + grup + "_" + tasca
+        # rutaFinsLlistatsInputGrupTasca = st.session_state.rutaFinsInput + "/" + grup + "_" + tasca
+        # rutaFinsLlistatsOutputGrupTasca = st.session_state.rutaFinsOutput + "/" + grup + "_" + tasca
 
         # VARIABLES
         # existeixCarpetaINPUTGrupTasca = None
@@ -158,14 +165,19 @@ if rol == "Professor" and acces_professor:
         # Comprovem el contingut del directori LLISTATS_INPUT
         # La carpeta INPUT es on desam els arxius que contenen la tasca dels
         # alumnes que hem de corregir
-        missatgeInput = "CONTINGUT CARPETA: LLISTATS_INPUT/" + grup + "_" + tasca
+        missatgeInput = (
+            "CONTINGUT CARPETA: LLISTATS_INPUT/"
+            + st.session_state.grup
+            + "_"
+            + st.session_state.tasca
+        )
         st.subheader(missatgeInput)
         st.write("")
         # Mostram els arxiua existents en el directori LLISTATS_INPUT
 
         llistaArxiusTeoricsInput, disponibilitatArxiuInput = (
             logic_estructura_1_03.relacioArxiusPresents(
-                "INPUT", rutaFinsLlistatsInputGrupTasca
+                "INPUT", st.session_state.rutaFinsLlistatsInputGrupTasca
             )
         )
 
@@ -251,21 +263,21 @@ if rol == "Professor" and acces_professor:
         disponibilitatArxiusINPUTCompres = (
             logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
                 "INPUT",
-                rutaFinsLlistatsInputGrupTasca,
+                st.session_state.rutaFinsLlistatsInputGrupTasca,
                 logic_estructura_1_03.nomArxiusTeoricsInputCOMPRES,
             )
         )
         disponibilitatArxiusINPUTVendes = (
             logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
                 "INPUT",
-                rutaFinsLlistatsInputGrupTasca,
+                st.session_state.rutaFinsLlistatsInputGrupTasca,
                 logic_estructura_1_03.nomArxiusTeoricsInputVENDES,
             )
         )
         disponibilitatArxiusINPUTInventari = (
             logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
                 "INPUT",
-                rutaFinsLlistatsInputGrupTasca,
+                st.session_state.rutaFinsLlistatsInputGrupTasca,
                 logic_estructura_1_03.nomArxiusTeoricsInputINVENTARI,
             )
         )
@@ -274,31 +286,39 @@ if rol == "Professor" and acces_professor:
             st.success(
                 "Els arxius FONT per corregir les compres han estat carregats correctament"
             )
+            st.session_state.disponibilitatArxiusINPUTCompres = True
         else:
             st.error("No s'han carregat els arxius FONT per corregir les compres")
         if disponibilitatArxiusINPUTVendes:
             st.success(
                 "Els arxius FONT per corregir les vendes han estat carregats correctament"
             )
+            st.session_state.disponibilitatArxiusINPUTVendes = True
         else:
             st.error("No s'han carregat els arxius FONT per corregir les vendes")
         if disponibilitatArxiusINPUTInventari:
             st.success(
                 "Els arxius FONT per corregir l'inventari han estat carregats correctament"
             )
+            st.session_state.disponibilitatArxiusINPUTInventari = True
         else:
             st.error("No s'han carregat els arxius FONT per corregir l'inventari")
 
         # Comprovem el contingut del directori LLISTATS_OUTPUT
         # La carpeta OUTPUT es on desam els arxius amb la correcció de les tasques dels alumnes
-        missatgeOutput = "CONTINGUT CARPETA: LLISTATS_OUTPUT/" + grup + "_" + tasca
+        missatgeOutput = (
+            "CONTINGUT CARPETA: LLISTATS_OUTPUT/"
+            + st.session_state.grup
+            + "_"
+            + st.session_state.tasca
+        )
         st.subheader(missatgeOutput)
 
         # Mostram els arxiua existents en el directori LLISTATS_OUTPUT
 
         llistaArxiusTeoricsOutput, disponibilitatArxiuOutput = (
             logic_estructura_1_03.relacioArxiusPresents(
-                "OUTPUT", rutaFinsLlistatsOutputGrupTasca
+                "OUTPUT", st.session_state.rutaFinsLlistatsOutputGrupTasca
             )
         )
 
@@ -328,35 +348,38 @@ if rol == "Professor" and acces_professor:
         disponibilitatArxiusOUTPUTCompres = (
             logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
                 "OUTPUT",
-                rutaFinsLlistatsOutputGrupTasca,
+                st.session_state.rutaFinsLlistatsOutputGrupTasca,
                 logic_estructura_1_03.nomArxiusTeoricsOutputCOMPRES,
             )
         )
         disponibilitatArxiusOUTPUTVendes = (
             logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
                 "OUTPUT",
-                rutaFinsLlistatsOutputGrupTasca,
+                st.session_state.rutaFinsLlistatsOutputGrupTasca,
                 logic_estructura_1_03.nomArxiusTeoricsOutputVENDES,
             )
         )
         disponibilitatArxiusOUTPUTInventari = (
             logic_estructura_1_03.comprovaDisponibilitatArxiusperTipus(
                 "OUTPUT",
-                rutaFinsLlistatsOutputGrupTasca,
+                st.session_state.rutaFinsLlistatsOutputGrupTasca,
                 logic_estructura_1_03.nomArxiusTeoricsOutputINVENTARI,
             )
         )
 
         if disponibilitatArxiusOUTPUTCompres:
             st.success("Actualment existeix una correcció de les compres")
+            st.session_state.disponibilitatArxiusOUTPUTCompres = True
         else:
             st.error("A hores d'ara les compres no han estat corregides")
         if disponibilitatArxiusOUTPUTVendes:
             st.success("Actualment existeix una correcció de les vendes")
+            st.session_state.disponibilitatArxiusOUTPUTVendes = True
         else:
             st.error("A hores d'ara les vendes no han estat corregides")
         if disponibilitatArxiusOUTPUTInventari:
             st.success("Actualment existeix una correcció de l'inventari")
+            st.session_state.disponibilitatArxiusOUTPUTInventari = True
         else:
             st.error("A hores d'ara l'inventari no ha estat corregit")
 
@@ -369,6 +392,8 @@ if rol == "Professor" and acces_professor:
     with tab_compres:
 
         st.subheader("CORRECCIÓ COMPRES")
+
+        comentamCompres = r"""
 
         # Abans de fer la correcció, comprovem si hi ha correccions anteriors:
         prefixNomFitxerCorreccioCompres = grup + "_" + tasca + "_COMPRES_"
@@ -506,6 +531,9 @@ if rol == "Professor" and acces_professor:
             st.subheader("No s'han trobat factures per corregir")
             st.divider()
 
+
+        """
+
     with tab_vendes:
         st.subheader("CORRECCIÓ VENDES")
 
@@ -516,99 +544,35 @@ if rol == "Professor" and acces_professor:
     with tab_inventari:
         st.subheader("CORRECCIÓ INVENTARI")
 
-        # Abans de fer la correcció, comprovem si hi ha correccions anteriors:
-        prefixNomFitxerCorreccioInventari = grup + "_" + tasca + "_INVENTARI_"
-        rutaLlistatsOutputInventari = (
-            os.getcwd() + "/" + carpetaOUTPUT + "/" + prefixNomFitxerCorreccioInventari
-        )
-        patro = rutaLlistatsOutputInventari + "*"
-        # la variable 'patro' a més de contenir la ruta a la carpeta, també
-        # inclou la part comé del nom del fitxer, i amb l'asterisc (*),
-        # obtindrem tots els arxius que compleixen el patró
-
-        llistaFitxersCorreccioInventari = glob.glob(patro)
-
-        _ = """
-        st.warning("*******************************************************")
-        # Ruta específica al directori LLISTATS_OUTPUT
-        ruta = os.getcwd() + "/" + carpetaOUTPUT
-
-        # Todos los archivos del directorio (cualquier extensión)
-        todos_archivos = glob.glob(os.path.join(ruta, "*"))
-        nombres_todos = [
-            os.path.basename(f) for f in todos_archivos if os.path.isfile(f)
-        ]
-        # print("Archivos en la carpeta:", nombres_todos)
-
-        # ADG32O_02.12_INVENTARI_40_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv
-        # ADG32O_02.12_INVENTARI_41_CORRECCIO_INVENTARI_EMPRESA.csv
-
-        fitxer40 = (
-            grup
-            + "_"
-            + tasca
-            + "_INVENTARI_"
-            + "40_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv"
-        )
-        fitxer41 = (
-            grup + "_" + tasca + "_INVENTARI_" + "41_CORRECCIO_INVENTARI_EMPRESA.csv"
-        )
-
-        if fitxer40 in nombres_todos:
-            missatge = "✅ S'HA TROBAT L'ARXIU DE CORRECCIÓ: " + fitxer40
-            st.success(missatge)
-            existeixFitxer40 = True
-        else:
-            missatge = "❌ NO S'HA TROBAT L'ARXIU DE CORRECCIÓ: " + fitxer40
-            st.error(missatge)
-            existeixFitxer40 = False
-
-        if fitxer41 in nombres_todos:
-            missatge = "✅ S'HA TROBAT L'ARXIU DE CORRECCIÓ: " + fitxer41
-            st.success(missatge)
-            existeixFitxer41 = True
-        else:
-            missatge = "❌ NO S'HA TROBAT L'ARXIU DE CORRECCIÓ: " + fitxer41
-            st.error(missatge)
-            existeixFitxer41 = False
-
-        if existeixFitxer40 and existeixFitxer41:
-            st.success("AQUI ESTA LA CORRECCIÓ DESADA")
-        else:
-            st.error("❌ CAL TORNAR REALITZAR LA CORRECCIÓ")
-
-        st.warning("*******************************************************")
-
-        """
-
         calCorregirInventari = False
 
-        if len(llistaFitxersCorreccioInventari) > 0:
-            st.warning("Hi ha correccions anteriors per a aquesta tasca")
+        if disponibilitatArxiusOUTPUTInventari:
+            st.success("✅ Hi ha disponible una correcció de l'inventari")
             opcioCorreccio = st.selectbox(
-                "L'inventari ja ha estat corregit anteriorment. Vols repetir la correcció?",
-                ("Sí", "No"),
+                "Vols mantenir la correcció existent o generar-ne una de nova?",
+                ("Mantenir", "Generar"),
                 index=None,
                 placeholder="Selecciona una opció...",
             )
             if opcioCorreccio is None:
-                st.error("❌ Per continuar, cal seleccionar una opció")
+                st.warning("❌ Per continuar, cal seleccionar una opció")
                 # st.stop()
-            elif opcioCorreccio == "Sí":
-                calCorregirInventari = True
-                st.success("✅ CORRECCIÓ ACTIVADA")
-                # Aquí va el resto del código de compres corregides
-            elif opcioCorreccio == "No":
+            elif opcioCorreccio == "Mantenir":
                 calCorregirInventari = False
-                st.info("ℹ️ CORRECCIÓ DESACTIVADA")
+                st.info(
+                    "ℹ️ S'HA DESACTIVAT LA CORRECCIÓ DE L'INVENTARI. SEGUIM AMB LA CORRECCIÓ EXISTENT"
+                )
                 # Código alternativo si no corregir
+            elif opcioCorreccio == "Generar":
+                calCorregirInventari = True
+                st.success("✅ S'HA ACTIVAT UNA NOVA CORRECCIÓ DE L'INVENTARI")
+                # Aquí va el resto del código de compres corregides
 
-        elif (
-            len(llistaFitxersCorreccioInventari) == 0
-            or len(llistaFitxersCorreccioInventari) is None
-        ):
+        else:
+            st.warning(
+                "⚠️ No hi ha disponible una correcció de l'inventari. Cal iniciar la correcció de l'inventari"
+            )
             calCorregirInventari = True
-            st.success("✅ CORRECCIÓ ACTIVADA")
 
         if calCorregirInventari:
             # Cridam a la funció de correcció de l'inventari
@@ -620,9 +584,7 @@ if rol == "Professor" and acces_professor:
                 (
                     df_correccio_inventari_empresa_producte,
                     df_correccio_inventari_empresa,
-                ) = logic_inventari_1_03.correccioInventari(
-                    grup, tasca, carpetaINPUT, carpetaOUTPUT
-                )
+                ) = logic_inventari_1_03.correccioInventari()
 
             # Una vez fuera del bloque 'with', el spinner desaparece solo
             st.success("✅ CORRECCIÓN COMPLETADA")
@@ -631,28 +593,22 @@ if rol == "Professor" and acces_professor:
             # Recuperem les dades de la correcció anterior
             # carregaCSV(fileName, carpeta)
 
-            fileName01 = (
-                grup
-                + "_"
-                + tasca
-                + "_INVENTARI_"
-                + "31_DF_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv"
+            rutaFinsFitxerOutputInventari31 = (
+                st.session_state.rutaFinsLlistatsOutputGrupTasca
+                + "/"
+                + st.session_state.fileOutputInventari31
+            )
+            rutaFinsFitxerOutputInventari32 = (
+                st.session_state.rutaFinsLlistatsOutputGrupTasca
+                + "/"
+                + st.session_state.fileOutputInventari32
             )
 
-            df_correccio_inventari_empresa_producte = logic_comu.carregaCSV(
-                fileName01, carpetaOUTPUT
+            df_correccio_inventari_empresa_producte = pd.read_csv(
+                rutaFinsFitxerOutputInventari31, sep=",", encoding="utf-8", dtype=str
             )
-
-            fileName02 = (
-                grup
-                + "_"
-                + tasca
-                + "_INVENTARI_"
-                + "32_DF_CORRECCIO_INVENTARI_EMPRESA.csv"
-            )
-
-            df_correccio_inventari_empresa = logic_comu.carregaCSV(
-                fileName02, carpetaOUTPUT
+            df_correccio_inventari_empresa = pd.read_csv(
+                rutaFinsFitxerOutputInventari32, sep=",", encoding="utf-8", dtype=str
             )
 
         if df_correccio_inventari_empresa_producte is not None:

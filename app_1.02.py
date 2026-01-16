@@ -8,7 +8,7 @@ import logic_compres
 import logic_comu
 import time
 
-from st_sessions_state import *
+from sessionsEstat import *
 
 # ==============================================================================
 # 1. CONFIGURACIÓN Y GESTIÓN DE CARPETAS

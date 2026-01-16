@@ -1,18 +1,46 @@
+import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import os
 import logic_comu
 import glob
+from sessionsEstat import inicialitzaSessionsEstat
+
+# ABANS DE RES, INICIALITZEM LES SESSIONS
+inicialitzaSessionsEstat()
 
 
-def correccioInventari(grup, tasca, carpetaINPUT, carpetaOUTPUT):
+def correccioInventari():
 
     # CARREGA ARXIUS
-    # ADG32O_02.12_09_RESUM_DADES_INVENTARI_ALUMNE.csv
-    # ADG32O_02.12_10_HISTORIAL_E_S_INVENTARI_ALUMNE.csv
+    # 09_RESUM_DADES_INVENTARI_ALUMNE.csv
+    # 10_HISTORIAL_E_S_INVENTARI_ALUMNE.csv
 
     # Abans de recuperar les fonts de dades, per fer les correccions, eliminarem tots els arxius existents relacionats amb l'INVENTARI:
 
+    # "31_DF_CORRECCIO_INVENTARI_EMPRESA_PRODUCTE.csv"
+    # "32_DF_CORRECCIO_INVENTARI_EMPRESA.csv"
+
+    # Si existeixen arxius de correcció anterior, els eliminem
+    if st.session_state.disponibilitatArxiusOUTPUTInventari:
+        try:
+            os.remove(
+                st.session_state.rutaFinsLlistatsOutputGrupTasca
+                + "/"
+                + st.session_state.fileOutputInventari31
+            )
+            os.remove(
+                st.session_state.rutaFinsLlistatsOutputGrupTasca
+                + "/"
+                + st.session_state.fileOutputInventari32
+            )
+            st.success("Correcció anterior eliminada correctament")
+        except Exception as e:
+            print(f"Error eliminant la correcció anterior: {e}")
+
+    bloc_comentari = r"""
+    
+    # Comentari per a la funcio eliminacioArxiusOUTPUTInventari
     # Definim ruta y patró
     # El asterisco (*) actúa como comodín para cualquier carácter posterior
 
@@ -299,7 +327,9 @@ def correccioInventari(grup, tasca, carpetaINPUT, carpetaOUTPUT):
     df_correccio_inventari_empresa = pd.DataFrame(informe02)
 
     # GUARDEM INFORME
-    fileName = grup + "_" + tasca + "_INVENTARI_" + "41_DF_CORRECCIO_INVENTARI_EMPRESA.csv"
+    fileName = (
+        grup + "_" + tasca + "_INVENTARI_" + "41_DF_CORRECCIO_INVENTARI_EMPRESA.csv"
+    )
 
     try:
         logic_comu.desaCSV(df_correccio_inventari_empresa, fileName, carpetaOUTPUT)
@@ -311,3 +341,6 @@ def correccioInventari(grup, tasca, carpetaINPUT, carpetaOUTPUT):
     # print(df_correccio_inventari_empresa)
 
     return df_correccio_inventari_empresa_producte, df_correccio_inventari_empresa
+    
+    
+    """
